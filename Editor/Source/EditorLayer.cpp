@@ -158,8 +158,11 @@ std::shared_ptr<RightEngine::Scene> EditorLayer::LoadScene(const fs::path& path)
     return serializer.GetScene();
 }
 
+#include <RHI/RHI.hpp>
+
 void EditorLayer::OnAttach()
 {
+    rhi::helloFromRHI();
     RightEngine::Timer timer;
 	m_propertyPanel.Init();
     sceneData.renderer = std::make_shared<SceneRenderer>();

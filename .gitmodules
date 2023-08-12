@@ -37,3 +37,6 @@
 [submodule "Lib/taskflow"]
 	path = Lib/taskflow
 	url = git@github.com:taskflow/taskflow.git
+[submodule "Lib/EASTL"]
+	path = Lib/EASTL
+	url = https://github.com/electronicarts/EASTL

@@ -13,6 +13,7 @@ endif()
 
 if (MSVC)
     add_compile_options("/MP")
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -42,7 +43,6 @@ message(STATUS "Vulkan library directory: " ${Vulkan_LIBRARY})
 
 include_directories(before system Lib/glslang/)
 include_directories(${Vulkan_INCLUDE_DIR})
-include_directories(Lib/Glad/include)
 include_directories(Lib/spdlog/include)
 include_directories(Lib/easyargs/include)
 include_directories(Lib/googletest/googletest/include)
@@ -60,21 +60,7 @@ include_directories(Lib/hash-library)
 include_directories(Lib/ImGuizmo)
 include_directories(Lib/yaml-cpp/include)
 include_directories(Lib/taskflow)
-
-include_directories(Engine/Source/Public)
-include_directories(Engine/Source/Core/Public)
-include_directories(Engine/Source/Core/Event/Public)
-include_directories(Engine/Source/Core/Launch/Public)
-include_directories(Engine/Source/Core/Window/Public)
-include_directories(Engine/Source/Core/Application/Public)
-include_directories(Engine/Source/Core/RHI/Public)
-include_directories(Engine/Source/Core/Testing/Public)
-include_directories(Engine/Source/Core/Shader/Public)
-include_directories(Engine/Source/Core/Utils/Public)
-include_directories(Engine/Source/Core/Scene/Public)
-include_directories(Engine/Source/Core/UI/Public)
-include_directories(Engine/Source/Core/Loaders/Public)
-include_directories(Engine/Source/Core/Service/Public)
+include_directories(Lib/EASTL/include)
 
 add_subdirectory(Lib/spdlog)
 add_subdirectory(Lib/easyargs)
@@ -118,27 +104,18 @@ add_subdirectory(Lib/taskflow)
 
 add_subdirectory(Lib/simdjson)
 
+add_subdirectory(Lib/EASTL)
+
 set(THIRD_PARTY_LIB
         glfw
         stb_image
         imgui
         assimp
-        glslang
-        MachineIndependent
-        GenericCodeGen
-        OGLCompiler
-        OSDependent
-        SPIRV
-        ${Vulkan_LIBRARY}
-        glslang-default-resource-limits
-        vk-tools
-        VulkanMemoryAllocator
         crossguid
         easyargs
         ImGuizmo
         yaml-cpp
         Taskflow
-        simdjson
         )
 
 set(THIRD_PARTY_PROJECT_DIR_NAME "Lib")
@@ -150,15 +127,6 @@ set_target_properties(imgui PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(assimp PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(zlibstatic PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(glslang PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(MachineIndependent PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(GenericCodeGen PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(OGLCompiler PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(OSDependent PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(SPIRV PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(glslang-default-resource-limits PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(vk-tools PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(VulkanMemoryAllocator PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(ImGuizmo PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(yaml-cpp PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(yaml-cpp-parse PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
@@ -173,6 +141,11 @@ set_target_properties(spdlog PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(uninstall PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(Taskflow PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(simdjson PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
+set_target_properties(EASTL PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
+set_target_properties(vk-tools PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
+set_target_properties(VulkanMemoryAllocator PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 
 add_subdirectory(Editor)
 add_subdirectory(Engine)
+add_subdirectory(Core)
+add_subdirectory(RHI)

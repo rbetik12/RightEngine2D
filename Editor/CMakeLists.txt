@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
+
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Editor/Source/*.cpp"
         "${CMAKE_SOURCE_DIR}/Editor/Source/*.hpp"
@@ -9,10 +11,7 @@ file(GLOB_RECURSE SOURCE_FILES
 
 add_executable(Editor ${SOURCE_FILES})
 target_include_directories(Editor PRIVATE ${CMAKE_SOURCE_DIR}/Editor/Source/Public)
-
-if (MSVC)
-    set(CMAKE_STARTUP_PROJECT Editor)
-endif()
+target_link_libraries(Editor Engine)
 
 # Create source groups for each directory
 foreach(FILE ${SOURCE_FILES})
@@ -23,15 +22,6 @@ foreach(FILE ${SOURCE_FILES})
     # Create the source group
     source_group(${DIR} FILES ${FILE})
 endforeach()
-
-set_target_properties(Editor
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR})
-
-target_link_libraries(Editor
-        Engine
-        ${THIRD_PARTY_LIB}
-        )
 
 set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/Editor/Assets)
 add_compile_definitions("ASSETS_DIR=\"${ASSETS_DIR}\"")

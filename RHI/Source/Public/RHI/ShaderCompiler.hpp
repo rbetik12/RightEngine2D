@@ -1,22 +1,22 @@
 #pragma once
 
-#include "VertexBufferLayout.hpp"
-#include "Utils.hpp"
-#include "BufferDescriptor.hpp"
+#include <RHI/Config.hpp>
+#include <RHI/BufferDescriptor.hpp>
+#include <RHI/VertexBufferLayout.hpp>
 #include <Core/Hash.hpp>
+#include <EASTL/unordered_map.h>
+#include <EASTL/vector.h>
 #include <string>
 
-namespace RightEngine
+namespace rhi
 {
-    enum class ShaderType
+    enum class ShaderType : uint8_t
     {
         NONE = 0,
         VERTEX,
         FRAGMENT
     };
     typedef ShaderType ShaderStage;
-
-    constexpr const int C_CONSTANT_BUFFER_SLOT = -1;
 
     struct BufferRef
     {
@@ -36,16 +36,15 @@ namespace RightEngine
             size_t h = 0x1231;
             core::hash::CombineHash(h, p.slot);
             core::hash::CombineHash(h, p.stage);
-
             return h;
         }
     };
 
     struct ShaderReflection
     {
-        using BufferMap = std::unordered_map<BufferRef, BufferType, BufferRefHash>;
+        using BufferMap = eastl::unordered_map<BufferRef, BufferType, BufferRefHash>;
         BufferMap buffers;
-        std::vector<int> textures;
+        eastl::vector<int> textures;
     };
 
     struct ShaderDescriptor
@@ -57,7 +56,7 @@ namespace RightEngine
 
     struct ShaderProgramDescriptor
     {
-        std::vector<ShaderDescriptor> shaders;
+        eastl::vector<ShaderDescriptor> shaders;
         VertexBufferLayout layout;
         ShaderReflection reflection;
     };
