@@ -9,7 +9,15 @@ file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Editor/Source/*.hpp"
         )
 
-add_executable(Editor ${SOURCE_FILES})
+if (MSVC)
+    add_executable(Editor ${SOURCE_FILES})
+    set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+    target_link_options(Editor PRIVATE "/ENTRY:mainCRTStartup")
+else()
+    add_executable(Editor ${SOURCE_FILES})
+endif()
+
 target_include_directories(Editor PRIVATE ${CMAKE_SOURCE_DIR}/Editor/Source/Public)
 target_link_libraries(Editor Engine)
 

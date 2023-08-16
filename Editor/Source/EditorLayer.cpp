@@ -159,10 +159,17 @@ std::shared_ptr<RightEngine::Scene> EditorLayer::LoadScene(const fs::path& path)
 }
 
 #include <RHI/RHI.hpp>
+#include <Core/Log.hpp>
 
 void EditorLayer::OnAttach()
 {
     rhi::helloFromRHI();
+    std::string kek = "kek";
+    core::log::debug("Hello {}", "debug");
+    core::log::info("Hello {}", "info");
+    core::log::warning("Hello {}", "warning");
+    core::log::error("Hello {}", "error");
+    std::cout << "kek" << std::endl;
     RightEngine::Timer timer;
 	m_propertyPanel.Init();
     sceneData.renderer = std::make_shared<SceneRenderer>();

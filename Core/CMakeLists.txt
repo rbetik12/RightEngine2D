@@ -10,7 +10,7 @@ file(GLOB_RECURSE SOURCE_FILES
         )
 
 add_library(Core SHARED ${SOURCE_FILES})
-target_link_libraries(Core PUBLIC EASTL)
+target_link_libraries(Core PUBLIC EASTL spdlog)
 target_compile_definitions(Core PRIVATE CORE_EXPORT)
 target_precompile_headers(Core PRIVATE "${CMAKE_SOURCE_DIR}/Core/Source/PCH.hpp")
 

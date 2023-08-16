@@ -4,6 +4,7 @@
 #include <RHI/BufferDescriptor.hpp>
 #include <RHI/VertexBufferLayout.hpp>
 #include <Core/Hash.hpp>
+#include <Core/Blob.hpp>
 #include <EASTL/unordered_map.h>
 #include <EASTL/vector.h>
 #include <string>
@@ -18,7 +19,7 @@ namespace rhi
     };
     typedef ShaderType ShaderStage;
 
-    struct BufferRef
+    struct RHI_API BufferRef
     {
         int slot;
         ShaderStage stage;
@@ -29,7 +30,7 @@ namespace rhi
         }
     };
 
-    struct BufferRefHash
+    struct RHI_API BufferRefHash
     {
         size_t operator()(const BufferRef& p) const
         {
@@ -59,5 +60,29 @@ namespace rhi
         eastl::vector<ShaderDescriptor> shaders;
         VertexBufferLayout layout;
         ShaderReflection reflection;
+    };
+
+    struct ShaderData
+    {
+        core::Blob m_compiledShader;
+    };
+
+    class RHI_API ShaderCompiler
+    {
+    public:
+        //TODO: Implement options: switch Vulkan API version, shader code version, etc
+        struct Options
+        {};
+
+        ShaderCompiler(Options options) : m_options(options)
+        {}
+
+        //Path must be absolute
+        virtual ShaderData Compile(std::string_view path) = 0;
+
+        static std::shared_ptr<ShaderCompiler> Create(Options options);
+
+    protected:
+        Options m_options;
     };
 }
