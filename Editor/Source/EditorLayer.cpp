@@ -19,6 +19,7 @@
 #include "Panels/ContentBrowserPanel.hpp"
 #include "Timer.hpp"
 #include "Service/SelectionService.hpp"
+#include <RHI/ShaderCompiler.hpp>
 #include <glm/glm.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -163,13 +164,10 @@ std::shared_ptr<RightEngine::Scene> EditorLayer::LoadScene(const fs::path& path)
 
 void EditorLayer::OnAttach()
 {
-    rhi::helloFromRHI();
-    std::string kek = "kek";
-    core::log::debug("Hello {}", "debug");
-    core::log::info("Hello {}", "info");
-    core::log::warning("Hello {}", "warning");
-    core::log::error("Hello {}", "error");
-    std::cout << "kek" << std::endl;
+    auto compiler = rhi::ShaderCompiler::Create();
+    compiler->Compile(Path::Absolute("/Engine/Shaders/test.glsl"));
+    __debugbreak();
+
     RightEngine::Timer timer;
 	m_propertyPanel.Init();
     sceneData.renderer = std::make_shared<SceneRenderer>();

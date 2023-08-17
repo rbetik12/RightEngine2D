@@ -1,0 +1,4 @@
+float GetTestNumber(int index)
+{
+    return 0.0f;
+}

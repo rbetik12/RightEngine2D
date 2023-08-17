@@ -61,6 +61,7 @@ include_directories(Lib/ImGuizmo)
 include_directories(Lib/yaml-cpp/include)
 include_directories(Lib/taskflow)
 include_directories(Lib/EASTL/include)
+include_directories(Lib/fmt/include)
 
 add_subdirectory(Lib/spdlog)
 add_subdirectory(Lib/easyargs)
@@ -106,6 +107,8 @@ add_subdirectory(Lib/simdjson)
 
 add_subdirectory(Lib/EASTL)
 
+add_subdirectory(Lib/fmt)
+
 set(THIRD_PARTY_LIB
         glfw
         stb_image
@@ -144,6 +147,7 @@ set_target_properties(simdjson PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME}
 set_target_properties(EASTL PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(vk-tools PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 set_target_properties(VulkanMemoryAllocator PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
+set_target_properties(fmt PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 
 add_subdirectory(Editor)
 add_subdirectory(Engine)

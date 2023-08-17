@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Log.hpp>
+#include <RHI/Log.hpp>
 
 #include <RHI/Assert.hpp>
 #include <RHI/Types.hpp>
