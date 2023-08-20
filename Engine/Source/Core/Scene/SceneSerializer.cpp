@@ -8,6 +8,7 @@
 #include "ThreadService.hpp"
 #include "TextureLoader.hpp"
 #include <taskflow/taskflow.hpp>
+#include <taskflow/algorithm/for_each.hpp>
 #include <fstream>
 
 using namespace RightEngine;

@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
-
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Editor/Source/*.cpp"
         "${CMAKE_SOURCE_DIR}/Editor/Source/*.hpp"
@@ -11,8 +9,6 @@ file(GLOB_RECURSE SOURCE_FILES
 
 if (MSVC)
     add_executable(Editor ${SOURCE_FILES})
-    set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
     target_link_options(Editor PRIVATE "/ENTRY:mainCRTStartup")
 else()
     add_executable(Editor ${SOURCE_FILES})

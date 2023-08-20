@@ -4,7 +4,7 @@
 #include "Scene.hpp"
 #include "Assert.hpp"
 #include <glm/glm.hpp>
-#include <entt.hpp>
+#include <entt/entt.hpp>
 #include <memory>
 
 namespace RightEngine

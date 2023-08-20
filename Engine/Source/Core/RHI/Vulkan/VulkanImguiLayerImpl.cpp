@@ -11,8 +11,8 @@
 #include "Path.hpp"
 #include "ImGuiLayer.hpp"
 #include <imgui.h>
-#include <backends/imgui_impl_vulkan.h>
-#include <backends/imgui_impl_glfw.h>
+#include <ImGuiBackend/imgui_impl_vulkan.h>
+#include <ImGuiBackend/imgui_impl_glfw.h>
 #include <ImGuizmo.h>
 #include <vulkan/vulkan.h>
 

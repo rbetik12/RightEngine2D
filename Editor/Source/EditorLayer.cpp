@@ -166,7 +166,6 @@ void EditorLayer::OnAttach()
 {
     auto compiler = rhi::ShaderCompiler::Create();
     compiler->Compile(Path::Absolute("/Engine/Shaders/test.glsl"));
-    __debugbreak();
 
     RightEngine::Timer timer;
 	m_propertyPanel.Init();
@@ -447,7 +446,7 @@ void EditorLayer::OnImGuiRender()
         ImGui::PopStyleVar();
     }
 
-    if (ImGui::BeginPopupContextWindow(nullptr, 1, false))
+    if (ImGui::BeginPopupContextWindow(nullptr, 1))
     {
         if (ImGui::MenuItem("Create Empty Entity"))
         {

@@ -2,15 +2,17 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
-
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Core/Source/*.cpp"
         "${CMAKE_SOURCE_DIR}/Core/Source/*.hpp"
         )
 
+find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(EASTL REQUIRED)
+
 add_library(Core SHARED ${SOURCE_FILES})
-target_link_libraries(Core PUBLIC EASTL spdlog fmt)
+target_link_libraries(Core PUBLIC EASTL::EASTL spdlog::spdlog fmt::fmt)
 target_compile_definitions(Core PRIVATE CORE_EXPORT)
 target_precompile_headers(Core PRIVATE "${CMAKE_SOURCE_DIR}/Core/Source/PCH.hpp")
 

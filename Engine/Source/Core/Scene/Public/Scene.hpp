@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Components.hpp"
-#include <entt.hpp>
+#include <entt/entt.hpp>
 
 namespace RightEngine
 {

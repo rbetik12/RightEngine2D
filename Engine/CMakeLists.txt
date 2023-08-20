@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.19)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
-
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Engine/Source/*.cpp"
         "${CMAKE_SOURCE_DIR}/Engine/Source/*.hpp"
@@ -11,8 +9,25 @@ file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/Engine/Assets/Shaders/*.frag"
         )
 
+find_package(taskflow REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(assimp REQUIRED)
+find_package(stb REQUIRED)
+find_package(imgui REQUIRED)
+find_package(imguizmo REQUIRED)
+find_package(EnTT REQUIRED)
+
 add_library(Engine STATIC ${SOURCE_FILES})
-target_link_libraries(Engine PUBLIC RHI ${THIRD_PARTY_LIB})
+target_link_libraries(Engine PUBLIC 
+                            RHI 
+                            ${THIRD_PARTY_LIB} 
+                            assimp::assimp 
+                            glfw 
+                            Taskflow::Taskflow
+                            stb::stb
+                            imgui::imgui
+                            imguizmo::imguizmo
+                            EnTT::EnTT)
 
 set(ENGINE_INCLUDE_DIR
     ${CMAKE_SOURCE_DIR}/Engine/Source/Public

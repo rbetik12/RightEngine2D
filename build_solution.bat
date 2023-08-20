@@ -21,5 +21,5 @@ if "%choice%"=="1" (
 )
 
 :launch_script
-python Scripts/generate_solution.py %build_type%
+python Scripts/build_solution.py %build_type%
 pause
