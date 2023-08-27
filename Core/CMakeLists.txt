@@ -21,7 +21,7 @@ target_include_directories(Core INTERFACE ${CORE_INCLUDE_DIR})
 target_include_directories(Core PUBLIC ${CORE_INCLUDE_DIR})
 
 if (MSVC)
-    target_compile_options(Core PRIVATE /WX /W4 /wd4251)
+    target_compile_options(Core PRIVATE /WX)
 endif()
 
 # Create source groups for each directory

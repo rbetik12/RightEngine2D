@@ -4,5 +4,4 @@
 
 namespace rhi
 {
-	void RHI_API helloFromRHI();
 }

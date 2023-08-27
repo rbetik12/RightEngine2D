@@ -1,10 +1,11 @@
 #pragma once
 
 #include <RHI/Log.hpp>
-
 #include <RHI/Assert.hpp>
 #include <RHI/Types.hpp>
 #include <RHI/Helpers.hpp>
+
+#include <Core/EASTLIntergration.hpp>
 
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>

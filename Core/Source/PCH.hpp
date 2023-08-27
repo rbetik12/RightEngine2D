@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Blob.hpp>
+#include <Core/Math.hpp>
 #include <Core/Assert.hpp>
 
 #include <EASTL/unordered_set.h>

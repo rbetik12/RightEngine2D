@@ -64,8 +64,10 @@ namespace rhi
 
     struct ShaderData
     {
-        core::Blob  m_compiledShader;
-        bool        m_successful = false;
+        ShaderReflection    m_reflection;
+        core::Blob          m_compiledShader;
+        ShaderType          m_type = ShaderType::NONE;
+        bool                m_valid = false;
     };
 
     class RHI_API ShaderCompiler
@@ -78,10 +80,10 @@ namespace rhi
         ShaderCompiler(Options options) : m_options(options)
         {}
 
+        virtual ~ShaderCompiler() = default;
+
         //Path must be absolute
         virtual ShaderData Compile(std::string_view path) = 0;
-
-        static std::shared_ptr<ShaderCompiler> Create(Options options = {});
 
     protected:
         Options m_options;

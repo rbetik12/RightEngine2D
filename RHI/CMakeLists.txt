@@ -9,10 +9,18 @@ file(GLOB_RECURSE SOURCE_FILES
 
 find_package(glm REQUIRED)
 find_package(glslang REQUIRED)
+find_package(spirv-cross REQUIRED)
 
 add_library(RHI SHARED ${SOURCE_FILES})
+
+target_compile_definitions(RHI PRIVATE RHI_EXPORT)
+target_precompile_headers(RHI PRIVATE "${CMAKE_SOURCE_DIR}/RHI/Source/PCH.hpp")
+target_include_directories(RHI PUBLIC "${CMAKE_SOURCE_DIR}/RHI/Source/Public")
+target_link_directories(RHI PRIVATE ${CMAKE_BINARY_DIR}/.bin)
+
 target_link_libraries(RHI PUBLIC 
                             Core 
+                            spirv-cross::spirv-cross
                             glslang::glslang
                             glslang::SPIRV
                             glm::glm
@@ -21,13 +29,8 @@ target_link_libraries(RHI PUBLIC
                             vk-tools
                     )
 
-target_compile_definitions(RHI PRIVATE RHI_EXPORT)
-target_precompile_headers(RHI PRIVATE "${CMAKE_SOURCE_DIR}/RHI/Source/PCH.hpp")
-target_include_directories(RHI PUBLIC "${CMAKE_SOURCE_DIR}/RHI/Source/Public")
-target_link_directories(RHI PRIVATE ${CMAKE_BINARY_DIR}/.bin)
-
 if (MSVC)
-    target_compile_options(RHI PRIVATE /WX /W4 /wd4251)
+    target_compile_options(RHI PRIVATE)
 endif()
 
 # Create source groups for each directory

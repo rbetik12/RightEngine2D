@@ -160,12 +160,14 @@ std::shared_ptr<RightEngine::Scene> EditorLayer::LoadScene(const fs::path& path)
 }
 
 #include <RHI/RHI.hpp>
+#include <RHI/Device.hpp>
 #include <Core/Log.hpp>
 
 void EditorLayer::OnAttach()
 {
-    auto compiler = rhi::ShaderCompiler::Create();
-    compiler->Compile(Path::Absolute("/Engine/Shaders/test.glsl"));
+    auto device = rhi::Device::Create();
+    auto compiler = device->CreateShaderCompiler();
+    compiler->Compile(Path::Absolute("/Engine/Shaders/pbr.frag"));
 
     RightEngine::Timer timer;
 	m_propertyPanel.Init();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Config.hpp>
+#include <EASTL/vector.h>
 
 namespace core
 {
@@ -9,15 +10,18 @@ namespace core
 	class CORE_API Blob
 	{
 	public:
+		using Payload = eastl::vector<uint8_t>;
+
 		Blob() = default;
-		Blob(const void* data, size_t size);
+		Blob(const void* data, uint32_t size);
 		~Blob();
 
-		size_t		size() const { return m_size; }
-		const void* data() const { return m_data; }
+		size_t			size() const { return m_data.size(); }
+		bool			empty() const { return m_data.empty(); }
+		const void*		raw() const { return m_data.data(); }
+		const Payload&	data() const { return m_data; }
 
 	private:
-		size_t		m_size = 0;
-		void*		m_data = nullptr;
+		Payload m_data;
 	};
 }
