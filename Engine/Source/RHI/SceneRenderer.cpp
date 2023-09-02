@@ -4,9 +4,9 @@
 #include "RendererCommand.hpp"
 #include "AssetManager.hpp"
 #include "Application.hpp"
-#include "ThreadService.hpp"
 #include "Timer.hpp"
 #include "RHIHelpers.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <stb_image_write.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -145,7 +145,7 @@ void SceneRenderer::Init()
 
 void SceneRenderer::CreateShaders()
 {
-    auto& ts = Instance().Service<ThreadService>();
+    auto& ts = Instance().Service<engine::ThreadService>();
 
     tf::Taskflow taskflow;
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Types.hpp"
+#include <Core/Type.hpp>
 
-namespace RightEngine
+namespace engine
 {
-	class IService : public NonMovable
+	class IService : public core::NonCopyable
 	{
 	public:
 		virtual void OnUpdate(float dt) = 0;

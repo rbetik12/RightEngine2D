@@ -5,8 +5,8 @@
 #include "MaterialLoader.hpp"
 #include "Timer.hpp"
 #include "Application.hpp"
-#include "ThreadService.hpp"
 #include "TextureLoader.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <taskflow/taskflow.hpp>
 #include <taskflow/algorithm/for_each.hpp>
 #include <fstream>
@@ -256,7 +256,7 @@ bool SceneSerializer::Deserialize(const fs::path& path)
     std::string sceneName = data["Scene"].as<std::string>();
     R_CORE_TRACE("Deserializing scene '{0}'", sceneName);
 
-    auto& ts = Instance().Service<ThreadService>();
+    auto& ts = Instance().Service<engine::ThreadService>();
     auto resourceLoadFuture = ts.AddBackgroundTask([&]()
     {
     	DeserializeAssets(data);
@@ -463,7 +463,7 @@ void SceneSerializer::LoadDependencies(const std::vector<std::shared_ptr<AssetDe
         }
     );
 
-    Instance().Service<ThreadService>().AddBackgroundTaskflow(std::move(taskflow)).wait();
+    Instance().Service<engine::ThreadService>().AddBackgroundTaskflow(std::move(taskflow)).wait();
 
     // We must load materials only after other resources was load to be sure that all default ones will be properly set up
     for (const auto dep : assetDependencies)

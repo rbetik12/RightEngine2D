@@ -9,8 +9,8 @@
 #include "VulkanTexture.hpp"
 #include "CommandBufferDescriptor.hpp"
 #include "VulkanUtils.hpp"
-#include "ThreadService.hpp"
 #include "VulkanGraphicsPipeline.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <glslang/Include/glslang_c_interface.h>
 #include <vk-tools/VulkanTools.h>
 
@@ -45,7 +45,7 @@ void VulkanRendererAPI::Init()
 
     CreateSwapchain();
     CreateSyncObjects();
-    Instance().Service<ThreadService>().AddBackgroundTask([=]()
+    Instance().Service<engine::ThreadService>().AddBackgroundTask([=]()
         {
             glslang_initialize_process();
         });

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Hash.hpp>
 #include <EASTL/functional.h>
 #include <string>
 
@@ -10,7 +11,7 @@ namespace eastl
 	{
 		size_t operator()(const std::string& str) const
 		{
-			return str.size();
+			return core::hash::HashString(str);
 		}
 	};
 }

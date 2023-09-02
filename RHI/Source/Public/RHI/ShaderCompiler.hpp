@@ -19,33 +19,26 @@ namespace rhi
     };
     typedef ShaderType ShaderStage;
 
-    struct RHI_API BufferRef
-    {
-        int slot;
-        ShaderStage stage;
-
-        bool operator==(const BufferRef& other) const
-        {
-            return slot == other.slot && stage == other.stage;
-        }
-    };
-
-    struct RHI_API BufferRefHash
-    {
-        size_t operator()(const BufferRef& p) const
-        {
-            size_t h = 0x1231;
-            core::hash::CombineHash(h, p.slot);
-            core::hash::CombineHash(h, p.stage);
-            return h;
-        }
-    };
-
     struct ShaderReflection
     {
-        using BufferMap = eastl::unordered_map<BufferRef, BufferType, BufferRefHash>;
-        BufferMap buffers;
-        eastl::vector<int> textures;
+        struct BufferInfo
+        {
+            rhi::BufferType m_type;
+            std::string     m_name;
+        };
+
+        struct TextureInfo
+        {
+            uint8_t     m_slot;
+            std::string m_name;
+        };
+
+        using BufferMap = eastl::unordered_map<uint8_t, BufferInfo>;
+        using TextureList = eastl::vector<TextureInfo>;
+
+        BufferMap           m_bufferMap;
+    	TextureList         m_textures;
+        VertexBufferLayout  m_inputLayout;
     };
 
     struct ShaderDescriptor
@@ -70,6 +63,7 @@ namespace rhi
         bool                m_valid = false;
     };
 
+    // API assumes that there will be only one instance of shader compiler in application, please follow that rule!
     class RHI_API ShaderCompiler
     {
     public:

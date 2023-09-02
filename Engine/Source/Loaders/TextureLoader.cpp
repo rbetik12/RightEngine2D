@@ -4,7 +4,7 @@
 #include "Assert.hpp"
 #include "AssetManager.hpp"
 #include "Application.hpp"
-#include "ThreadService.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include <fstream>
@@ -158,7 +158,7 @@ void TextureLoader::LoadAsync(AssetHandle& handle,
                               const std::string& path,
                               const TextureLoaderOptions& options) const
 {
-    Instance().Service<ThreadService>().AddBackgroundTask([=, &handle]()
+    Instance().Service<engine::ThreadService>().AddBackgroundTask([=, &handle]()
         {
             handle = _Load(path, options, xg::Guid());
         });

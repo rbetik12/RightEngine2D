@@ -44,9 +44,5 @@ namespace RightEngine
     private:
         VkShaderModule vertexShaderModule;
         VkShaderModule fragShaderModule;
-
-        ShaderProgramSource ParseShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
-
-        std::vector<uint32_t> CompileShader(glslang_stage_t stage, const char* shaderSource, const char* fileName);
     };
 }

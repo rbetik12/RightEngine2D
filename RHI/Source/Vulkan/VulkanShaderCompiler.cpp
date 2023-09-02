@@ -2,19 +2,25 @@
 
 #include <filesystem>
 #include <fmt/format.h>
+#pragma warning(push)
+#pragma warning(disable : 4464)
 #include <glslang/Include/glslang_c_interface.h>
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
+#pragma warning(pop)
 #include <spirv_cross/spirv_cross.hpp>
 #include <fstream>
 #include <sstream>
 
 #define SHADER_COMPILER_VERBOSE 1
+#define SHADER_COMPILER_PRINT_SHADER 0
 
 namespace fs = std::filesystem;
 
 namespace
 {
+    using SPIRV_PAYLOAD = uint32_t;
+
     TBuiltInResource InitResources()
     {
         TBuiltInResource Resources;
@@ -154,32 +160,13 @@ namespace
 	        }
 	    }
     }
-
-    EShLanguage RHITypeToEShLanguageType(rhi::ShaderType type)
-    {
-        switch (type)
-        {
-	        case rhi::ShaderType::VERTEX: return EShLangVertex;
-	        case rhi::ShaderType::FRAGMENT: return EShLangFragment;
-	        default:
-	        {
-	            RHI_ASSERT(false);
-	            return static_cast<EShLanguage>(-1);
-	        }
-        }
-    }
 }
 
 namespace rhi::vulkan
 {
     VulkanShaderCompiler::VulkanShaderCompiler(Options options) : ShaderCompiler(options)
     {
-        static bool glslangInitialized = false;
-        if (!glslangInitialized)
-        {
-            glslang::InitializeProcess();
-            glslangInitialized = true;
-        }
+        glslang::InitializeProcess();
     }
 
     VulkanShaderCompiler::~VulkanShaderCompiler()
@@ -189,7 +176,8 @@ namespace rhi::vulkan
 
     ShaderData VulkanShaderCompiler::Compile(std::string_view path)
 	{
-        rhi::log::info("Compiling {}", path);
+        RHI_ASSERT(fs::path(path).is_absolute());
+        rhi::log::info("[VulkanShaderCompiler] Compiling {}", path);
         Context ctx;
         ctx.m_path = path;
 
@@ -209,8 +197,8 @@ namespace rhi::vulkan
 
         ctx.m_processedCodeStr = processedShaderStr;
 
-#ifdef SHADER_COMPILER_VERBOSE
-        rhi::log::debug("Preprocessed shader code: {}. Path: {}", processedShaderStr, path);
+#if SHADER_COMPILER_PRINT_SHADER
+        rhi::log::debug("[VulkanShaderCompiler] Preprocessed shader code:\n{}\n Path: {}", processedShaderStr, path);
 #endif
 
         ctx.m_type = TypeByExtension(path);
@@ -221,13 +209,15 @@ namespace rhi::vulkan
         auto blob = CompileShader(ctx);
         if (blob.empty())
         {
-            rhi::log::error("Shader compilation failed: {}", path);
+            rhi::log::error("[VulkanShaderCompiler] Shader compilation failed: {}", path);
             return {};
         }
         data.m_compiledShader = std::move(blob);
         data.m_valid = true;
 
-        rhi::log::info("Successfully compiled: {}", path);
+        data.m_reflection = ReflectShader(ctx, data.m_compiledShader);
+
+        rhi::log::info("[VulkanShaderCompiler] Successfully compiled: {}", path);
 
 		return data;
 	}
@@ -298,18 +288,12 @@ namespace rhi::vulkan
 
         std::vector<uint32_t> spirvBinary(glslang_program_SPIRV_get_size(program));
         glslang_program_SPIRV_get(program, spirvBinary.data());
-
-        spirv_cross::Compiler spirvCompiler(spirvBinary.data(), spirvBinary.size());
-        spirv_cross::ShaderResources res = spirvCompiler.get_shader_resources();
-
-        //TODO: Reflection
-
-        core::Blob shaderBinary(spirvBinary.data(), sizeof(spirvBinary[0]) * spirvBinary.size());
+        core::Blob shaderBinary(spirvBinary.data(), static_cast<uint32_t>(spirvBinary.size() * sizeof(uint32_t)));
 
         const char* spirv_messages = glslang_program_SPIRV_get_messages(program);
         if (spirv_messages)
         {
-#ifdef SHADER_COMPILER_VERBOSE 
+#if SHADER_COMPILER_VERBOSE 
             rhi::log::debug("[glslang] {} SPIRV messages: {}", ctx.m_path, spirv_messages);
 #endif
         }
@@ -320,13 +304,73 @@ namespace rhi::vulkan
         return std::move(shaderBinary);
     }
 
+    ShaderReflection VulkanShaderCompiler::ReflectShader(const Context& ctx, const core::Blob& shaderBlob)
+    {
+        spirv_cross::Compiler spirvCompiler(static_cast<const SPIRV_PAYLOAD*>(shaderBlob.raw()), shaderBlob.size() / sizeof(SPIRV_PAYLOAD));
+        spirv_cross::ShaderResources res = spirvCompiler.get_shader_resources();
+
+        ShaderReflection reflectionData;
+
+        for (auto& uniformBuffer : res.uniform_buffers)
+        {
+            auto& name = uniformBuffer.name;
+            const uint8_t slot = static_cast<uint8_t>(spirvCompiler.get_decoration(uniformBuffer.id, spv::DecorationBinding));
+            reflectionData.m_bufferMap[slot] = { rhi::BufferType::UNIFORM, std::move(name) };
+        }
+
+        for (auto& texture : res.sampled_images)
+        {
+            auto& name = texture.name;
+            const uint8_t slot = static_cast<uint8_t>(spirvCompiler.get_decoration(texture.id, spv::DecorationBinding));
+            auto& texData = reflectionData.m_textures.emplace_back();
+            texData.m_slot = slot;
+            texData.m_name = std::move(name);
+        }
+
+        if (ctx.m_type == ShaderType::VERTEX)
+        {
+            VertexBufferLayout layout;
+            for (auto& input : res.stage_inputs)
+            {
+                auto& name = input.name;
+                const auto& type = spirvCompiler.get_type(input.type_id);
+
+                switch (type.basetype)
+                {
+					case spirv_cross::SPIRType::Float:
+					{
+                        layout.Push<float>(name, type.vecsize);
+                        break;
+					}
+                    case spirv_cross::SPIRType::UByte:
+                    {
+                        layout.Push<uint8_t>(name, type.vecsize);
+                        break;
+                    }
+                    case spirv_cross::SPIRType::UInt:
+                    {
+                        layout.Push<uint32_t>(name, type.vecsize);
+                        break;
+                    }
+                    default:
+                        RHI_ASSERT(false);
+                }
+
+            }
+            reflectionData.m_inputLayout = std::move(layout);
+        }
+
+        rhi::log::debug("[VulkanShaderCompiler] Successfully build reflection data for: {}", ctx.m_path);
+        return reflectionData;
+    }
+
     std::string VulkanShaderCompiler::ReadShader(std::string_view path) const
 	{
         std::ifstream stream(std::string{ path });
         
         if (!stream.is_open())
         {
-            rhi::log::error("Could not find shader file: {}", path);
+            rhi::log::error("[VulkanShaderCompiler] Could not find shader file: {}", path);
             return "";
         }
 

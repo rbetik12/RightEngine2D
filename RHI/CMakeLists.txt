@@ -30,7 +30,7 @@ target_link_libraries(RHI PUBLIC
                     )
 
 if (MSVC)
-    target_compile_options(RHI PRIVATE)
+    target_compile_options(RHI PRIVATE /WX)
 endif()
 
 # Create source groups for each directory

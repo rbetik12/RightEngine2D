@@ -8,7 +8,7 @@
 #include "EditorCore.hpp"
 #include "TextureLoader.hpp"
 #include "Application.hpp"
-#include "ThreadService.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <filesystem>
@@ -163,7 +163,7 @@ namespace
 			}
 			if (path.extension() == ".png" || path.extension() == ".jpg")
 			{
-				auto& ts = Instance().Service<ThreadService>();
+				auto& ts = Instance().Service<engine::ThreadService>();
 				ts.AddBackgroundTask([&textureHandle, &assetManager, path = std::move(path)]()
 					{
 						textureHandle = assetManager.GetLoader<TextureLoader>()->Load(path.generic_string());
@@ -197,7 +197,7 @@ namespace editor
 
 	void PropertyPanel::Init()
 	{
-		auto& ts = Instance().Service<ThreadService>();
+		auto& ts = Instance().Service<engine::ThreadService>();
 		ts.AddBackgroundTask([=]()
 			{
 				editorDefaultTexture = AssetManager::Get().GetLoader<TextureLoader>()->Load(

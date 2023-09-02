@@ -10,6 +10,7 @@ namespace rhi
 {
     struct VertexBufferElement
     {
+        std::string m_name;
         Format      m_type;
         uint32_t    m_count;
         bool        m_normalized;
@@ -33,9 +34,11 @@ namespace rhi
                 return 12;
             case Format::RGBA32_SFLOAT:
                 return 16;
+            default:
+                RHI_ASSERT(false);
+                return 0;
             }
-            assert(false);
-            return 0;
+            
         }
     };
 
@@ -46,13 +49,13 @@ namespace rhi
         {}
 
         template<typename T>
-        void Push(uint32_t count, bool normalized = false)
+        void Push(const std::string& name, uint32_t count, bool normalized = false)
         {
             RHI_ASSERT(false);
         }
 
         template<typename T>
-        void Push()
+        void Push(const std::string& name)
         {
             RHI_ASSERT(false);
         }
@@ -72,62 +75,62 @@ namespace rhi
     };
 
     template<>
-    inline void VertexBufferLayout::Push<float>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<float>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::R32_SFLOAT, count, normalized });
+        m_elements.push_back({ name, Format::R32_SFLOAT, count, normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::R32_SFLOAT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<uint32_t>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<uint32_t>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::R32_UINT, count, normalized });
+        m_elements.push_back({ name, Format::R32_UINT, count, normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::R32_UINT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<uint8_t>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<uint8_t>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::R8_UINT, count,  normalized });
+        m_elements.push_back({ name, Format::R8_UINT, count,  normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::R8_UINT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec2>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<glm::vec2>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::RG32_SFLOAT, count, normalized });
+        m_elements.push_back({ name, Format::RG32_SFLOAT, count, normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::RG32_SFLOAT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec3>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<glm::vec3>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::RGB32_SFLOAT, count, normalized });
+        m_elements.push_back({ name, Format::RGB32_SFLOAT, count, normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::RGB32_SFLOAT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec4>(uint32_t count, bool normalized)
+    inline void VertexBufferLayout::Push<glm::vec4>(const std::string& name, uint32_t count, bool normalized)
     {
-        m_elements.push_back({ Format::RGBA32_SFLOAT, count, normalized });
+        m_elements.push_back({ name, Format::RGBA32_SFLOAT, count, normalized });
         m_stride += count * VertexBufferElement::GetSizeOfType(Format::RGBA32_SFLOAT);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec2>()
+    inline void VertexBufferLayout::Push<glm::vec2>(const std::string& name)
     {
-        Push<glm::vec2>(1, false);
+        Push<glm::vec2>(name, 1, false);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec3>()
+    inline void VertexBufferLayout::Push<glm::vec3>(const std::string& name)
     {
-        Push<glm::vec3>(1, false);
+        Push<glm::vec3>(name, 1, false);
     }
 
     template<>
-    inline void VertexBufferLayout::Push<glm::vec4>()
+    inline void VertexBufferLayout::Push<glm::vec4>(const std::string& name)
     {
-        Push<glm::vec4>(1, false);
+        Push<glm::vec4>(name, 1, false);
     }
 }

@@ -1,10 +1,10 @@
 #pragma once
 #include "Entity.hpp"
-#include "IService.hpp"
+#include <Engine/Service/IService.hpp>
 
 namespace editor
 {
-	class SelectionService : public RightEngine::IService
+	class SelectionService : public engine::IService
 	{
 	public:
 		virtual void OnUpdate(float dt) override;

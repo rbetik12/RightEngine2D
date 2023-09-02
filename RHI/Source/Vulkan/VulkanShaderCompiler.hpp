@@ -30,8 +30,10 @@ namespace rhi::vulkan
 		std::string			ReadShader(std::string_view path) const;
 		std::string			PreprocessShader(const Context& ctx);
 		core::Blob			CompileShader(const Context& ctx);
+		ShaderReflection	ReflectShader(const Context& ctx, const core::Blob& shaderBlob);
 
 		eastl::unordered_map<std::string, std::string>	m_includeCache;
 		std::mutex										m_includeCacheMutex;
+		std::mutex										m_glslangMutex;
 	};
 }

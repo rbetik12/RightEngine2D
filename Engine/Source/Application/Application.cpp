@@ -8,7 +8,8 @@
 #include "AssetManager.hpp"
 #include "Filesystem.hpp"
 #include "MaterialLoader.hpp"
-#include "ThreadService.hpp"
+#include <Engine/Service/Render/RenderService.hpp>
+#include <Engine/Service/ThreadService.hpp>
 #include "TextureLoader.hpp"
 #include <memory>
 
@@ -41,7 +42,8 @@ namespace RightEngine
 
     void Application::Init()
     {
-        RegisterService<ThreadService>();
+        RegisterService<engine::ThreadService>();
+        RegisterService<engine::render::RenderService>();
         m_window.reset(Window::Create("Right Editor", 1920, 1080));
         RendererCommand::Init(GGPU_API);
 

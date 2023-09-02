@@ -40,6 +40,8 @@ namespace core::log::impl
 		// Set the log level
 		loggerInstance->set_level(spdlog::level::debug);
 		loggerInstance->flush_on(spdlog::level::debug);
+
+		loggerInstance->info("[Logger] Logging was initialized. Logs directory: {}", abs.generic_u8string());
 	}
 
 	const std::unique_ptr<spdlog::logger>& Logger::GetLogger() const

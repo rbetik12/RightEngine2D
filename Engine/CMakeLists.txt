@@ -31,19 +31,19 @@ target_link_libraries(Engine PUBLIC
 
 set(ENGINE_INCLUDE_DIR
     ${CMAKE_SOURCE_DIR}/Engine/Source/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Event/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Launch/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Window/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Application/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/RHI/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Testing/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Shader/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Utils/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Scene/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/UI/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Loaders/Public
-    ${CMAKE_SOURCE_DIR}/Engine/Source/Core/Service/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Event/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Launch/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Window/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Application/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/RHI/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Testing/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Shader/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Utils/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Scene/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/UI/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/Loaders/Public
+    ${CMAKE_SOURCE_DIR}/Engine/Source/
 )
 
 target_include_directories(Engine PUBLIC ${ENGINE_INCLUDE_DIR})

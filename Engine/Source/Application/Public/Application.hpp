@@ -4,7 +4,7 @@
 #include "Window.hpp"
 #include "Scene.hpp"
 #include "Layer.hpp"
-#include "IService.hpp"
+#include <Engine/Service/IService.hpp>
 #include <memory>
 #include <typeindex>
 
@@ -40,7 +40,7 @@ namespace RightEngine
     private:
         std::shared_ptr<Window> m_window;
         std::vector<std::shared_ptr<Layer>> m_layers;
-        std::unordered_map<std::type_index, std::shared_ptr<IService>> m_services;
+        std::unordered_map<std::type_index, std::shared_ptr<engine::IService>> m_services;
 
     private:
         Application();
@@ -52,7 +52,7 @@ namespace RightEngine
     template <class T>
     void Application::RegisterService()
     {
-        R_CORE_ASSERT(static_cast<bool>(std::is_base_of_v<IService, T>), "");
+        R_CORE_ASSERT(static_cast<bool>(std::is_base_of_v<engine::IService, T>), "");
         const auto typeIndex = std::type_index(typeid(T));
         const auto serviceIt = m_services.find(typeIndex);
         if (serviceIt == m_services.end())
@@ -68,7 +68,7 @@ namespace RightEngine
     template <class T>
     T& Application::Service()
     {
-        R_CORE_ASSERT(static_cast<bool>(std::is_base_of_v<IService, T>), "");
+        R_CORE_ASSERT(static_cast<bool>(std::is_base_of_v<engine::IService, T>), "");
         const auto typeIndex = std::type_index(typeid(T));
         const auto serviceIt = m_services.find(typeIndex);
         if (serviceIt == m_services.end())

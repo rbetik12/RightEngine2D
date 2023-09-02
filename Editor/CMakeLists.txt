@@ -9,6 +9,7 @@ file(GLOB_RECURSE SOURCE_FILES
 
 if (MSVC)
     add_executable(Editor ${SOURCE_FILES})
+    set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/.bin/${CMAKE_BUILD_TYPE}")
     target_link_options(Editor PRIVATE "/ENTRY:mainCRTStartup")
 else()
     add_executable(Editor ${SOURCE_FILES})

@@ -15,10 +15,10 @@
 #include "Filesystem.hpp"
 #include "EditorCore.hpp"
 #include "ImGuiLayer.hpp"
-#include "ThreadService.hpp"
 #include "Panels/ContentBrowserPanel.hpp"
 #include "Timer.hpp"
 #include "Service/SelectionService.hpp"
+#include <Engine/Service/ThreadService.hpp>
 #include <RHI/ShaderCompiler.hpp>
 #include <glm/glm.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -165,10 +165,6 @@ std::shared_ptr<RightEngine::Scene> EditorLayer::LoadScene(const fs::path& path)
 
 void EditorLayer::OnAttach()
 {
-    auto device = rhi::Device::Create();
-    auto compiler = device->CreateShaderCompiler();
-    compiler->Compile(Path::Absolute("/Engine/Shaders/pbr.frag"));
-
     RightEngine::Timer timer;
 	m_propertyPanel.Init();
     sceneData.renderer = std::make_shared<SceneRenderer>();

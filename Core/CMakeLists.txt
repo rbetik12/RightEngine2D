@@ -12,6 +12,7 @@ find_package(spdlog REQUIRED)
 find_package(EASTL REQUIRED)
 
 add_library(Core SHARED ${SOURCE_FILES})
+target_sources(Core PRIVATE "${CMAKE_SOURCE_DIR}/Core/Source/EASTL.natvis")
 target_link_libraries(Core PUBLIC EASTL::EASTL spdlog::spdlog fmt::fmt)
 target_compile_definitions(Core PRIVATE CORE_EXPORT)
 target_precompile_headers(Core PRIVATE "${CMAKE_SOURCE_DIR}/Core/Source/PCH.hpp")
