@@ -2,7 +2,7 @@ name: Windows-MSVC-x64-Release
 
 on:
   push:
-    branches: [ ci-setup, renderer-2.0 ]
+    branches: [ RNG-31-renderer-2.0, development ]
   workflow_dispatch:
 
 env:
