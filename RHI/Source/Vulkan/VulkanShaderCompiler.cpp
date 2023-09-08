@@ -174,7 +174,7 @@ namespace rhi::vulkan
         glslang::FinalizeProcess();
     }
 
-    ShaderData VulkanShaderCompiler::Compile(std::string_view path)
+    CompiledShaderData VulkanShaderCompiler::Compile(std::string_view path)
 	{
         RHI_ASSERT(fs::path(path).is_absolute());
         rhi::log::info("[VulkanShaderCompiler] Compiling {}", path);
@@ -203,7 +203,7 @@ namespace rhi::vulkan
 
         ctx.m_type = TypeByExtension(path);
 
-        ShaderData data;
+        CompiledShaderData data;
         data.m_type = ctx.m_type;
 
         auto blob = CompileShader(ctx);

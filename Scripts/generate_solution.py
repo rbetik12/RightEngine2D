@@ -46,9 +46,17 @@ def copy_dll_files(source_dir, destination_dir):
     if not os.path.exists(destination_dir):
         os.makedirs(destination_dir)
 
+    copied_dlls = set()
+
     for root, _, files in os.walk(source_dir):
         for filename in files:
             if filename.lower().endswith(".dll"):
+
+                if (filename in copied_dlls):
+                    continue
+                else:
+                    copied_dlls.add(filename)
+
                 source_path = os.path.join(root, filename)
                 destination_path = os.path.join(destination_dir, filename)
 
@@ -64,10 +72,7 @@ sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/lib --b
 
 copy_dll_files(".build/lib/dll", f".build/Win/.bin/{build_type}")
 
-try:
-    shutil.rmtree(".build/lib/dll")
-except Exception as e:
-    pass
+
 
 sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .")
 

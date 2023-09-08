@@ -16,7 +16,7 @@ namespace rhi::vulkan
 
 		virtual ~VulkanShaderCompiler() override;
 
-		virtual ShaderData Compile(std::string_view path) override;
+		virtual CompiledShaderData Compile(std::string_view path) override;
 
 	private:
 		struct Context

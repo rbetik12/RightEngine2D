@@ -16,6 +16,7 @@ add_library(RHI SHARED ${SOURCE_FILES})
 target_compile_definitions(RHI PRIVATE RHI_EXPORT)
 target_precompile_headers(RHI PRIVATE "${CMAKE_SOURCE_DIR}/RHI/Source/PCH.hpp")
 target_include_directories(RHI PUBLIC "${CMAKE_SOURCE_DIR}/RHI/Source/Public")
+target_include_directories(RHI PRIVATE "${CMAKE_SOURCE_DIR}/Lib/VulkanMemoryAllocator/include")
 target_link_directories(RHI PRIVATE ${CMAKE_BINARY_DIR}/.bin)
 
 target_link_libraries(RHI PUBLIC 

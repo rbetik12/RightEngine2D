@@ -18,7 +18,7 @@ namespace engine::render
 		// 	glslang::InitializeProcess();
 		// });
 
-		m_device = rhi::Device::Create();
+		//m_device = rhi::Device::Create();
 		m_shaderCompiler = CreateShaderCompiler({});
 	}
 
@@ -34,7 +34,7 @@ namespace engine::render
 	{
 	}
 
-	std::future<rhi::ShaderData> RenderService::CompileShader(std::string_view path)
+	std::future<rhi::CompiledShaderData> RenderService::CompileShader(std::string_view path)
 	{
 		return m_executor->async([=]()
 		{

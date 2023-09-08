@@ -47,6 +47,12 @@ if (MSVC)
         /Zc:lambda          # Enable updated lambda processor
         /Zc:preprocessor      # Enable preprocessor conformance mode
     )
+
+    add_link_options("/ignore:4099")
+    # disable warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
+    add_link_options("/ignore:4075")
+    # disable warning LNK4075: defaultlib conflicts with use of other libs; use /NODEFAULTLIB:library
+    add_link_options("/ignore:4098")
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -82,7 +88,6 @@ add_subdirectory(Lib/yaml-cpp)
 set(CROSSGUID_TESTS OFF CACHE BOOL "Build test runner")
 add_subdirectory(Lib/crossguid)
 
-
 set(THIRD_PARTY_LIB
         crossguid
         easyargs
@@ -103,3 +108,4 @@ add_subdirectory(Editor)
 add_subdirectory(Engine)
 add_subdirectory(Core)
 add_subdirectory(RHI)
+add_subdirectory(RHITest)

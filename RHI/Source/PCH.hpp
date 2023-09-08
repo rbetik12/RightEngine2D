@@ -7,6 +7,7 @@
 
 #include <Core/EASTLIntergration.hpp>
 
+#include <EASTL/array.h>
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/vector.h>

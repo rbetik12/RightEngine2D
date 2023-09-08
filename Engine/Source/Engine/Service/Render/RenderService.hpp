@@ -18,7 +18,7 @@ namespace engine::render
 		virtual void OnUpdate(float dt) override;
 
 		// Schedules shader compilation on render thread
-		std::future<rhi::ShaderData> CompileShader(std::string_view path);
+		std::future<rhi::CompiledShaderData> CompileShader(std::string_view path);
 
 	private:
 

@@ -2,7 +2,7 @@
 assimp/5.2.2
 eastl/3.21.12
 entt/3.12.2
-fmt/10.0.0
+fmt/10.1.0
 glfw/3.3.8
 glm/cci.20230113
 glslang/1.3.239.0
@@ -24,7 +24,11 @@ spirv-cross*:hlsl=False
 spirv-cross*:msl=False
 spirv-cross*:c_api=False
 spirv-cross*:util=False
+glfw*:shared=True
 
 [generators]
 CMakeDeps
 CMakeToolchain
+
+[layout]
+cmake_layout
