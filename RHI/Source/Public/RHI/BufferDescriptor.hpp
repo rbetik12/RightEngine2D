@@ -16,8 +16,9 @@ namespace rhi
 
     struct BufferDescriptor
     {
-        size_t size;
-        BufferType type;
-        MemoryType memoryType;
+        size_t      m_size;
+        BufferType  m_type;
+        MemoryType  m_memoryType;
+        std::string m_name;
     };
 }

@@ -1,5 +1,6 @@
 #include "VulkanDevice.hpp"
 #include "VulkanShaderCompiler.hpp"
+#include "VulkanBuffer.hpp"
 #include <optional>
 
 namespace rhi::vulkan
@@ -43,11 +44,6 @@ namespace
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
 		eastl::unordered_set<std::string> requiredExtensions(C_DEVICE_EXTENSIONS.begin(), C_DEVICE_EXTENSIONS.end());
-
-		// for (const auto ext : C_DEVICE_EXTENSIONS)
-		// {
-		// 	requiredExtensions.insert(ext);
-		// }
 
 		for (const auto& extension : availableExtensions)
 		{
@@ -170,16 +166,24 @@ namespace
 		PickPhysicalDevice(context);
 		CreateLogicalDevice(context);
 		SetupDeviceQueues();
-		SetupAllocator();
 		FillProperties();
+		SetupAllocator(context);
 	}
 
 	VulkanDevice::~VulkanDevice()
-	{}
+	{
+		vmaDestroyAllocator(s_ctx.m_allocator);
+		vkDestroyDevice(s_ctx.m_device, nullptr);
+	}
 
 	std::shared_ptr<ShaderCompiler> VulkanDevice::CreateShaderCompiler(const ShaderCompiler::Options& options)
 	{
 		return std::make_shared<VulkanShaderCompiler>(options);
+	}
+
+	std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(const BufferDescriptor& desc, const void* data)
+	{
+		return std::make_shared<VulkanBuffer>(desc, data);
 	}
 
 	void VulkanDevice::PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context)
@@ -260,15 +264,20 @@ namespace
 		RHI_ASSERT_WITH_MESSAGE(vkCreateDevice(m_physicalDevice, 
 											   &createInfo, 
 											   nullptr, 
-											   &m_device) == VK_SUCCESS, "Failed to create logical device!");
+											   &s_ctx.m_device) == VK_SUCCESS, "Failed to create logical device!");
 	}
 
 	void VulkanDevice::SetupDeviceQueues()
 	{
 	}
 
-	void VulkanDevice::SetupAllocator()
+	void VulkanDevice::SetupAllocator(const std::shared_ptr<VulkanContext>& context)
 	{
+		VmaAllocatorCreateInfo allocatorInfo{};
+		allocatorInfo.physicalDevice = m_physicalDevice;
+		allocatorInfo.device = s_ctx.m_device;
+		allocatorInfo.instance = context->Instance();
+		vmaCreateAllocator(&allocatorInfo, &s_ctx.m_allocator);
 	}
 
 	void VulkanDevice::FillProperties()
@@ -276,7 +285,7 @@ namespace
 		VkPhysicalDeviceProperties deviceProps;
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &deviceProps);
 
-		m_properties.minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
+		m_properties.m_minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
 	}
 
 }

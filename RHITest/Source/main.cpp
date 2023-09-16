@@ -5,6 +5,19 @@
 #include <RHI/Device.hpp>
 #include <GLFW/glfw3.h>
 
+struct Vertex
+{
+    glm::vec2 pos;
+    glm::vec3 color;
+};
+
+const std::vector<Vertex> vertices = 
+{
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+};
+
 int main(int argc, char* argv[])
 {
     assert(glfwInit());
@@ -36,6 +49,12 @@ int main(int argc, char* argv[])
 
     auto vulkanContext = rhi::vulkan::CreateContext(std::move(ctx));
     auto device = rhi::Device::Create(vulkanContext);
+
+    rhi::BufferDescriptor bufferDesc;
+    bufferDesc.m_type = rhi::BufferType::VERTEX;
+    bufferDesc.m_memoryType = rhi::MemoryType::CPU_GPU;
+    bufferDesc.m_size = vertices.size() * sizeof(Vertex);
+    auto buffer = device->CreateBuffer(bufferDesc, vertices.data());
 
     while (!glfwWindowShouldClose(window))
     {
