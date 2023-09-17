@@ -19,7 +19,7 @@ namespace rhi
     class RHI_API ShaderCompiler
     {
     public:
-        //TODO: Implement options: switch Vulkan API version, shader code version, etc
+        // TODO: Implement options: switch Vulkan API version, shader code version, etc
         struct Options
         {};
 
@@ -28,8 +28,11 @@ namespace rhi
 
         virtual ~ShaderCompiler() = default;
 
-        //Path must be absolute
+        // Path must be absolute
         virtual CompiledShaderData Compile(std::string_view path) = 0;
+
+        // Accepts shader code as a text buffer
+        virtual CompiledShaderData CompileText(std::string_view text, ShaderType type, std::string_view name = "") = 0;
 
     protected:
         Options m_options;

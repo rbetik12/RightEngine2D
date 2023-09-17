@@ -8,6 +8,7 @@
 namespace rhi
 {
 	class Buffer;
+	class Shader;
 
 	struct DeviceProperties
 	{
@@ -21,6 +22,7 @@ namespace rhi
 
 		virtual std::shared_ptr<ShaderCompiler> CreateShaderCompiler(const ShaderCompiler::Options& options = {}) = 0;
 		virtual std::shared_ptr<Buffer>			CreateBuffer(const BufferDescriptor& desc, const void* data) = 0;
+		virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) = 0;
 
 		static std::shared_ptr<Device> Create(const std::shared_ptr<IContext>& ctx);
 

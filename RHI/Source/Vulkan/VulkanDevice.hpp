@@ -27,6 +27,7 @@ namespace rhi::vulkan
 
 		virtual std::shared_ptr<ShaderCompiler> CreateShaderCompiler(const ShaderCompiler::Options& options = {}) override;
 		virtual std::shared_ptr<Buffer>			CreateBuffer(const BufferDescriptor& desc, const void* data) override;
+		virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) override;
 
 		VkPhysicalDevice						PhysicalDevice() const { return m_physicalDevice; }
 
@@ -38,7 +39,7 @@ namespace rhi::vulkan
 		// Initializer methods
 		void				PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);
 		void				CreateLogicalDevice(const std::shared_ptr<VulkanContext>& context);
-		void				SetupDeviceQueues();
+		void				SetupDeviceQueues(const std::shared_ptr<VulkanContext>& context);
 		void				FillProperties();
 		void				SetupAllocator(const std::shared_ptr<VulkanContext>& context);
 	};

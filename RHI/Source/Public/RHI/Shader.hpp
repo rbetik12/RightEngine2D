@@ -10,14 +10,14 @@ namespace rhi
 	class RHI_API Shader
 	{
 	public:
-		Shader(const std::shared_ptr<Device>& device, const ShaderDescriptor& descriptor) : m_descriptor(descriptor)
+		Shader(const ShaderDescriptor& descriptor) : m_descriptor(descriptor)
 		{}
 
 		virtual ~Shader() = default;
 
-		inline const ShaderDescriptor& GetShaderProgramDescriptor() const { return m_descriptor; }
+		inline const ShaderDescriptor& GetShaderDescriptor() const { return m_descriptor; }
 
-	private:
+	protected:
 		ShaderDescriptor m_descriptor;
 	};
 

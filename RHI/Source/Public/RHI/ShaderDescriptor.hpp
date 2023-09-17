@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Blob.hpp>
 #include <RHI/VertexBufferLayout.hpp>
 #include <RHI/BufferDescriptor.hpp>
 #include <EASTL/vector.h>
@@ -45,6 +46,7 @@ namespace rhi
         std::string         m_path;
         ShaderType          m_type = ShaderType::NONE;
         ShaderReflection    m_reflection;
+        core::Blob          m_blob;
     };
 
 }

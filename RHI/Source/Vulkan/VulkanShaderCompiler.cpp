@@ -222,6 +222,45 @@ namespace rhi::vulkan
 		return data;
 	}
 
+    CompiledShaderData VulkanShaderCompiler::CompileText(std::string_view text, ShaderType type, std::string_view name)
+    {
+        RHI_ASSERT(!text.empty());
+        Context ctx;
+        ctx.m_rawCodeStr = text;
+        ctx.m_type = type;
+        ctx.m_path = name;
+
+        const auto processedShaderStr = PreprocessShader(ctx);
+        if (processedShaderStr.empty())
+        {
+            return {};
+        }
+
+        ctx.m_processedCodeStr = processedShaderStr;
+
+#if SHADER_COMPILER_PRINT_SHADER
+        rhi::log::debug("[VulkanShaderCompiler] Preprocessed shader code:\n{}\n Name: {}", processedShaderStr, name);
+#endif
+
+        CompiledShaderData data;
+        data.m_type = ctx.m_type;
+
+        auto blob = CompileShader(ctx);
+        if (blob.empty())
+        {
+            rhi::log::error("[VulkanShaderCompiler] Shader compilation failed: {}", ctx.m_path);
+            return {};
+        }
+        data.m_compiledShader = std::move(blob);
+        data.m_valid = true;
+
+        data.m_reflection = ReflectShader(ctx, data.m_compiledShader);
+
+        rhi::log::info("[VulkanShaderCompiler] Successfully compiled: {}", ctx.m_path);
+
+        return data;
+    }
+
     core::Blob VulkanShaderCompiler::CompileShader(const Context& ctx)
     {
         TBuiltInResource resource = InitResources();

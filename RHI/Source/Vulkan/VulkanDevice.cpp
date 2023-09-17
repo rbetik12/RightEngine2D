@@ -1,6 +1,7 @@
 #include "VulkanDevice.hpp"
 #include "VulkanShaderCompiler.hpp"
 #include "VulkanBuffer.hpp"
+#include "VulkanShader.hpp"
 #include <optional>
 
 namespace rhi::vulkan
@@ -165,7 +166,7 @@ namespace
 	{
 		PickPhysicalDevice(context);
 		CreateLogicalDevice(context);
-		SetupDeviceQueues();
+		SetupDeviceQueues(context);
 		FillProperties();
 		SetupAllocator(context);
 	}
@@ -184,6 +185,11 @@ namespace
 	std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(const BufferDescriptor& desc, const void* data)
 	{
 		return std::make_shared<VulkanBuffer>(desc, data);
+	}
+
+	std::shared_ptr<Shader> VulkanDevice::CreateShader(const ShaderDescriptor& desc)
+	{
+		return std::make_shared<VulkanShader>(desc);
 	}
 
 	void VulkanDevice::PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context)
@@ -267,8 +273,12 @@ namespace
 											   &s_ctx.m_device) == VK_SUCCESS, "Failed to create logical device!");
 	}
 
-	void VulkanDevice::SetupDeviceQueues()
+	void VulkanDevice::SetupDeviceQueues(const std::shared_ptr<VulkanContext>& context)
 	{
+		const auto indices = FindQueueFamilies(m_physicalDevice, context->Surface());
+		RHI_ASSERT(indices.IsComplete());
+		vkGetDeviceQueue(s_ctx.m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
+		vkGetDeviceQueue(s_ctx.m_device, indices.presentFamily.value(), 0, &m_presentQueue);
 	}
 
 	void VulkanDevice::SetupAllocator(const std::shared_ptr<VulkanContext>& context)

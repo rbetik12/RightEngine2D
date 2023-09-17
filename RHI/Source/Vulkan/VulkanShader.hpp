@@ -9,11 +9,18 @@ namespace rhi::vulkan
 	class RHI_API VulkanShader : public Shader
 	{
 	public:
-		VulkanShader(const std::shared_ptr<Device>& device, const ShaderDescriptor& descriptor);
+		VulkanShader(const ShaderDescriptor& descriptor);
 
 		virtual ~VulkanShader() override;
 
 	private:
+		VkShaderModule										m_module;
+
+		// Only for vertex shader
+		eastl::vector<VkVertexInputAttributeDescription>	m_vertexBufferAttributesDescription;
+		VkVertexInputBindingDescription						m_vertexBufferDescription;
+
+		void fillVertexData();
 	};
 
 }
