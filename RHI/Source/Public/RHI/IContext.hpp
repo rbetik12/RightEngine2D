@@ -12,9 +12,10 @@ namespace rhi
 class RHI_API IContext : public core::NonCopyable
 {
 public:
-	IContext() = default;
-
 	virtual ~IContext() = default;
+
+protected:
+	IContext() = default;
 };
 
 namespace vulkan

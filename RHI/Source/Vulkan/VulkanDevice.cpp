@@ -2,6 +2,7 @@
 #include "VulkanShaderCompiler.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanShader.hpp"
+#include "VulkanSampler.hpp"
 #include <optional>
 
 namespace rhi::vulkan
@@ -192,6 +193,11 @@ namespace
 		return std::make_shared<VulkanShader>(desc);
 	}
 
+	std::shared_ptr<Sampler> VulkanDevice::CreateSampler(const SamplerDescriptor& desc)
+	{
+		return std::make_shared<VulkanSampler>(desc);
+	}
+
 	void VulkanDevice::PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context)
 	{
 		VkInstance instance = context->Instance();
@@ -295,7 +301,10 @@ namespace
 		VkPhysicalDeviceProperties deviceProps;
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &deviceProps);
 
-		m_properties.m_minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
+		Properties& properties = s_ctx.m_properties;
+
+		properties.m_minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
+		properties.m_maxSamplerAnisotropy = deviceProps.limits.maxSamplerAnisotropy;
 	}
 
 }

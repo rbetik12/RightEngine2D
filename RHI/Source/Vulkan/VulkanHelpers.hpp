@@ -2,7 +2,11 @@
 
 #include <RHI/Assert.hpp>
 #include <RHI/BufferDescriptor.hpp>
+#include <RHI/SamplerDescriptor.hpp>
 #include <vulkan/vulkan.h>
+
+#define HELPER_DEFAULT_RETURN(TypeName) RHI_ASSERT(false); \
+										return static_cast<TypeName>(-1)
 
 namespace rhi::vulkan::helpers
 {
@@ -22,8 +26,7 @@ namespace rhi::vulkan::helpers
         case BufferType::TRANSFER_SRC:
             return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         default:
-            RHI_ASSERT(false);
-            return static_cast<VkBufferUsageFlags>(-1);
+            HELPER_DEFAULT_RETURN(VkBufferUsageFlags);
         }
     }
 
@@ -38,8 +41,7 @@ namespace rhi::vulkan::helpers
         case MemoryType::GPU_ONLY:
             return VMA_MEMORY_USAGE_GPU_ONLY;
         default:
-            RHI_ASSERT(false);
-            return static_cast<VmaMemoryUsage>(-1);
+            HELPER_DEFAULT_RETURN(VmaMemoryUsage);
         }
     }
 
@@ -90,8 +92,22 @@ namespace rhi::vulkan::helpers
         case Format::D32_SFLOAT:
             return VK_FORMAT_D32_SFLOAT;
         default:
-            RHI_ASSERT(false);
-            return static_cast<VkFormat>(-1);
+            HELPER_DEFAULT_RETURN(VkFormat);
+        }
+    }
+
+    inline VkSamplerAddressMode AddressMode(AddressMode mode)
+    {
+        switch (mode)
+        {
+        case AddressMode::REPEAT:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case AddressMode::CLAMP_TO_EDGE:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case AddressMode::CLAMP_TO_BORDER:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        default:
+            HELPER_DEFAULT_RETURN(VkSamplerAddressMode);
         }
     }
 

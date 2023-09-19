@@ -11,11 +11,19 @@ namespace rhi::vulkan
 	class RHI_API VulkanDevice : public Device
 	{
 	public:
+		// Physical device properties cache
+		struct Properties
+		{
+			size_t	m_minUniformBufferOffsetAlignment = 0;
+			float	m_maxSamplerAnisotropy = 0;
+		};
+
 		// Global context needed for operations with memory (buffers, texture and other allocations)
 		struct ContextHolder
 		{
 			VkDevice		m_device = nullptr;
 			VmaAllocator	m_allocator = nullptr;
+			Properties		m_properties;
 		};
 
 		inline static ContextHolder s_ctx;
@@ -28,6 +36,7 @@ namespace rhi::vulkan
 		virtual std::shared_ptr<ShaderCompiler> CreateShaderCompiler(const ShaderCompiler::Options& options = {}) override;
 		virtual std::shared_ptr<Buffer>			CreateBuffer(const BufferDescriptor& desc, const void* data) override;
 		virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) override;
+		virtual std::shared_ptr<Sampler>		CreateSampler(const SamplerDescriptor& desc) override;
 
 		VkPhysicalDevice						PhysicalDevice() const { return m_physicalDevice; }
 

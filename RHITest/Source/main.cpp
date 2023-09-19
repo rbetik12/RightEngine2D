@@ -3,6 +3,7 @@
 #include <EASTL/vector.h>
 #include <RHI/IContext.hpp>
 #include <RHI/Device.hpp>
+#include <RHI/Sampler.hpp>
 #include <GLFW/glfw3.h>
 #pragma warning(push)
 #pragma warning(disable : 4464)
@@ -78,6 +79,9 @@ int main(int argc, char* argv[])
     vertexShaderDesc.m_type = rhi::ShaderType::VERTEX;
     vertexShaderDesc.m_reflection = std::move(shaderData.m_reflection);
     const auto vertexShader = device->CreateShader(vertexShaderDesc);
+
+    rhi::SamplerDescriptor desc{};
+    const auto sampler = device->CreateSampler(desc);
 
     while (!glfwWindowShouldClose(window))
     {
