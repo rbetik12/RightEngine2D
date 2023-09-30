@@ -3,6 +3,9 @@
 #include <RHI/Config.hpp>
 #include <RHI/Device.hpp>
 #include "VulkanContext.hpp"
+#include "CommandBuffer.hpp"
+#include "Fence.hpp"
+#include <vulkan/vulkan.hpp>
 #include <VulkanMemoryAllocator/vk_mem_alloc.h>
 
 namespace rhi::vulkan
@@ -21,9 +24,11 @@ namespace rhi::vulkan
 		// Global context needed for operations with memory (buffers, texture and other allocations)
 		struct ContextHolder
 		{
-			VkDevice		m_device = nullptr;
-			VmaAllocator	m_allocator = nullptr;
-			Properties		m_properties;
+			VkDevice			m_device = nullptr;
+			VmaAllocator		m_allocator = nullptr;
+			VkPhysicalDevice	m_physicalDevice = nullptr;
+			Properties			m_properties;
+			VulkanDevice*		m_instance = nullptr;
 		};
 
 		inline static ContextHolder s_ctx;
@@ -38,12 +43,15 @@ namespace rhi::vulkan
 		virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) override;
 		virtual std::shared_ptr<Sampler>		CreateSampler(const SamplerDescriptor& desc) override;
 
-		VkPhysicalDevice						PhysicalDevice() const { return m_physicalDevice; }
+		VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
+		VkCommandPool							CommandPool() const { return m_commandPool; }
+
+		Fence									Execute(CommandBuffer buffer);
 
 	private:
-		VkPhysicalDevice	m_physicalDevice = nullptr;
 		VkQueue				m_graphicsQueue = nullptr;
 		VkQueue				m_presentQueue = nullptr;
+		VkCommandPool		m_commandPool = nullptr;
 
 		// Initializer methods
 		void				PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);
@@ -51,6 +59,7 @@ namespace rhi::vulkan
 		void				SetupDeviceQueues(const std::shared_ptr<VulkanContext>& context);
 		void				FillProperties();
 		void				SetupAllocator(const std::shared_ptr<VulkanContext>& context);
+		void				SetupCommandPool(const std::shared_ptr<VulkanContext>& context);
 	};
 
 }

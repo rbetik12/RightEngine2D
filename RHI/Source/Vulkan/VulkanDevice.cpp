@@ -170,10 +170,13 @@ namespace
 		SetupDeviceQueues(context);
 		FillProperties();
 		SetupAllocator(context);
+		SetupCommandPool(context);
+		s_ctx.m_instance = this;
 	}
 
 	VulkanDevice::~VulkanDevice()
 	{
+		vkDestroyCommandPool(s_ctx.m_device, m_commandPool, nullptr);
 		vmaDestroyAllocator(s_ctx.m_allocator);
 		vkDestroyDevice(s_ctx.m_device, nullptr);
 	}
@@ -198,6 +201,21 @@ namespace
 		return std::make_shared<VulkanSampler>(desc);
 	}
 
+	Fence VulkanDevice::Execute(CommandBuffer buffer)
+	{
+		const auto cmd = buffer.Raw();
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &cmd;
+
+		Fence fence;
+		vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, fence.Raw());
+
+		return fence;
+	}
+
 	void VulkanDevice::PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context)
 	{
 		VkInstance instance = context->Instance();
@@ -213,9 +231,9 @@ namespace
 		{
 			if (IsDeviceSuitable(device, context->Surface()))
 			{
-				m_physicalDevice = device;
+				s_ctx.m_physicalDevice = device;
 				VkPhysicalDeviceProperties properties;
-				vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+				vkGetPhysicalDeviceProperties(s_ctx.m_physicalDevice, &properties);
 				rhi::log::info("[Vulkan] Successfully initialized physical device: {}. Device type: {}. Device API version: {}.{}.{}", properties.deviceName, 
 																												PhysicalDeviceTypeToString(properties.deviceType),
 																												VK_API_VERSION_MAJOR(properties.apiVersion),
@@ -225,12 +243,12 @@ namespace
 			}
 		}
 
-		RHI_ASSERT_WITH_MESSAGE(m_physicalDevice != nullptr, "No suitable physical device was found!");
+		RHI_ASSERT_WITH_MESSAGE(s_ctx.m_physicalDevice != nullptr, "No suitable physical device was found!");
 	}
 
 	void VulkanDevice::CreateLogicalDevice(const std::shared_ptr<VulkanContext>& context)
 	{
-		QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice, context->Surface());
+		QueueFamilyIndices indices = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
 		RHI_ASSERT(indices.IsComplete());
 
 		eastl::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -273,7 +291,7 @@ namespace
 			createInfo.enabledLayerCount = 0;
 		}
 
-		RHI_ASSERT_WITH_MESSAGE(vkCreateDevice(m_physicalDevice, 
+		RHI_ASSERT_WITH_MESSAGE(vkCreateDevice(s_ctx.m_physicalDevice,
 											   &createInfo, 
 											   nullptr, 
 											   &s_ctx.m_device) == VK_SUCCESS, "Failed to create logical device!");
@@ -281,7 +299,7 @@ namespace
 
 	void VulkanDevice::SetupDeviceQueues(const std::shared_ptr<VulkanContext>& context)
 	{
-		const auto indices = FindQueueFamilies(m_physicalDevice, context->Surface());
+		const auto indices = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
 		RHI_ASSERT(indices.IsComplete());
 		vkGetDeviceQueue(s_ctx.m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
 		vkGetDeviceQueue(s_ctx.m_device, indices.presentFamily.value(), 0, &m_presentQueue);
@@ -290,16 +308,26 @@ namespace
 	void VulkanDevice::SetupAllocator(const std::shared_ptr<VulkanContext>& context)
 	{
 		VmaAllocatorCreateInfo allocatorInfo{};
-		allocatorInfo.physicalDevice = m_physicalDevice;
+		allocatorInfo.physicalDevice = s_ctx.m_physicalDevice;
 		allocatorInfo.device = s_ctx.m_device;
 		allocatorInfo.instance = context->Instance();
 		vmaCreateAllocator(&allocatorInfo, &s_ctx.m_allocator);
 	}
 
+	void VulkanDevice::SetupCommandPool(const std::shared_ptr<VulkanContext>& context)
+	{
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.queueFamilyIndex = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface()).graphicsFamily.value();
+
+		RHI_ASSERT(vkCreateCommandPool(s_ctx.m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS);
+	}
+
 	void VulkanDevice::FillProperties()
 	{
 		VkPhysicalDeviceProperties deviceProps;
-		vkGetPhysicalDeviceProperties(m_physicalDevice, &deviceProps);
+		vkGetPhysicalDeviceProperties(s_ctx.m_physicalDevice, &deviceProps);
 
 		Properties& properties = s_ctx.m_properties;
 
