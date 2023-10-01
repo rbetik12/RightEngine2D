@@ -4,11 +4,7 @@
 namespace engine
 {
 
-WindowService::~WindowService()
-{
-}
-
-void WindowService::Init()
+WindowService::WindowService()
 {
 	ENGINE_ASSERT(glfwInit());
 
@@ -18,14 +14,14 @@ void WindowService::Init()
 	ENGINE_ASSERT(m_window);
 
 	glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window)
-	{
-		Instance().Stop();
-	});
+		{
+			Instance().Stop();
+		});
 
 	core::log::info("Successfully initialized WindowService");
 }
 
-void WindowService::Destroy()
+WindowService::~WindowService()
 {
 	glfwDestroyWindow(m_window);
 

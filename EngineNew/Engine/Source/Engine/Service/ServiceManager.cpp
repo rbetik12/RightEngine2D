@@ -23,7 +23,7 @@ void ServiceManager::Destroy()
 {
 	for (auto& [_, service] : m_services)
 	{
-		service->Destroy();
+		service.reset();
 	}
 }
 

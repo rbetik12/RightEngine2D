@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(PROJECT_NAME EngineNew)
 
 find_package(glfw3 REQUIRED)
+find_package(taskflow REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
@@ -14,6 +15,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC 
                             glfw
+                            Taskflow::Taskflow
                             RHI
                     )
 

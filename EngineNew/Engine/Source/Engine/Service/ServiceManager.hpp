@@ -26,7 +26,6 @@ public:
         {
             auto service = std::make_shared<T>();
             m_services[typeIndex] = service;
-            service->Init();
             return true;
         }
         return false;

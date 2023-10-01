@@ -1,5 +1,6 @@
 #include <Engine/Engine.hpp>
 #include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/ThreadService.hpp>
 
 namespace engine
 {
@@ -8,6 +9,8 @@ Engine::Engine(int argCount, char* argPtr[])
 {
 	m_timer.Restart();
 	s_instance = this;
+
+	m_serviceManager.RegisterService<ThreadService>();
 
 	m_serviceManager.RegisterService<WindowService>();
 

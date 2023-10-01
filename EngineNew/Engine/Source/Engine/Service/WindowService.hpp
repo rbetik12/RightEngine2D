@@ -10,10 +10,8 @@ namespace engine
 class ENGINE_API WindowService final : public IService
 {
 public:
+	WindowService();
 	virtual ~WindowService() override;
-
-	virtual void Init() override;
-	virtual void Destroy() override;
 
 	virtual void Update(float dt) override;
 	virtual void PostUpdate(float dt) override;
