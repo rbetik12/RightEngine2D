@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE SOURCE_FILES
-        "${CMAKE_SOURCE_DIR}/RHI/Source/*.cpp"
-        "${CMAKE_SOURCE_DIR}/RHI/Source/*.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.hpp"
         )
 
 find_package(glm REQUIRED)
@@ -14,8 +14,8 @@ find_package(spirv-cross REQUIRED)
 add_library(RHI SHARED ${SOURCE_FILES})
 
 target_compile_definitions(RHI PRIVATE RHI_EXPORT)
-target_precompile_headers(RHI PRIVATE "${CMAKE_SOURCE_DIR}/RHI/Source/PCH.hpp")
-target_include_directories(RHI PUBLIC "${CMAKE_SOURCE_DIR}/RHI/Source/Public")
+target_precompile_headers(RHI PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Source/PCH.hpp")
+target_include_directories(RHI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Source/Public")
 target_include_directories(RHI PRIVATE "${CMAKE_SOURCE_DIR}/Lib/VulkanMemoryAllocator/include")
 target_link_directories(RHI PRIVATE ${CMAKE_BINARY_DIR}/.bin)
 

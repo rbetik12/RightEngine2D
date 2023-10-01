@@ -95,6 +95,7 @@ set(THIRD_PARTY_LIB
         )
 
 set(THIRD_PARTY_PROJECT_DIR_NAME "Lib")
+set(NEW_ENGINE_PROJECT_DIR "NewEngine")
 set(CUSTOM_TARGET_DIR_NAME "Custom")
 
 set_target_properties(yaml-cpp PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
@@ -106,6 +107,11 @@ set_target_properties(VulkanMemoryAllocator PROPERTIES FOLDER ${THIRD_PARTY_PROJ
 
 add_subdirectory(Editor)
 add_subdirectory(Engine)
-add_subdirectory(Core)
-add_subdirectory(RHI)
-add_subdirectory(RHITest)
+add_subdirectory(EngineNew/Core)
+add_subdirectory(EngineNew/RHI)
+add_subdirectory(EngineNew/Engine)
+add_subdirectory(EngineNew/EngineLauncher)
+
+set_target_properties(Core PROPERTIES FOLDER ${NEW_ENGINE_PROJECT_DIR})
+set_target_properties(RHI PROPERTIES FOLDER ${NEW_ENGINE_PROJECT_DIR})
+set_target_properties(EngineNew PROPERTIES FOLDER ${NEW_ENGINE_PROJECT_DIR})
