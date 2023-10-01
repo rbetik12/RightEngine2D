@@ -6,6 +6,8 @@
 #include <Core/Hash.hpp>
 #include <Core/Log.hpp>
 
+#include <Engine/Assert.hpp>
+
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>
 #include <EASTL/vector.h>

@@ -14,3 +14,13 @@
 #else
 #define ENGINE_API
 #endif
+
+#if defined(R_WIN32)
+
+#define ENGINE_FORCE_INLINE __forceinline
+
+#else
+
+#define ENGINE_FORCE_INLINE
+
+#endif

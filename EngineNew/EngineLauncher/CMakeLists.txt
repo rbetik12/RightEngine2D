@@ -14,6 +14,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE EngineNew)
 
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /WX)
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/.bin/${CMAKE_BUILD_TYPE}")
 endif()
 
 # Create source groups for each directory
