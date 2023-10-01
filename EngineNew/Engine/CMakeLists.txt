@@ -23,7 +23,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/S
 target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/.bin)
 
 if (MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /WX /GR-)
+    target_compile_options(${PROJECT_NAME} PRIVATE /WX)
 endif()
 
 # Create source groups for each directory

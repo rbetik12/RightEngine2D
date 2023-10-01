@@ -8,5 +8,5 @@
 #define ENGINE_ASSERT_WITH_MESSAGE(x, ...) do { if(!(x)) { std::cout << "[Engine] Assertion failed: " << #x << __VA_ARGS__ << " " << std::endl; __debugbreak(); } } while(false)
 #endif
 #else
-#define RHI_ASSERT(x, ...)
+#define ENGINE_ASSERT(x, ...)
 #endif
