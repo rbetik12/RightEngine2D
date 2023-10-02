@@ -1,6 +1,14 @@
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Engine.hpp>
+#include <rttr/registration>
+
+RTTR_REGISTRATION
+{
+rttr::registration::class_<engine::EditorService>("engine::EditorService")
+	.constructor();
+}
+
 
 namespace engine
 {
@@ -12,12 +20,10 @@ EditorService::EditorService()
 		{
 			core::log::debug("[EditorService] Message from another thread!");
 		});
-	core::log::info("Successfully initialized EditorService");
 }
 
 EditorService::~EditorService()
 {
-	core::log::info("Successfully destroyed EditorService");
 };
 
 void EditorService::Update(float dt)

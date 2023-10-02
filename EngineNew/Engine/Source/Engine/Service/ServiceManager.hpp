@@ -5,8 +5,11 @@
 #include <Engine/Service/IService.hpp>
 #include <Core/Type.hpp>
 #include <Core/EASTLIntergration.hpp>
+#include <Core/RTTRIntegration.hpp>
+#include <Core/Log.hpp>
 #include <EASTL/unordered_map.h>
 #include <fmt/format.h>
+#include <rttr/type>
 #include <typeindex>
 
 namespace engine
@@ -21,11 +24,13 @@ public:
         static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
 
         const auto typeIndex = std::type_index(typeid(T));
+        ENGINE_ASSERT_WITH_MESSAGE(rttr::type::get<T>().get_constructor().is_valid(), fmt::format("Type '{}' must be registered in rttr", typeIndex.name()));
 
         if (m_services.find(typeIndex) == m_services.end())
         {
             auto service = std::make_shared<T>();
             m_services[typeIndex] = service;
+            core::log::info("[ServiceManager] Registered service '{}' successfully", rttr::type::get<T>().get_name());
             return true;
         }
         return false;
@@ -41,7 +46,7 @@ public:
         if (serviceIt == m_services.end())
         {
             static std::shared_ptr<T> empty;
-            ENGINE_ASSERT_WITH_MESSAGE(false, fmt::format("Service {} doesn't exist!", typeIndex.name()));
+            ENGINE_ASSERT_WITH_MESSAGE(false, fmt::format("[ServiceManager] Service {} doesn't exist!", typeIndex.name()));
             return *empty;
         }
 

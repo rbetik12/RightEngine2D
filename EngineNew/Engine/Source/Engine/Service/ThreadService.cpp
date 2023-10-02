@@ -1,11 +1,18 @@
 #include <Engine/Service/ThreadService.hpp>
 #include <Core/String.hpp>
+#include <rttr/registration>
 #include <algorithm>
 
 #if defined(R_WIN32)
 #define NOMINMAX
 #include <Windows.h>
 #endif
+
+RTTR_REGISTRATION
+{
+rttr::registration::class_<engine::ThreadService>("engine::ThreadService")
+	.constructor();
+}
 
 
 namespace engine
@@ -84,13 +91,10 @@ ThreadService::ThreadService()
 {
 	const auto workersAmount = std::max(4u, std::thread::hardware_concurrency() / 2);
 	m_executor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Worker", workersAmount));
-
-	core::log::info("Successfully initialized ThreadService");
 }
 
 ThreadService::~ThreadService()
 {
-	core::log::info("Successfully destroyed ThreadService");
 }
 
 void ThreadService::Update(float dt)

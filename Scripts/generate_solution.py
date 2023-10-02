@@ -40,6 +40,10 @@ if not check_lib_version("imguizmo", "1.83.1"):
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Debug --version 1.83.1")
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Release --version 1.83.1")
 
+if not check_lib_version("rttr", "0.9.6.1"):
+    sub.run("conan create Scripts/lib/rttr/all -s build_type=Debug --version 0.9.6.1")
+    sub.run("conan create Scripts/lib/rttr/all -s build_type=Release --version 0.9.6.1")
+
 #Generate solution and copy all prebuilt binaries to binary folder
 
 def copy_dll_files(source_dir, destination_dir):
@@ -72,8 +76,15 @@ sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/lib --b
 
 copy_dll_files(".build/lib/dll", f".build/Win/.bin/{build_type}")
 
-
-
-sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .")
-
-print("Solution was successfully generated!")
+try:
+    completed_process = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)
+    
+    if completed_process.returncode == 0:
+        print("Solution was successfully generated!")
+    else:
+        print("Error: Solution generation failed")
+        print("Error output:", completed_process.stderr)
+except sub.CalledProcessError as e:
+    print("Error while generating the solution:", e)
+except Exception as e:
+    print("An unexpected error occurred:", e)

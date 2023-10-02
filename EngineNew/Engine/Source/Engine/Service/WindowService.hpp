@@ -9,6 +9,7 @@ namespace engine
 // Service is responsible for current window drawing and input events processing
 class ENGINE_API WindowService final : public IService
 {
+	RTTR_ENABLE(IService);
 public:
 	WindowService();
 	virtual ~WindowService() override;

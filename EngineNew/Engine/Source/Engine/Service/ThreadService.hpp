@@ -8,7 +8,9 @@ namespace engine
 
 class ENGINE_API ThreadService final : public IService
 {
+	RTTR_ENABLE(IService);
 public:
+
 	ThreadService();
 	virtual ~ThreadService() override;
 

@@ -7,6 +7,7 @@ namespace engine
 
 class ENGINE_API EditorService final : public IService
 {
+	RTTR_ENABLE(IService);
 public:
 	EditorService();
 	virtual ~EditorService() override;

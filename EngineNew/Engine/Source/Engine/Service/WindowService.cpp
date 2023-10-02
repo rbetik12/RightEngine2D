@@ -1,5 +1,12 @@
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Engine.hpp>
+#include <rttr/registration>
+
+RTTR_REGISTRATION
+{
+rttr::registration::class_<engine::WindowService>("engine::WindowService")
+	.constructor();
+}
 
 namespace engine
 {
@@ -17,15 +24,11 @@ WindowService::WindowService()
 		{
 			Instance().Stop();
 		});
-
-	core::log::info("Successfully initialized WindowService");
 }
 
 WindowService::~WindowService()
 {
 	glfwDestroyWindow(m_window);
-
-	core::log::info("Successfully destroyed WindowService");
 }
 
 void WindowService::Update(float dt)
