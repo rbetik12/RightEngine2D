@@ -12,18 +12,18 @@ public:
 	ThreadService();
 	virtual ~ThreadService() override;
 
-	virtual void Update(float dt) override;
-	virtual void PostUpdate(float dt) override;
+	virtual void					Update(float dt) override;
+	virtual void					PostUpdate(float dt) override;
 
 	template <typename F>
-	auto AddBackgroundTask(F&& f)
+	auto							AddBackgroundTask(F&& f)
 	{
 		return m_executor->async(std::move(f));
 	}
 
-	tf::Future<void> AddBackgroundTaskflow(tf::Taskflow&& taskflow);
+	tf::Future<void>				AddBackgroundTaskflow(tf::Taskflow&& taskflow);
 
-	std::shared_ptr<tf::Executor> NamedExecutor(std::string_view name, int threadAmount) const;
+	std::shared_ptr<tf::Executor>	NamedExecutor(std::string_view name, int threadAmount) const;
 
 private:
 	std::unique_ptr<tf::Executor>	m_executor;

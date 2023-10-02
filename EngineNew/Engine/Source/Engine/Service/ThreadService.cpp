@@ -68,7 +68,7 @@ public:
 private:
 	void scheduler_prologue(tf::Worker& worker) override
 	{
-		SetThreadName(fmt::format("{}{}", m_threadNamePrefix, worker.id()));
+		SetThreadName(fmt::format("{} #{}", m_threadNamePrefix, worker.id()));
 
 		m_threads[worker.id()] = std::this_thread::get_id();
 	}

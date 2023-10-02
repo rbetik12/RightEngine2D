@@ -15,20 +15,26 @@ public:
 	Engine(int argCount, char* argPtr[]);
 	~Engine();
 
-	int Run();
-	void Stop();
+	int		Run();
+	void	Stop();
+
+	template<typename T>
+	T&		Service()
+	{
+		return m_serviceManager.Service<T>();
+	}
 
 	friend Engine& Instance();
 
 private:
-	void Update();
+	void	Update();
 
 private:
-	inline static Engine* s_instance = nullptr;
+	inline static Engine*	s_instance = nullptr;
 
-	bool			m_running = false;
-	Timer			m_timer;
-	ServiceManager	m_serviceManager;
+	bool					m_running = false;
+	Timer					m_timer;
+	ServiceManager			m_serviceManager;
 };
 
 ENGINE_FORCE_INLINE Engine& Instance()

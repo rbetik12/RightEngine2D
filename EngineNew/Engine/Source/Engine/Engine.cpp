@@ -1,6 +1,7 @@
 #include <Engine/Engine.hpp>
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Service/ThreadService.hpp>
+#include <Engine/Service/EditorService.hpp>
 
 namespace engine
 {
@@ -13,6 +14,8 @@ Engine::Engine(int argCount, char* argPtr[])
 	m_serviceManager.RegisterService<ThreadService>();
 
 	m_serviceManager.RegisterService<WindowService>();
+
+	m_serviceManager.RegisterService<EditorService>();
 
 	m_running = true;
 
