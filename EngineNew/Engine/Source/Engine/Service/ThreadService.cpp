@@ -1,6 +1,6 @@
 #include <Engine/Service/ThreadService.hpp>
 #include <Core/String.hpp>
-#include <rttr/registration>
+#include <Engine/Registration.hpp>
 #include <algorithm>
 
 #if defined(R_WIN32)
@@ -10,8 +10,7 @@
 
 RTTR_REGISTRATION
 {
-rttr::registration::class_<engine::ThreadService>("engine::ThreadService")
-	.constructor();
+engine::registration::Service<engine::ThreadService>("engine::ThreadService");
 }
 
 

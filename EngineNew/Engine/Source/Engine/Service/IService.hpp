@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine/Config.hpp>
+#include <Engine/Domain.hpp>
 #include <Core/Type.hpp>
 #include <rttr/rttr_enable.h>
 
@@ -11,6 +12,11 @@ class ENGINE_API IService : public core::NonCopyable
 {
 	RTTR_ENABLE();
 public:
+	struct MetaInfo
+	{
+		Domain m_domain = Domain::NONE;
+	};
+
 	virtual ~IService() = default;
 
 	virtual void Update(float dt) = 0;

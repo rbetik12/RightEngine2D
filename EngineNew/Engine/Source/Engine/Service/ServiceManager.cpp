@@ -5,7 +5,7 @@ namespace engine
 
 void ServiceManager::Update(float dt)
 {
-	for (auto& [_, service] : m_services)
+	for (auto& service : m_services)
 	{
 		service->Update(dt);
 	}
@@ -13,7 +13,7 @@ void ServiceManager::Update(float dt)
 
 void ServiceManager::PostUpdate(float dt)
 {
-	for (auto& [_, service] : m_services)
+	for (auto& service : m_services)
 	{
 		service->PostUpdate(dt);
 	}
@@ -21,17 +21,9 @@ void ServiceManager::PostUpdate(float dt)
 
 void ServiceManager::Destroy()
 {
-	eastl::vector<std::shared_ptr<IService>> servicesList;
+	std::reverse(m_services.begin(), m_services.end());
 
-	for (auto& [_, service] : m_services)
-	{
-		servicesList.push_back(service);
-	}
-	m_services.clear();
-
-	std::reverse(servicesList.begin(), servicesList.end());
-
-	for (auto& service: servicesList)
+	for (auto& service: m_services)
 	{
 		const auto type = service->get_type();
 		service.reset();

@@ -1,11 +1,10 @@
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Engine.hpp>
-#include <rttr/registration>
+#include <Engine/Registration.hpp>
 
 RTTR_REGISTRATION
 {
-rttr::registration::class_<engine::WindowService>("engine::WindowService")
-	.constructor();
+engine::registration::Service<engine::WindowService>("engine::WindowService");
 }
 
 namespace engine

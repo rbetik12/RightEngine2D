@@ -10,7 +10,6 @@
 #include <EASTL/unordered_map.h>
 #include <fmt/format.h>
 #include <rttr/type>
-#include <typeindex>
 
 namespace engine
 {
@@ -23,14 +22,15 @@ public:
 	{
         static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
 
-        const auto typeIndex = std::type_index(typeid(T));
-        ENGINE_ASSERT_WITH_MESSAGE(rttr::type::get<T>().get_constructor().is_valid(), fmt::format("Type '{}' must be registered in rttr", typeIndex.name()));
+        const auto type = rttr::type::get<T>();
+        ENGINE_ASSERT_WITH_MESSAGE(type.get_constructor().is_valid(), fmt::format("Type '{}' must be registered in rttr", type.get_name()));
 
-        if (m_services.find(typeIndex) == m_services.end())
+        if (m_servicesMap.find(type) == m_servicesMap.end())
         {
             auto service = std::make_shared<T>();
-            m_services[typeIndex] = service;
-            core::log::info("[ServiceManager] Registered service '{}' successfully", rttr::type::get<T>().get_name());
+            m_services.push_back(service);
+            m_servicesMap[type] = m_services.size() - 1;
+            core::log::info("[ServiceManager] Registered service '{}' successfully", type.get_name());
             return true;
         }
         return false;
@@ -41,16 +41,17 @@ public:
     {
         static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
 
-        const auto typeIndex = std::type_index(typeid(T));
-        const auto serviceIt = m_services.find(typeIndex);
-        if (serviceIt == m_services.end())
+        const auto type = rttr::type::get<T>();
+        const auto serviceIt = m_servicesMap.find(type);
+        if (serviceIt == m_servicesMap.end())
         {
             static std::shared_ptr<T> empty;
-            ENGINE_ASSERT_WITH_MESSAGE(false, fmt::format("[ServiceManager] Service {} doesn't exist!", typeIndex.name()));
+            ENGINE_ASSERT_WITH_MESSAGE(false, fmt::format("[ServiceManager] Service {} doesn't exist!", type.get_name()));
             return *empty;
         }
 
-        auto* s = static_cast<T*>(serviceIt->second.get());
+        const auto serviceIdx = serviceIt->second;
+        auto* s = static_cast<T*>(m_services.at(serviceIdx).get());
         return *s;
     }
 
@@ -60,7 +61,8 @@ public:
     void Destroy();
 
 private:
-	eastl::unordered_map<std::type_index, std::shared_ptr<IService>> m_services;
+	eastl::unordered_map<rttr::type, size_t>    m_servicesMap;
+    eastl::vector<std::shared_ptr<IService>>    m_services;
 };
 
 } // namespace engine

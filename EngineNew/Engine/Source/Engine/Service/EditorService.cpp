@@ -1,12 +1,11 @@
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Engine.hpp>
-#include <rttr/registration>
+#include <Engine/Registration.hpp>
 
 RTTR_REGISTRATION
 {
-rttr::registration::class_<engine::EditorService>("engine::EditorService")
-	.constructor();
+engine::registration::Service<engine::EditorService>("engine::EditorService");
 }
 
 
