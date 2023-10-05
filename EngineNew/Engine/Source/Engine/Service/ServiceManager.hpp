@@ -3,6 +3,7 @@
 #include <Engine/Config.hpp>
 #include <Engine/Assert.hpp>
 #include <Engine/Service/IService.hpp>
+#include <Engine/Registration.hpp>
 #include <Core/Type.hpp>
 #include <Core/EASTLIntergration.hpp>
 #include <Core/RTTRIntegration.hpp>
@@ -17,6 +18,9 @@ namespace engine
 class ENGINE_API ServiceManager : public core::NonCopyable
 {
 public:
+    ServiceManager(Domain engineDomain) : m_domain(engineDomain)
+    {}
+
 	template<typename T>
 	bool RegisterService()
 	{
@@ -27,12 +31,26 @@ public:
 
         if (m_servicesMap.find(type) == m_servicesMap.end())
         {
+            const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value<IService::MetaInfo>();
+
+            if (metadata.m_domain != Domain::ALL && (m_domain & metadata.m_domain) != metadata.m_domain)
+            {
+                core::log::info("[ServiceManager] Skipping '{}' registration due to incompatible domain '{}' engine domain: '{}'", 
+                    type.get_name(), 
+                    DomainToString(metadata.m_domain),
+                    DomainToString(m_domain));
+                return false;
+            }
+
             auto service = std::make_shared<T>();
+
             m_services.push_back(service);
             m_servicesMap[type] = m_services.size() - 1;
+
             core::log::info("[ServiceManager] Registered service '{}' successfully", type.get_name());
             return true;
         }
+        ENGINE_ASSERT(false);
         return false;
 	}
 
@@ -63,6 +81,7 @@ public:
 private:
 	eastl::unordered_map<rttr::type, size_t>    m_servicesMap;
     eastl::vector<std::shared_ptr<IService>>    m_services;
+    Domain                                      m_domain;
 };
 
 } // namespace engine

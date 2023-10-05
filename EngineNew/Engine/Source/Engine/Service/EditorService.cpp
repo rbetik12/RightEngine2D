@@ -5,7 +5,8 @@
 
 RTTR_REGISTRATION
 {
-engine::registration::Service<engine::EditorService>("engine::EditorService");
+engine::registration::Service<engine::EditorService>("engine::EditorService")
+	.Domain(engine::Domain::EDITOR);
 }
 
 

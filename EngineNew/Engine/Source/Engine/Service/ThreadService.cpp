@@ -10,7 +10,8 @@
 
 RTTR_REGISTRATION
 {
-engine::registration::Service<engine::ThreadService>("engine::ThreadService");
+engine::registration::Service<engine::ThreadService>("engine::ThreadService")
+	.Domain(engine::Domain::ALL);
 }
 
 

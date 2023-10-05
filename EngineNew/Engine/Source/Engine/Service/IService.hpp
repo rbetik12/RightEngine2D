@@ -14,7 +14,7 @@ class ENGINE_API IService : public core::NonCopyable
 public:
 	struct MetaInfo
 	{
-		Domain m_domain = Domain::NONE;
+		Domain m_domain = Domain::ALL;
 	};
 
 	virtual ~IService() = default;

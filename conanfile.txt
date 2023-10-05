@@ -1,5 +1,6 @@
 [requires]
 assimp/5.2.2
+argparse/2.9
 eastl/3.21.12
 entt/3.12.2
 fmt/[~10]

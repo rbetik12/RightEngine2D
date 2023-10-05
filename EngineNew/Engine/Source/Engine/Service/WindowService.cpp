@@ -4,7 +4,8 @@
 
 RTTR_REGISTRATION
 {
-engine::registration::Service<engine::WindowService>("engine::WindowService");
+engine::registration::Service<engine::WindowService>("engine::WindowService")
+	.Domain(engine::Domain::UI);
 }
 
 namespace engine

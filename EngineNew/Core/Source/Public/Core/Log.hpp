@@ -20,7 +20,7 @@ public:
     static Logger& Get();
 
 private:
-    static std::unique_ptr<spdlog::logger> loggerInstance;
+    static std::unique_ptr<spdlog::logger> s_instance;
 };
 
 }
