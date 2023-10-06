@@ -37,7 +37,7 @@ endif()
 # Create source groups for each directory
 foreach(FILE ${SOURCE_FILES})
     # Get the path relative to the source directory
-    file(RELATIVE_PATH RELATIVE_FILE ${CMAKE_SOURCE_DIR} ${FILE})
+    file(RELATIVE_PATH RELATIVE_FILE ${CMAKE_CURRENT_SOURCE_DIR} ${FILE})
     # Get the directory of the file
     get_filename_component(DIR ${RELATIVE_FILE} DIRECTORY)
     # Create the source group

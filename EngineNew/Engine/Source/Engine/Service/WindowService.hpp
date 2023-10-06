@@ -14,8 +14,11 @@ public:
 	WindowService();
 	virtual ~WindowService() override;
 
-	virtual void Update(float dt) override;
-	virtual void PostUpdate(float dt) override;
+	virtual void		Update(float dt) override;
+	virtual void		PostUpdate(float dt) override;
+
+	GLFWwindow*			Window() { return m_window; }
+	const GLFWwindow*	Window() const { return m_window; }
 
 private:
 	GLFWwindow* m_window = nullptr;
