@@ -1,7 +1,16 @@
 #include <Engine/Service/RenderService.hpp>
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Engine.hpp>
+#pragma warning(push)
+#pragma warning(disable : 4464)
 #include <glslang/Public/ShaderLang.h>
+#pragma warning(pop)
+
+RTTR_REGISTRATION
+{
+engine::registration::Service<engine::RenderService>("engine::RenderService")
+    .Domain(engine::Domain::UI);
+}
 
 namespace engine
 {
@@ -44,6 +53,8 @@ RenderService::RenderService()
 
 RenderService::~RenderService()
 {
+    m_device.reset();
+    m_context.reset();
     glslang::FinalizeProcess();
 }
 

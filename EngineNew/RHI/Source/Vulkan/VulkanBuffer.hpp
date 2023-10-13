@@ -16,6 +16,8 @@ namespace rhi::vulkan
 		virtual void*	Map() const;
 		virtual void	UnMap() const;
 
+		VkBuffer		Raw() const { return m_buffer; }
+
 	private:
 		VkBuffer			m_buffer = nullptr;
 		VmaAllocation		m_allocation = nullptr;

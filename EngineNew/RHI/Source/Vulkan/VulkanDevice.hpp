@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <RHI/Config.hpp>
 #include <RHI/Device.hpp>
 #include "VulkanContext.hpp"
@@ -18,6 +19,17 @@ struct SwapchainSupportDetails
 	eastl::vector<VkPresentModeKHR>		m_presentModes;
 };
 
+struct QueueFamilyIndices
+{
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
+
+	bool IsComplete() const
+	{
+		return graphicsFamily.has_value() && presentFamily.has_value();
+	}
+};
+
 class RHI_API VulkanDevice : public Device
 {
 public:
@@ -34,6 +46,7 @@ public:
 		VkDevice			m_device = nullptr;
 		VmaAllocator		m_allocator = nullptr;
 		VkPhysicalDevice	m_physicalDevice = nullptr;
+		VkSurfaceKHR		m_surface = nullptr;
 		Properties			m_properties;
 		VulkanDevice*		m_instance = nullptr;
 	};
@@ -53,6 +66,7 @@ public:
 	VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
 	VkCommandPool							CommandPool() const { return m_commandPool; }
 	const SwapchainSupportDetails&			GetSwapchainSupportDetails() const { return m_swapchainDetails; }
+	QueueFamilyIndices						FindQueueFamilies() const;
 
 	Fence									Execute(CommandBuffer buffer);
 

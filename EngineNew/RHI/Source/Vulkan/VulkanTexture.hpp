@@ -14,6 +14,17 @@ namespace rhi::vulkan
 
 		virtual ~VulkanTexture() override;
 
+		void			ChangeImageLayout(VkImage image,
+							VkImageLayout oldLayout,
+							VkImageLayout newLayout,
+							Format format,
+							int layers,
+							int mipmaps,
+							bool isDepth = false);
+
+		VkImage			Image() const { return m_image; }
+		VkImageView		ImageView(uint32_t idx) const { RHI_ASSERT(idx < m_imageViews.size());  return m_imageViews[idx]; }
+
 	private:
 		std::shared_ptr<Buffer>		m_stagingBuffer;
 		VkImage						m_image;

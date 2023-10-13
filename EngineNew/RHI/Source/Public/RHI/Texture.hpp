@@ -10,6 +10,8 @@ namespace rhi
 	public:
 		virtual ~Texture() = default;
 
+		const TextureDescriptor& Descriptor() const { return m_descriptor; }
+
 	protected:
 		TextureDescriptor m_descriptor;
 

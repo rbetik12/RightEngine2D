@@ -3,6 +3,7 @@
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/EditorService.hpp>
+#include <Engine/Service/RenderService.hpp>
 
 RTTR_REGISTRATION
 {
@@ -45,6 +46,8 @@ Engine::Engine(int argCount, char* argPtr[])
 	m_serviceManager->RegisterService<WindowService>();
 
 	m_serviceManager->RegisterService<EditorService>();
+
+	m_serviceManager->RegisterService<RenderService>();
 
 	m_running = true;
 

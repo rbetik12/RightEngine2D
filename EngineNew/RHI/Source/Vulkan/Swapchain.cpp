@@ -1,25 +1,71 @@
 #include "Swapchain.hpp"
+#include "VulkanDevice.hpp"
 
 namespace rhi::vulkan
 {
 
-Swapchain::Swapchain(const SwapchainDescriptor& desc)
+namespace
 {
-    SwapchainSupportDetails details = device->GetSwapchainSupportDetails();
 
-    imageFormat = ChooseSwapSurfaceFormat(details.formats);
-    VkPresentModeKHR presentMode = VulkanConverters::PresentMode(descriptor.presentMode);
-    VkExtent2D extent = ChooseSwapExtent(details.capabilities, descriptor);
-
-    uint32_t imageCount = details.capabilities.minImageCount + 1;
-    if (details.capabilities.maxImageCount > 0 && imageCount > details.capabilities.maxImageCount)
+VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const eastl::vector<VkSurfaceFormatKHR>& availableFormats)
+{
+    for (const auto& availableFormat : availableFormats)
     {
-        imageCount = details.capabilities.maxImageCount;
+        if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM
+            && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        {
+            return availableFormat;
+        }
+    }
+
+    return availableFormats[0];
+}
+
+VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const SwapchainDescriptor& descriptor)
+{
+    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+    {
+        return capabilities.currentExtent;
+    }
+    else
+    {
+        VkExtent2D actualExtent =
+        {
+        static_cast<uint32_t>(descriptor.m_extent.x),
+        static_cast<uint32_t>(descriptor.m_extent.y)
+        };
+
+        actualExtent.width = glm::clamp(actualExtent.width,
+            capabilities.minImageExtent.width,
+            capabilities.maxImageExtent.width);
+        actualExtent.height = glm::clamp(actualExtent.height,
+            capabilities.minImageExtent.height,
+            capabilities.maxImageExtent.height);
+
+        return actualExtent;
+    }
+}
+
+} // namespace unnamed
+
+Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
+{
+    auto& device = *VulkanDevice::s_ctx.m_instance;
+    SwapchainSupportDetails details = VulkanDevice::s_ctx.m_instance->GetSwapchainSupportDetails();
+
+    const auto imageFormat = ChooseSwapSurfaceFormat(details.m_formats);
+    VkPresentModeKHR presentMode = desc.m_presentMode;
+    VkExtent2D extent = ChooseSwapExtent(details.m_capabilities, m_descriptor);
+
+    uint32_t imageCount = details.m_capabilities.minImageCount + 1;
+    if (details.m_capabilities.maxImageCount > 0 && imageCount > details.m_capabilities.maxImageCount)
+    {
+        imageCount = details.m_capabilities.maxImageCount;
     }
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface->GetSurface();
+    createInfo.surface = VulkanDevice::s_ctx.m_surface;
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = imageFormat.format;
@@ -28,7 +74,7 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc)
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-    QueueFamilyIndices indices = device->FindQueueFamilies();
+    QueueFamilyIndices indices = device.FindQueueFamilies();
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -44,47 +90,46 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc)
         createInfo.pQueueFamilyIndices = nullptr; // Optional
     }
 
-    createInfo.preTransform = details.capabilities.currentTransform;
+    createInfo.preTransform = details.m_capabilities.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(device->GetDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS)
+    RHI_ASSERT(vkCreateSwapchainKHR(VulkanDevice::s_ctx.m_device, &createInfo, nullptr, &m_swapchain) == VK_SUCCESS);
+
+    vkGetSwapchainImagesKHR(VulkanDevice::s_ctx.m_device, m_swapchain, &imageCount, nullptr);
+    m_images.resize(imageCount);
+    vkGetSwapchainImagesKHR(VulkanDevice::s_ctx.m_device, m_swapchain, &imageCount, m_images.data());
+
+    m_imageViews.resize(m_images.size());
+    for (size_t i = 0; i < m_images.size(); i++)
     {
-        R_CORE_ASSERT(false, "Failed to create swap chain!");
-    }
+        VkImageViewCreateInfo imageViewCreateInfo{};
+        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.image = m_images[i];
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.format = imageFormat.format;
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-    vkGetSwapchainImagesKHR(device->GetDevice(), swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device->GetDevice(), swapChain, &imageCount, swapChainImages.data());
-
-    swapChainImageViews.resize(swapChainImages.size());
-    for (size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = swapChainImages[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = imageFormat.format;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-
-        if (vkCreateImageView(device->GetDevice(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
-        {
-            R_CORE_ASSERT(false, "Failed to create image views!");
-        }
+        RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &imageViewCreateInfo, nullptr, &m_imageViews[i]) == VK_SUCCESS);
     }
 }
 
 Swapchain::~Swapchain()
 {
+    for (auto imageView : m_imageViews)
+    {
+        vkDestroyImageView(VulkanDevice::s_ctx.m_device, imageView, nullptr);
+    }
+    vkDestroySwapchainKHR(VulkanDevice::s_ctx.m_device, m_swapchain, nullptr);
 }
 
-}
+} //namespace rhi::vulkan

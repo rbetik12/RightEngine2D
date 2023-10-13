@@ -19,17 +19,6 @@ const eastl::array<const char*> C_DEVICE_EXTENSIONS =
 #endif
 };
 
-struct QueueFamilyIndices
-{
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> presentFamily;
-
-	bool IsComplete() const
-	{
-		return graphicsFamily.has_value() && presentFamily.has_value();
-	}
-};
-
 bool CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
 	uint32_t extensionCount;
@@ -165,6 +154,7 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	SetupAllocator(context);
 	SetupCommandPool(context);
 	FillSwapchainSupportDetails(context);
+	s_ctx.m_surface = context->Surface();
 	s_ctx.m_instance = this;
 }
 
@@ -222,6 +212,11 @@ void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanConte
 	m_swapchainDetails = std::move(details);
 }
 
+QueueFamilyIndices VulkanDevice::FindQueueFamilies() const
+{
+	return vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, s_ctx.m_surface);
+}
+
 Fence VulkanDevice::Execute(CommandBuffer buffer)
 {
 	const auto cmd = buffer.Raw();
@@ -269,7 +264,7 @@ void VulkanDevice::PickPhysicalDevice(const std::shared_ptr<VulkanContext>& cont
 
 void VulkanDevice::CreateLogicalDevice(const std::shared_ptr<VulkanContext>& context)
 {
-	QueueFamilyIndices indices = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
+	QueueFamilyIndices indices = vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
 	RHI_ASSERT(indices.IsComplete());
 
 	eastl::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -320,7 +315,7 @@ void VulkanDevice::CreateLogicalDevice(const std::shared_ptr<VulkanContext>& con
 
 void VulkanDevice::SetupDeviceQueues(const std::shared_ptr<VulkanContext>& context)
 {
-	const auto indices = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
+	const auto indices = vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface());
 	RHI_ASSERT(indices.IsComplete());
 	vkGetDeviceQueue(s_ctx.m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
 	vkGetDeviceQueue(s_ctx.m_device, indices.presentFamily.value(), 0, &m_presentQueue);
@@ -340,9 +335,9 @@ void VulkanDevice::SetupCommandPool(const std::shared_ptr<VulkanContext>& contex
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	poolInfo.queueFamilyIndex = FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface()).graphicsFamily.value();
+	poolInfo.queueFamilyIndex = vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, context->Surface()).graphicsFamily.value();
 
-	RHI_ASSERT(vkCreateCommandPool(s_ctx.m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS);
+	RHI_ASSERT(vkCreateCommandPool(s_ctx.m_device, &poolInfo, nullptr, &m_commandPool) == VK_SUCCESS);
 }
 
 void VulkanDevice::FillProperties()
