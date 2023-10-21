@@ -69,6 +69,12 @@ namespace rhi
         {
             return m_stride;
         }
+
+        inline bool Empty() const
+        {
+            return m_stride == 0;
+        }
+
     private:
         eastl::vector<VertexBufferElement>  m_elements;
         uint32_t                            m_stride;

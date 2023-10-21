@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine/Service/IService.hpp>
+#include <RHI/ShaderCompiler.hpp>
 
 namespace engine
 {
@@ -16,6 +17,7 @@ public:
 	virtual void	PostUpdate(float dt) override;
 
 private:
+	std::shared_ptr<rhi::ShaderCompiler> m_shaderCompiler;
 };
 
 } // namespace engine

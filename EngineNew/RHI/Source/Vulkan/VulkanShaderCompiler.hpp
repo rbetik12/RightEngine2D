@@ -9,33 +9,37 @@
 
 namespace rhi::vulkan
 {
-	class RHI_API VulkanShaderCompiler : public ShaderCompiler
+
+class RHI_API VulkanShaderCompiler : public ShaderCompiler
+{
+public:
+	VulkanShaderCompiler(Options options);
+
+	virtual ~VulkanShaderCompiler() override;
+
+	virtual CompiledShaderData Compile(std::string_view path, ShaderType type) override;
+
+private:
+	using ReflectionMap = eastl::unordered_map<ShaderStage, ShaderReflection>;
+	using ShaderMap = eastl::unordered_map<ShaderStage, std::string>;
+
+	struct Context
 	{
-	public:
-		VulkanShaderCompiler(Options options);
-
-		virtual ~VulkanShaderCompiler() override;
-
-		virtual CompiledShaderData Compile(std::string_view path) override;
-
-		virtual CompiledShaderData CompileText(std::string_view text, ShaderType type, std::string_view name = "") override;
-
-	private:
-		struct Context
-		{
-			std::string_view m_path;
-			std::string_view m_rawCodeStr;
-			std::string_view m_processedCodeStr;
-			rhi::ShaderType  m_type;
-		};
-
-		std::string			ReadShader(std::string_view path) const;
-		std::string			PreprocessShader(const Context& ctx);
-		core::Blob			CompileShader(const Context& ctx);
-		ShaderReflection	ReflectShader(const Context& ctx, const core::Blob& shaderBlob);
-
-		eastl::unordered_map<std::string, std::string>	m_includeCache;
-		std::mutex										m_includeCacheMutex;
-		std::mutex										m_glslangMutex;
+		std::string_view	m_path;
+		ShaderMap			m_stageCodeStr;
+		ShaderType			m_type;
 	};
+
+	void							ReadShader(const std::string& text, Context& ctx) const;
+	std::string						ReadShader(std::string_view path);
+	void							PreprocessShader(Context& ctx);
+	ShaderReflection				MergeReflection(const ReflectionMap& reflectionMap, std::string_view path);
+	[[nodiscard]] ShaderReflection	ReflectShader(const core::Blob& shaderBlob, std::string_view path, ShaderStage stage);
+	[[nodiscard]] core::Blob		CompileShader(const std::string& shaderCode, std::string_view path, ShaderStage stage);
+
+	eastl::unordered_map<std::string, std::string>	m_includeCache;
+	std::mutex										m_includeCacheMutex;
+	std::mutex										m_glslangMutex;
+};
+
 }

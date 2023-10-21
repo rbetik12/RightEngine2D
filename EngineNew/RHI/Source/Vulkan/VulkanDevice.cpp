@@ -167,6 +167,14 @@ VulkanDevice::~VulkanDevice()
 
 std::shared_ptr<ShaderCompiler> VulkanDevice::CreateShaderCompiler(const ShaderCompiler::Options& options)
 {
+	static bool created = false;
+
+	RHI_ASSERT_WITH_MESSAGE(!created, "Currently engine supports only one instance of shader compiler!");
+
+	if (!created)
+	{
+		created = true;
+	}
 	return std::make_shared<VulkanShaderCompiler>(options);
 }
 

@@ -6,21 +6,37 @@
 namespace rhi::vulkan
 {
 
-	class RHI_API VulkanShader : public Shader
-	{
-	public:
-		VulkanShader(const ShaderDescriptor& descriptor);
+class RHI_API VulkanShader : public Shader
+{
+public:
+	VulkanShader(const ShaderDescriptor& descriptor);
 
-		virtual ~VulkanShader() override;
+	virtual ~VulkanShader() override;
 
-	private:
-		VkShaderModule										m_module;
+	using InputAttributeDescription = eastl::vector<VkVertexInputAttributeDescription>;
+	using DescriptorSetLayout = eastl::vector<VkDescriptorSetLayoutBinding>;
 
-		// Only for vertex shader
-		eastl::vector<VkVertexInputAttributeDescription>	m_vertexBufferAttributesDescription;
-		VkVertexInputBindingDescription						m_vertexBufferDescription;
+	const InputAttributeDescription&		AttributeDescription() const
+	{ return m_attributesDescription; }
 
-		void fillVertexData();
-	};
+	const VkVertexInputBindingDescription&	InputDescription() const
+	{ return m_inputDescription; }
+
+	VkShaderModule							Module(ShaderStage stage) const { return m_modules[stage]; }
+
+	const DescriptorSetLayout&				DescriptorSetBindings() const { return m_bindings; }
+
+private:
+
+	using ModuleMap = eastl::unordered_map<ShaderStage, VkShaderModule>;
+
+	mutable ModuleMap									m_modules;
+	eastl::vector<VkDescriptorSetLayoutBinding>			m_bindings;
+	eastl::vector<VkVertexInputAttributeDescription>	m_attributesDescription;
+	VkVertexInputBindingDescription						m_inputDescription;
+
+	void FillVertexData();
+	void CreateDescriptorSetLayout();
+};
 
 }

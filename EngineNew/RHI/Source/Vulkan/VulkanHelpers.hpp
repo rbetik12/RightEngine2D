@@ -4,6 +4,7 @@
 #include <RHI/BufferDescriptor.hpp>
 #include <RHI/SamplerDescriptor.hpp>
 #include <RHI/RenderPassDescriptor.hpp>
+#include <RHI/PipelineDescriptor.hpp>
 #include <VulkanMemoryAllocator/vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
@@ -139,6 +140,37 @@ inline VkAttachmentStoreOp StoreOperation(AttachmentStoreOperation storeOp)
         return VK_ATTACHMENT_STORE_OP_STORE;
     default:
         HELPER_DEFAULT_RETURN(VkAttachmentStoreOp);
+    }
+}
+
+inline VkExtent2D Extent(const glm::ivec2& extent)
+{
+    return { static_cast<uint32_t>(extent.x), static_cast<uint32_t>(extent.y) };
+}
+
+inline VkCullModeFlags CullMode(CullMode mode)
+{
+    switch (mode)
+    {
+    case CullMode::FRONT:
+        return VK_CULL_MODE_FRONT_BIT;
+    case CullMode::BACK:
+        return VK_CULL_MODE_BACK_BIT;
+    default:
+        HELPER_DEFAULT_RETURN(VkCullModeFlags);
+    }
+}
+
+inline VkShaderStageFlagBits ShaderStage(ShaderStage stage)
+{
+    switch (stage)
+    {
+    case ShaderStage::VERTEX:
+        return VK_SHADER_STAGE_VERTEX_BIT;
+    case ShaderStage::FRAGMENT:
+        return VK_SHADER_STAGE_FRAGMENT_BIT;
+    default:
+        HELPER_DEFAULT_RETURN(VkShaderStageFlagBits);
     }
 }
 

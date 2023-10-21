@@ -45,9 +45,9 @@ Engine::Engine(int argCount, char* argPtr[])
 
 	m_serviceManager->RegisterService<WindowService>();
 
-	m_serviceManager->RegisterService<EditorService>();
-
 	m_serviceManager->RegisterService<RenderService>();
+
+	m_serviceManager->RegisterService<EditorService>();
 
 	m_running = true;
 

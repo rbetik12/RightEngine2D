@@ -40,22 +40,12 @@ RenderService::RenderService()
 
     m_context = rhi::vulkan::CreateContext(std::move(initCtx));
     m_device = rhi::Device::Create(m_context);
-
-    if (glslang::InitializeProcess())
-    {
-        core::log::info("[RenderService] Initialized glslang");
-    }
-    else
-    {
-        core::log::error("[RenderService] Can't initialize glslang");
-    }
 }
 
 RenderService::~RenderService()
 {
     m_device.reset();
     m_context.reset();
-    glslang::FinalizeProcess();
 }
 
 void RenderService::Update(float dt)

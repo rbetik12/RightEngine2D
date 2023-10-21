@@ -9,10 +9,9 @@ namespace rhi
 
     struct CompiledShaderData
     {
-        ShaderReflection    m_reflection;
-        core::Blob          m_compiledShader;
-        ShaderType          m_type = ShaderType::NONE;
-        bool                m_valid = false;
+        ShaderReflection                                m_reflection;
+        eastl::unordered_map<ShaderStage, core::Blob>	m_stageBlob;
+        bool                                            m_valid = false;
     };
 
     // API assumes that there will be only one instance of shader compiler in application, please follow that rule!
@@ -28,11 +27,9 @@ namespace rhi
 
         virtual ~ShaderCompiler() = default;
 
+        // TODO: Implement compiling from already giving shader text
         // Path must be absolute
-        virtual CompiledShaderData Compile(std::string_view path) = 0;
-
-        // Accepts shader code as a text buffer
-        virtual CompiledShaderData CompileText(std::string_view text, ShaderType type, std::string_view name = "") = 0;
+        virtual CompiledShaderData Compile(std::string_view path, ShaderType type = ShaderType::FX) = 0;
 
     protected:
         Options m_options;
