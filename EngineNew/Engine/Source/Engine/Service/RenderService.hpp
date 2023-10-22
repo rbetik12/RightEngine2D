@@ -13,14 +13,16 @@ public:
 	RenderService();
 	virtual ~RenderService() override;
 
-	virtual void									Update(float dt) override;
-	virtual void									PostUpdate(float dt) override;
+	virtual void							Update(float dt) override;
+	virtual void							PostUpdate(float dt) override;
 
 	std::shared_ptr<rhi::ShaderCompiler>	CreateShaderCompiler(const rhi::ShaderCompiler::Options& options = {});
 	std::shared_ptr<rhi::Buffer>			CreateBuffer(const rhi::BufferDescriptor& desc, const void* data = nullptr);
 	std::shared_ptr<rhi::Texture>			CreateTexture(const rhi::TextureDescriptor& desc, const void* data = nullptr);
 	std::shared_ptr<rhi::Shader>			CreateShader(const rhi::ShaderDescriptor& desc);
 	std::shared_ptr<rhi::Sampler>			CreateSampler(const rhi::SamplerDescriptor& desc);
+	std::shared_ptr<rhi::RenderPass>		CreateRenderPass(const rhi::RenderPassDescriptor& desc);
+	std::shared_ptr<rhi::Pipeline>			CreatePipeline(const rhi::PipelineDescriptor& desc);
 
 private:
 	std::shared_ptr<rhi::Device>	m_device;

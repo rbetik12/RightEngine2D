@@ -63,6 +63,8 @@ public:
 	virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) override;
 	virtual std::shared_ptr<Sampler>		CreateSampler(const SamplerDescriptor& desc) override;
 	virtual std::shared_ptr<Texture>		CreateTexture(const TextureDescriptor& desc, const void* data = {}) override;
+	virtual std::shared_ptr<RenderPass>		CreateRenderPass(const RenderPassDescriptor& desc) override;
+	virtual std::shared_ptr<Pipeline>		CreatePipeline(const PipelineDescriptor& desc) override;
 
 	VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
 	VkCommandPool							CommandPool() const { return m_commandPool; }

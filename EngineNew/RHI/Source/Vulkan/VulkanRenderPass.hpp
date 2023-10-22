@@ -19,7 +19,9 @@ public:
 	VkImageLayout	InitialLayoutDepth() const { return m_initialLayoutDepth; }
 	VkImageLayout	FinalLayoutDepth() const { return m_finalLayoutDepth; }
 
-	bool			hasDepth() const { return m_descriptor.m_depthStencilAttachment.m_texture != nullptr; }
+	bool			HasDepth() const { return m_descriptor.m_depthStencilAttachment.m_texture != nullptr; }
+
+	VkRenderPass	Pass() const { return m_pass; }
 
 private:
 	void CreateFramebuffer();
@@ -28,6 +30,7 @@ private:
 	eastl::vector<VkImageLayout>	m_finalLayoutColor;
 	VkImageLayout					m_initialLayoutDepth = VK_IMAGE_LAYOUT_UNDEFINED;
 	VkImageLayout					m_finalLayoutDepth = VK_IMAGE_LAYOUT_UNDEFINED;
+	eastl::vector<VkClearValue>		m_clearValues;
 	VkRenderPass					m_pass = nullptr;
 	VkFramebuffer					m_framebuffer = nullptr;
 };

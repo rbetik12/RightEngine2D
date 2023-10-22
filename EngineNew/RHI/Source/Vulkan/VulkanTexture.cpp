@@ -203,8 +203,9 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const void* data) : 
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1;
 
-    auto imageView = m_imageViews.emplace_back();
-    RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &viewInfo, nullptr, &imageView) == VK_SUCCESS);
+    auto& view = m_imageViews.emplace_back();
+    RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &viewInfo, nullptr, &view) == VK_SUCCESS);
+    RHI_ASSERT(view);
 }
 
 VulkanTexture::~VulkanTexture()
@@ -212,7 +213,6 @@ VulkanTexture::~VulkanTexture()
     // TODO: Currently we support only one image view, change later!
     vkDestroyImageView(VulkanDevice::s_ctx.m_device, m_imageViews[0], nullptr);
     vmaDestroyImage(VulkanDevice::s_ctx.m_allocator, m_image, m_allocation);
-    vmaFreeMemory(VulkanDevice::s_ctx.m_allocator, m_allocation);
 }
 
 void VulkanTexture::ChangeImageLayout(VkImage image, 

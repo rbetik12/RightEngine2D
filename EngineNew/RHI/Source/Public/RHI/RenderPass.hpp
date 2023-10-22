@@ -11,6 +11,8 @@ class RHI_API RenderPass
 public:
 	virtual ~RenderPass() = default;
 
+	const RenderPassDescriptor& Descriptor() const { return m_descriptor; }
+
 protected:
     RenderPassDescriptor m_descriptor;
 

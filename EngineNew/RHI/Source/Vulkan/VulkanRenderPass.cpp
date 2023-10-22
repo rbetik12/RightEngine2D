@@ -10,6 +10,18 @@ namespace rhi::vulkan
 
 VulkanRenderPass::VulkanRenderPass(const RenderPassDescriptor& descriptor) : RenderPass(descriptor)
 {
+    for (const auto& attachment : m_descriptor.m_colorAttachments)
+    {
+        glm::vec4 color = attachment.m_clearValue.m_color;
+        VkClearValue clearValue;
+        clearValue.color = { color.r, color.g, color.b, color.a };
+        m_clearValues.push_back(clearValue);
+    }
+    VkClearValue clearValue;
+    clearValue.depthStencil = { m_descriptor.m_depthStencilAttachment.m_clearValue.m_depth,
+                                m_descriptor.m_depthStencilAttachment.m_clearValue.m_stencil };
+    m_clearValues.push_back(clearValue);
+
     eastl::vector<VkAttachmentDescription> colorAttachments;
     for (const auto& attachment : m_descriptor.m_colorAttachments)
     {
@@ -123,6 +135,8 @@ VulkanRenderPass::~VulkanRenderPass()
 
 void VulkanRenderPass::CreateFramebuffer()
 {
+    // TODO: Framebuffer must support multiple attachments or do we need to create new framebuffer for each image view?
+
     eastl::vector<VkImageView> attachments;
 
     for (const auto& attachment : m_descriptor.m_colorAttachments)
@@ -148,7 +162,7 @@ void VulkanRenderPass::CreateFramebuffer()
     framebufferInfo.height = m_descriptor.m_extent.y;
     framebufferInfo.layers = 1;
 
-    RHI_ASSERT(vkCreateFramebuffer(VulkanDevice::s_ctx.m_device, &framebufferInfo, nullptr, &m_framebuffer) != VK_SUCCESS);
+    RHI_ASSERT(vkCreateFramebuffer(VulkanDevice::s_ctx.m_device, &framebufferInfo, nullptr, &m_framebuffer) == VK_SUCCESS);
 }
 
 }

@@ -4,6 +4,8 @@
 #include "VulkanShader.hpp"
 #include "VulkanSampler.hpp"
 #include "VulkanTexture.hpp"
+#include "VulkanRenderPass.hpp"
+#include "VulkanPipeline.hpp"
 #include <optional>
 
 namespace rhi::vulkan
@@ -197,6 +199,16 @@ std::shared_ptr<Sampler> VulkanDevice::CreateSampler(const SamplerDescriptor& de
 std::shared_ptr<Texture> VulkanDevice::CreateTexture(const TextureDescriptor& desc, const void* data)
 {
 	return std::make_shared<VulkanTexture>(desc, data);
+}
+
+std::shared_ptr<RenderPass> VulkanDevice::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+	return std::make_shared<VulkanRenderPass>(desc);
+}
+
+std::shared_ptr<Pipeline> VulkanDevice::CreatePipeline(const PipelineDescriptor& desc)
+{
+	return std::make_shared<VulkanPipeline>(desc);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)

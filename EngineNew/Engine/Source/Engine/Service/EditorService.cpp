@@ -4,13 +4,13 @@
 #include <Engine/Engine.hpp>
 #include <Engine/Registration.hpp>
 #include <RHI/Texture.hpp>
+#include <RHI/PipelineDescriptor.hpp>
 
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::EditorService>("engine::EditorService")
 	.Domain(engine::Domain::EDITOR);
 }
-
 
 namespace engine
 {
@@ -47,6 +47,19 @@ EditorService::EditorService()
 	textureDescriptor.m_format = rhi::Format::RGBA8_UINT;
 
 	const auto texture = rs.CreateTexture(textureDescriptor);
+
+	rhi::RenderPassDescriptor renderPassDescriptor;
+	renderPassDescriptor.m_extent = { 1024, 1024 };
+	renderPassDescriptor.m_name = "Test";
+	renderPassDescriptor.m_colorAttachments = { {texture} };
+
+	const auto renderPass = rs.CreateRenderPass(renderPassDescriptor);
+
+	rhi::PipelineDescriptor pipelineDescriptor{};
+	pipelineDescriptor.m_pass = renderPass;
+	pipelineDescriptor.m_shader = shader;
+
+	const auto pipeline = rs.CreatePipeline(pipelineDescriptor);
 }
 
 EditorService::~EditorService()

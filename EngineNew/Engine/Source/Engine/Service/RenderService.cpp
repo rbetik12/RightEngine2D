@@ -81,4 +81,14 @@ std::shared_ptr<rhi::Sampler> RenderService::CreateSampler(const rhi::SamplerDes
     return m_device->CreateSampler(desc);
 }
 
+std::shared_ptr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::RenderPassDescriptor& desc)
+{
+    return m_device->CreateRenderPass(desc);
+}
+
+std::shared_ptr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
+{
+    return m_device->CreatePipeline(desc);
+}
+
 }
