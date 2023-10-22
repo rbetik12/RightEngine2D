@@ -60,8 +60,8 @@ VulkanShader::VulkanShader(const std::shared_ptr<Device>& device, const ShaderPr
     auto& rs = Instance().Service<engine::render::RenderService>();
     auto vertexShaderData = rs.CompileShader(vertexShaderPath);
     auto fragmentShaderData = rs.CompileShader(fragmentShaderPath);
-    vertexShaderModule = CreateShaderModule(vertexShaderData.get().m_compiledShader);
-    fragShaderModule = CreateShaderModule(fragmentShaderData.get().m_compiledShader);
+    // vertexShaderModule = CreateShaderModule(vertexShaderData.get().m_compiledShader);
+    // fragShaderModule = CreateShaderModule(fragmentShaderData.get().m_compiledShader);
 }
 
 VulkanShader::~VulkanShader()

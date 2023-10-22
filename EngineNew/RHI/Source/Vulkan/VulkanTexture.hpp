@@ -10,7 +10,7 @@ namespace rhi::vulkan
 	class RHI_API VulkanTexture : public Texture
 	{
 	public:
-		VulkanTexture(const TextureDescriptor& desc, const eastl::vector<uint8_t>& data);
+		VulkanTexture(const TextureDescriptor& desc, const void* data = nullptr);
 
 		virtual ~VulkanTexture() override;
 
@@ -27,9 +27,9 @@ namespace rhi::vulkan
 
 	private:
 		std::shared_ptr<Buffer>		m_stagingBuffer;
-		VkImage						m_image;
+		VkImage						m_image = nullptr;
 		eastl::vector<VkImageView>	m_imageViews;
-		VmaAllocation				m_allocation;
+		VmaAllocation				m_allocation = nullptr;
 		VkImageLayout				m_layout;
 	};
 }

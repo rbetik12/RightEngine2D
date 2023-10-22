@@ -174,4 +174,19 @@ inline VkShaderStageFlagBits ShaderStage(ShaderStage stage)
     }
 }
 
+inline VkCompareOp CompareOp(CompareOp op)
+{
+    switch (op)
+    {
+    case CompareOp::LESS:
+        return VK_COMPARE_OP_LESS;
+    case CompareOp::LESS_OR_EQUAL:
+        return VK_COMPARE_OP_LESS_OR_EQUAL;
+    case CompareOp::GREATER:
+        return VK_COMPARE_OP_GREATER;
+    default:
+        HELPER_DEFAULT_RETURN(VkCompareOp);
+    }
+}
+
 } // namespace rhi::vulkan::helpers

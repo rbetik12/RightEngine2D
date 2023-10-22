@@ -66,6 +66,11 @@ std::shared_ptr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescri
     return m_device->CreateBuffer(desc, data);
 }
 
+std::shared_ptr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const void* data)
+{
+    return m_device->CreateTexture(desc, data);
+}
+
 std::shared_ptr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
 {
     return m_device->CreateShader(desc);

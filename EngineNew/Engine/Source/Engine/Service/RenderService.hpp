@@ -17,7 +17,8 @@ public:
 	virtual void									PostUpdate(float dt) override;
 
 	std::shared_ptr<rhi::ShaderCompiler>	CreateShaderCompiler(const rhi::ShaderCompiler::Options& options = {});
-	std::shared_ptr<rhi::Buffer>			CreateBuffer(const rhi::BufferDescriptor& desc, const void* data);
+	std::shared_ptr<rhi::Buffer>			CreateBuffer(const rhi::BufferDescriptor& desc, const void* data = nullptr);
+	std::shared_ptr<rhi::Texture>			CreateTexture(const rhi::TextureDescriptor& desc, const void* data = nullptr);
 	std::shared_ptr<rhi::Shader>			CreateShader(const rhi::ShaderDescriptor& desc);
 	std::shared_ptr<rhi::Sampler>			CreateSampler(const rhi::SamplerDescriptor& desc);
 

@@ -19,7 +19,7 @@ namespace rhi
         uint16_t        m_width = 0;
         uint16_t        m_height = 0;
         uint8_t         m_componentAmount = 0;
-        uint8_t         m_mipLevels = 0;
+        uint8_t         m_mipLevels = 1;
         uint8_t         m_layersAmount = 1;
         Format          m_format = Format::NONE;
         TextureType     m_type = TextureType::NONE;

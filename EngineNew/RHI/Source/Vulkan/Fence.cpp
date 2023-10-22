@@ -8,7 +8,7 @@ namespace rhi::vulkan
 		VkFenceCreateInfo fenceInfo{};
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-		RHI_ASSERT(vkCreateFence(VulkanDevice::s_ctx.m_device, &fenceInfo, nullptr, &m_handle) != VK_SUCCESS);
+		RHI_ASSERT(vkCreateFence(VulkanDevice::s_ctx.m_device, &fenceInfo, nullptr, &m_handle) == VK_SUCCESS);
 	}
 
 	Fence::~Fence()

@@ -56,9 +56,11 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
 
 } // namespace unnamed
 
-VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const eastl::vector<uint8_t>& data) : Texture(desc), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const void* data) : Texture(desc), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
 {
-    if (!data.empty())
+    RHI_ASSERT(desc.m_mipLevels > 0);
+
+    if (data)
     {
         BufferDescriptor stagingBufferDesc;
         stagingBufferDesc.m_size = desc.Size();
@@ -66,7 +68,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const eastl::vector<
         stagingBufferDesc.m_memoryType = MemoryType::CPU_ONLY;
 		m_stagingBuffer = VulkanDevice::s_ctx.m_instance->CreateBuffer(stagingBufferDesc, nullptr);
         auto ptr = m_stagingBuffer->Map();
-        memcpy(ptr, data.data(), stagingBufferDesc.m_size);
+        memcpy(ptr, data, stagingBufferDesc.m_size);
         m_stagingBuffer->UnMap();
     }
 
@@ -128,7 +130,9 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const eastl::vector<
     imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     imageAllocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    vmaCreateImage(VulkanDevice::s_ctx.m_allocator, &imageCreateInfo, &imageAllocInfo, &m_image, &m_allocation, nullptr);
+    const auto status = vmaCreateImage(VulkanDevice::s_ctx.m_allocator, &imageCreateInfo, &imageAllocInfo, &m_image, &m_allocation, nullptr);
+
+    RHI_ASSERT(status == VK_SUCCESS);
 
     // TODO: Add later support for more layers
 
@@ -140,7 +144,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const eastl::vector<
             m_descriptor.m_format,
             m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1,
             m_descriptor.m_mipLevels);
-        if (!data.empty())
+        if (data)
         {
             CopyBufferToImage(std::static_pointer_cast<VulkanBuffer>(m_stagingBuffer)->Raw(),
                 m_image,

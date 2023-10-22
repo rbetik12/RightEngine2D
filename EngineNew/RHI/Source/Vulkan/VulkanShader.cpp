@@ -2,6 +2,8 @@
 #include "VulkanDevice.hpp"
 #include "VulkanHelpers.hpp"
 
+#define MAX_PUSH_CONSTANT_SIZE 128
+
 namespace rhi::vulkan
 {
 
@@ -30,7 +32,6 @@ VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descript
 
 	log::debug("[Vulkan] Successfully created shader '{}'", descriptor.m_path);
 
-    
 	FillVertexData();
     CreateDescriptorSetLayout();
 }
@@ -45,6 +46,8 @@ VulkanShader::~VulkanShader()
 
 void VulkanShader::CreateDescriptorSetLayout()
 {
+    eastl::vector<VkDescriptorSetLayoutBinding> bindings;
+
     for (const auto& [slot, info] : m_descriptor.m_reflection.m_bufferMap)
     {
         if (info.m_type == BufferType::UNIFORM)
@@ -54,7 +57,7 @@ void VulkanShader::CreateDescriptorSetLayout()
             bufferLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             bufferLayoutBinding.descriptorCount = 1;
             bufferLayoutBinding.stageFlags = helpers::ShaderStage(info.m_stage);
-            m_bindings.emplace_back(bufferLayoutBinding);
+            bindings.emplace_back(bufferLayoutBinding);
         }
     }
 
@@ -65,7 +68,35 @@ void VulkanShader::CreateDescriptorSetLayout()
         textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         textureLayoutBinding.descriptorCount = 1;
         textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        m_bindings.emplace_back(textureLayoutBinding);
+        bindings.emplace_back(textureLayoutBinding);
+    }
+
+    if (bindings.empty())
+    {
+        return;
+    }
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+
+    RHI_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::s_ctx.m_device, &layoutInfo, nullptr, &m_layout) == VK_SUCCESS);
+}
+
+void VulkanShader::FillPushContansts()
+{
+    for (const auto& [slot, buffer] : Descriptor().m_reflection.m_bufferMap)
+    {
+        if (buffer.m_type == BufferType::CONSTANT)
+        {
+            RHI_ASSERT(m_constants.empty());
+            VkPushConstantRange range;
+            range.offset = 0;
+            range.size = MAX_PUSH_CONSTANT_SIZE;
+            range.stageFlags = helpers::ShaderStage(buffer.m_stage);
+            m_constants.emplace_back(range);
+        }
     }
 }
 

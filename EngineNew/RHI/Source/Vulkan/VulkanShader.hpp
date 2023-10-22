@@ -14,29 +14,29 @@ public:
 	virtual ~VulkanShader() override;
 
 	using InputAttributeDescription = eastl::vector<VkVertexInputAttributeDescription>;
-	using DescriptorSetLayout = eastl::vector<VkDescriptorSetLayoutBinding>;
 
-	const InputAttributeDescription&		AttributeDescription() const
-	{ return m_attributesDescription; }
+	const InputAttributeDescription&			AttributeDescription() const { return m_attributesDescription; }
 
-	const VkVertexInputBindingDescription&	InputDescription() const
-	{ return m_inputDescription; }
+	const VkVertexInputBindingDescription&		InputDescription() const { return m_inputDescription; }
 
-	VkShaderModule							Module(ShaderStage stage) const { return m_modules[stage]; }
+	VkShaderModule								Module(ShaderStage stage) const { return m_modules[stage]; }
 
-	const DescriptorSetLayout&				DescriptorSetBindings() const { return m_bindings; }
+	VkDescriptorSetLayout						Layout() const { return m_layout; }
+
+	const eastl::vector<VkPushConstantRange>&	Constants() const { return m_constants; }
 
 private:
-
 	using ModuleMap = eastl::unordered_map<ShaderStage, VkShaderModule>;
 
 	mutable ModuleMap									m_modules;
-	eastl::vector<VkDescriptorSetLayoutBinding>			m_bindings;
+	VkDescriptorSetLayout								m_layout = nullptr;
 	eastl::vector<VkVertexInputAttributeDescription>	m_attributesDescription;
+	eastl::vector<VkPushConstantRange>					m_constants;
 	VkVertexInputBindingDescription						m_inputDescription;
 
 	void FillVertexData();
 	void CreateDescriptorSetLayout();
+	void FillPushContansts();
 };
 
 }

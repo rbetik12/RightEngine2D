@@ -3,6 +3,7 @@
 #include <Engine/Service/RenderService.hpp>
 #include <Engine/Engine.hpp>
 #include <Engine/Registration.hpp>
+#include <RHI/Texture.hpp>
 
 RTTR_REGISTRATION
 {
@@ -35,7 +36,17 @@ EditorService::EditorService()
 	shaderDescriptor.m_reflection = compiledShader.m_reflection;
 	shaderDescriptor.m_type = rhi::ShaderType::FX;
 	const auto shader = rs.CreateShader(shaderDescriptor);
-	__debugbreak();
+
+
+	rhi::TextureDescriptor textureDescriptor;
+	textureDescriptor.m_width = 1024;
+	textureDescriptor.m_height = 1024;
+	textureDescriptor.m_componentAmount = 4;
+	textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
+	textureDescriptor.m_layersAmount = 1;
+	textureDescriptor.m_format = rhi::Format::RGBA8_UINT;
+
+	const auto texture = rs.CreateTexture(textureDescriptor);
 }
 
 EditorService::~EditorService()
