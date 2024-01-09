@@ -6,6 +6,7 @@
 #include "VulkanTexture.hpp"
 #include "VulkanRenderPass.hpp"
 #include "VulkanPipeline.hpp"
+#include "VulkanHelpers.hpp"
 #include <optional>
 
 namespace rhi::vulkan
@@ -157,8 +158,16 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	SetupAllocator(context);
 	SetupCommandPool(context);
 	FillSwapchainSupportDetails(context);
+
 	s_ctx.m_surface = context->Surface();
 	s_ctx.m_instance = this;
+
+	m_cmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
+	for (auto& cmd : m_cmdBuffers)
+	{
+		cmd.m_buffer = CommandBuffer();
+		cmd.m_fence = Fence(true);
+	}
 }
 
 VulkanDevice::~VulkanDevice()
@@ -209,6 +218,63 @@ std::shared_ptr<RenderPass> VulkanDevice::CreateRenderPass(const RenderPassDescr
 std::shared_ptr<Pipeline> VulkanDevice::CreatePipeline(const PipelineDescriptor& desc)
 {
 	return std::make_shared<VulkanPipeline>(desc);
+}
+
+void VulkanDevice::BeginFrame()
+{
+	m_frameIndex += 1;
+	m_currentCmdBufferIndex = m_frameIndex % m_cmdBuffers.size();
+	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+	cmdBuffer.m_buffer.Reset();
+	cmdBuffer.m_buffer.Begin();
+}
+
+void VulkanDevice::EndFrame()
+{
+	// TODO: Implement cmd buffer sending to queue or should we do that in present method?
+}
+
+void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
+{
+	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+	
+	const auto vkRenderpass = std::static_pointer_cast<VulkanRenderPass>(pipeline->Descriptor().m_pass);
+	const auto& renderPassBeginInfo = vkRenderpass->BeginInfo(m_currentCmdBufferIndex);
+	const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline();
+
+	cmdBuffer.m_buffer.Push([&renderPassBeginInfo, vkPipeline](VkCommandBuffer buffer)
+		{
+			vkCmdBeginRenderPass(buffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+		});
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float>(vkRenderpass->Descriptor().m_extent.x);
+	viewport.height = static_cast<float>(vkRenderpass->Descriptor().m_extent.y);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	VkRect2D scissor{};
+	scissor.offset = { 0, 0 };
+	scissor.extent = helpers::Extent(vkRenderpass->Descriptor().m_extent);
+
+	cmdBuffer.m_buffer.Push([&scissor, &viewport](VkCommandBuffer buffer)
+		{
+			vkCmdSetViewport(buffer, 0, 1, &viewport);
+			vkCmdSetScissor(buffer, 0, 1, &scissor);
+		});
+}
+
+void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
+{
+	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+
+	cmdBuffer.m_buffer.Push([](VkCommandBuffer buffer)
+		{
+			vkCmdEndRenderPass(buffer);
+		});
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)

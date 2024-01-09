@@ -10,7 +10,6 @@ namespace rhi::vulkan
 
 struct SwapchainDescriptor
 {
-    Format              m_format;
     VkPresentModeKHR    m_presentMode;
     glm::ivec2          m_extent;
 };
@@ -21,6 +20,7 @@ public:
     Swapchain(const SwapchainDescriptor& desc);
     ~Swapchain();
 
+    const SwapchainDescriptor& Descriptor() const { return m_descriptor; }
 private:
     SwapchainDescriptor         m_descriptor;
     VkSwapchainKHR              m_swapchain;

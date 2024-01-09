@@ -12,6 +12,8 @@ class RHI_API Pipeline
 public:
 	virtual ~Pipeline() = default;
 
+	const PipelineDescriptor& Descriptor() const { return m_descriptor; }
+
 protected:
 	PipelineDescriptor m_descriptor;
 

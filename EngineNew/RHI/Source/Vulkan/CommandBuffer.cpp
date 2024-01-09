@@ -28,12 +28,20 @@ void CommandBuffer::Begin(bool oneTimeUsage)
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	}
 
-	vkBeginCommandBuffer(m_handle, &beginInfo);
+	const auto result = vkBeginCommandBuffer(m_handle, &beginInfo);
+	RHI_ASSERT(result == VK_SUCCESS);
 }
 
 void CommandBuffer::End()
 {
-	vkEndCommandBuffer(m_handle);
+	const auto result = vkEndCommandBuffer(m_handle);
+	RHI_ASSERT(result == VK_SUCCESS);
+}
+
+void CommandBuffer::Reset()
+{
+	const auto result = vkResetCommandBuffer(m_handle, 0);
+	RHI_ASSERT(result == VK_SUCCESS);
 }
 
 } // namespace rhi::vulkan

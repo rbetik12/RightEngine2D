@@ -9,7 +9,6 @@ namespace rhi::vulkan
 
 VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descriptor)
 {
-	RHI_ASSERT(!descriptor.m_reflection.m_inputLayout.Elements().empty());
     RHI_ASSERT(!descriptor.m_blobByStage.empty());
 
     for (const auto& [stage, blob] : descriptor.m_blobByStage)
@@ -103,6 +102,15 @@ void VulkanShader::FillPushContansts()
 void VulkanShader::FillVertexData()
 {
     const auto& layout = m_descriptor.m_reflection.m_inputLayout;
+    m_inputDescription.binding = 0;
+    m_inputDescription.stride = layout.Stride();
+    m_inputDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	if (layout.Empty())
+    {
+        return;
+    }
+
     const auto& layoutElements = layout.Elements();
     int32_t offset = -static_cast<int32_t>(layoutElements.front().GetSize());
     for (int i = 0; i < layoutElements.size(); i++)
@@ -116,10 +124,6 @@ void VulkanShader::FillVertexData()
 
         m_attributesDescription.emplace_back(attributeDescription);
     }
-
-    m_inputDescription.binding = 0;
-    m_inputDescription.stride = layout.Stride();
-    m_inputDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 }
 
 } // namespace rhi::vulkan

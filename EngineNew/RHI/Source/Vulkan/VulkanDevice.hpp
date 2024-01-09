@@ -6,8 +6,10 @@
 #include "VulkanContext.hpp"
 #include "CommandBuffer.hpp"
 #include "Fence.hpp"
-#include <vulkan/vulkan.hpp>
+#include "Swapchain.hpp"
 #include <VulkanMemoryAllocator/vk_mem_alloc.h>
+
+#include "Semaphore.hpp"
 
 namespace rhi::vulkan
 {
@@ -33,11 +35,12 @@ struct QueueFamilyIndices
 class RHI_API VulkanDevice : public Device
 {
 public:
-	// Physical device properties cache
+	// Device properties cache
 	struct Properties
 	{
-		size_t	m_minUniformBufferOffsetAlignment = 0;
-		float	m_maxSamplerAnisotropy = 0;
+		uint32_t	m_framesInFlight = 2;
+		size_t		m_minUniformBufferOffsetAlignment = 0;
+		float		m_maxSamplerAnisotropy = 0;
 	};
 
 	// Global context needed for operations with memory (buffers, texture and other allocations)
@@ -66,6 +69,11 @@ public:
 	virtual std::shared_ptr<RenderPass>		CreateRenderPass(const RenderPassDescriptor& desc) override;
 	virtual std::shared_ptr<Pipeline>		CreatePipeline(const PipelineDescriptor& desc) override;
 
+	virtual void							BeginFrame() override;
+	virtual void							EndFrame() override;
+	virtual void							BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
+	virtual void							EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
+
 	VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
 	VkCommandPool							CommandPool() const { return m_commandPool; }
 	const SwapchainSupportDetails&			GetSwapchainSupportDetails() const { return m_swapchainDetails; }
@@ -78,6 +86,19 @@ private:
 	VkQueue						m_presentQueue = nullptr;
 	VkCommandPool				m_commandPool = nullptr;
 	SwapchainSupportDetails		m_swapchainDetails;
+	std::unique_ptr<Swapchain>	m_swapchain;
+	uint32_t					m_frameIndex = 0;
+	uint32_t					m_currentCmdBufferIndex = 0;
+
+	// TODO: Rename to a better name
+	struct CommandBufferSync
+	{
+		CommandBuffer	m_buffer;
+		Fence			m_fence;
+		Semaphore       m_imageAvailableSemaphore;
+		Semaphore       m_renderFinishedSemaphore;
+	};
+	eastl::vector<CommandBufferSync> m_cmdBuffers;
 
 	// Initializer methods
 	void PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);

@@ -32,6 +32,11 @@ public:
 	virtual std::shared_ptr<RenderPass>		CreateRenderPass(const RenderPassDescriptor& desc) = 0;
 	virtual std::shared_ptr<Pipeline>		CreatePipeline(const PipelineDescriptor& desc) = 0;
 
+	virtual void							BeginFrame() = 0;
+	virtual void							EndFrame() = 0;
+	virtual void							BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
+	virtual void							EndPipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
+
 	static std::shared_ptr<Device>			Create(const std::shared_ptr<IContext>& ctx);
 };
 

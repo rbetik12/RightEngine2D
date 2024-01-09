@@ -5,17 +5,20 @@
 
 namespace rhi::vulkan
 {
-	class RHI_API Fence
-	{
-	public:
-		Fence();
-		~Fence();
 
-		void Wait();
+class RHI_API Fence
+{
+public:
+	Fence(bool signaled = false);
+	~Fence();
 
-		VkFence Raw() const { return m_handle; }
+	void Wait();
+	bool IsSignaled();
 
-	private:
-		VkFence m_handle;
-	};
+	VkFence Raw() const { return m_handle; }
+
+private:
+	VkFence m_handle;
+};
+
 }

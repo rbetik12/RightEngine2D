@@ -19,6 +19,7 @@ public:
 
 	void Begin(bool oneTimeUsage = true);
 	void End();
+	void Reset();
 
 	VkCommandBuffer Raw() const { return m_handle; }
 

@@ -4,7 +4,6 @@
 #include "VulkanHelpers.hpp"
 #include <vulkan/vulkan.h>
 
-
 namespace rhi::vulkan
 {
 
@@ -125,12 +124,31 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassDescriptor& descriptor) : Ren
     RHI_ASSERT(vkCreateRenderPass(VulkanDevice::s_ctx.m_device, &renderPassInfo, nullptr, &m_pass) == VK_SUCCESS);
 
     CreateFramebuffer();
+
+    m_beginInfos.resize(VulkanDevice::s_ctx.m_properties.m_framesInFlight);
 }
 
 VulkanRenderPass::~VulkanRenderPass()
 {
     vkDestroyFramebuffer(VulkanDevice::s_ctx.m_device, m_framebuffer, nullptr);
     vkDestroyRenderPass(VulkanDevice::s_ctx.m_device, m_pass, nullptr);
+}
+
+const VkRenderPassBeginInfo& VulkanRenderPass::BeginInfo(uint32_t frameInFlightIndex)
+{
+    RHI_ASSERT(frameInFlightIndex < m_beginInfos.size());
+    auto& beginInfo = m_beginInfos[frameInFlightIndex];
+
+    std::memset(&beginInfo, 0, sizeof(VkRenderPassBeginInfo));
+    beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    beginInfo.renderPass = m_pass;
+    beginInfo.framebuffer = m_framebuffer;
+    beginInfo.renderArea.offset = { 0, 0 };
+    beginInfo.renderArea.extent = rhi::vulkan::helpers::Extent(Descriptor().m_extent);
+    beginInfo.clearValueCount = static_cast<uint32_t>(m_clearValues.size());
+    beginInfo.pClearValues = m_clearValues.data();
+
+    return beginInfo;
 }
 
 void VulkanRenderPass::CreateFramebuffer()

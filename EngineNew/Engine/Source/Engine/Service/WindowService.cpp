@@ -16,6 +16,7 @@ WindowService::WindowService()
 	ENGINE_ASSERT(glfwInit());
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	m_window = glfwCreateWindow(1920, 1080, "Right Engine", nullptr, nullptr);
 
 	ENGINE_ASSERT(m_window);

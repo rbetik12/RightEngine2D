@@ -22,6 +22,10 @@ public:
 	bool			HasDepth() const { return m_descriptor.m_depthStencilAttachment.m_texture != nullptr; }
 
 	VkRenderPass	Pass() const { return m_pass; }
+	VkFramebuffer	Framebuffer() const { return m_framebuffer; }
+
+	const VkRenderPassBeginInfo&		BeginInfo(uint32_t frameInFlightIndex);
+	const eastl::vector<VkClearValue>&	ClearValues() const { return m_clearValues; }
 
 private:
 	void CreateFramebuffer();
@@ -33,6 +37,9 @@ private:
 	eastl::vector<VkClearValue>		m_clearValues;
 	VkRenderPass					m_pass = nullptr;
 	VkFramebuffer					m_framebuffer = nullptr;
+
+	// TODO: Reconsider storing that somewhere else
+	eastl::vector<VkRenderPassBeginInfo> m_beginInfos;
 };
 
 }
