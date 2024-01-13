@@ -74,12 +74,14 @@ public:
 	virtual void							BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
 	virtual void							EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
 
+	virtual void							OnResize(uint32_t x, uint32_t y) override;
+
 	VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
 	VkCommandPool							CommandPool() const { return m_commandPool; }
 	const SwapchainSupportDetails&			GetSwapchainSupportDetails() const { return m_swapchainDetails; }
 	QueueFamilyIndices						FindQueueFamilies() const;
 
-	Fence									Execute(CommandBuffer buffer);
+	std::shared_ptr<Fence>					Execute(CommandBuffer buffer);
 
 private:
 	VkQueue						m_graphicsQueue = nullptr;
@@ -88,17 +90,15 @@ private:
 	SwapchainSupportDetails		m_swapchainDetails;
 	std::unique_ptr<Swapchain>	m_swapchain;
 	uint32_t					m_frameIndex = 0;
+	uint32_t					m_swapchainImageIndex = 0;
 	uint32_t					m_currentCmdBufferIndex = 0;
+	glm::ivec2					m_presentExtent = {0, 0};
+	bool						m_isSwapchainDirty = false;
 
-	// TODO: Rename to a better name
-	struct CommandBufferSync
-	{
-		CommandBuffer	m_buffer;
-		Fence			m_fence;
-		Semaphore       m_imageAvailableSemaphore;
-		Semaphore       m_renderFinishedSemaphore;
-	};
-	eastl::vector<CommandBufferSync> m_cmdBuffers;
+	eastl::vector<VkCommandBuffer>	m_cmdBuffers;
+	eastl::vector<VkFence>			m_fences;
+	eastl::vector<VkSemaphore>		m_presentSemaphores;
+	eastl::vector<VkSemaphore>		m_renderSemaphores;
 
 	// Initializer methods
 	void PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);

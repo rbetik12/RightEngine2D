@@ -21,7 +21,7 @@ public:
 	void End();
 	void Reset();
 
-	VkCommandBuffer Raw() const { return m_handle; }
+	VkCommandBuffer* Raw() { return &m_handle; }
 
 private:
 	VkCommandBuffer m_handle;

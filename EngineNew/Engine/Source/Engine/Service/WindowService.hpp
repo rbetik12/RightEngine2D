@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine/Service/IService.hpp>
+#include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 
 namespace engine
@@ -16,6 +17,8 @@ public:
 
 	virtual void		Update(float dt) override;
 	virtual void		PostUpdate(float dt) override;
+
+	glm::ivec2          Extent() const;
 
 	GLFWwindow*			Window() { return m_window; }
 	const GLFWwindow*	Window() const { return m_window; }

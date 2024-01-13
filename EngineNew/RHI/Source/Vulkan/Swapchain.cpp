@@ -1,5 +1,8 @@
 #include "Swapchain.hpp"
 #include "VulkanDevice.hpp"
+#include <vk-tools/VulkanTools.h>
+
+#undef max
 
 namespace rhi::vulkan
 {
@@ -121,6 +124,27 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
 
         RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &imageViewCreateInfo, nullptr, &m_imageViews[i]) == VK_SUCCESS);
     }
+
+    CommandBuffer cmdBuffer;
+    cmdBuffer.Begin();
+
+    VkImageSubresourceRange srcSubRange{};
+    srcSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    srcSubRange.baseMipLevel = 0;
+    srcSubRange.levelCount = 1;
+    srcSubRange.layerCount = 1;
+
+    for (auto& image : m_images)
+    {
+        vks::tools::setImageLayout(*cmdBuffer.Raw(),
+            image,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            srcSubRange);
+    }
+    cmdBuffer.End();
+
+    VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
 }
 
 Swapchain::~Swapchain()
@@ -130,6 +154,13 @@ Swapchain::~Swapchain()
         vkDestroyImageView(VulkanDevice::s_ctx.m_device, imageView, nullptr);
     }
     vkDestroySwapchainKHR(VulkanDevice::s_ctx.m_device, m_swapchain, nullptr);
+}
+
+uint32_t Swapchain::AcquireNextImage(VkDevice device, VkSemaphore presentSemaphore)
+{
+    uint32_t imageIndex;
+    RHI_ASSERT(vkAcquireNextImageKHR(device, m_swapchain, UINT64_MAX, presentSemaphore, (VkFence)nullptr, &imageIndex) == VK_SUCCESS);
+    return imageIndex;
 }
 
 } //namespace rhi::vulkan

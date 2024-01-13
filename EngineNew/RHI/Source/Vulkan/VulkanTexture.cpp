@@ -252,14 +252,14 @@ void VulkanTexture::ChangeImageLayout(VkImage image,
     srcSubRange.levelCount = mipmaps;
     srcSubRange.layerCount = layers;
 
-    vks::tools::setImageLayout(cmdBuffer.Raw(),
+    vks::tools::setImageLayout(*cmdBuffer.Raw(),
         image,
         oldLayout,
         newLayout,
         srcSubRange);
     cmdBuffer.End();
 
-    VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer).Wait();
+    VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
     m_layout = newLayout;
 }
 

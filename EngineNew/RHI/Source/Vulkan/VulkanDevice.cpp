@@ -163,15 +163,43 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	s_ctx.m_instance = this;
 
 	m_cmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
-	for (auto& cmd : m_cmdBuffers)
+	m_fences.resize(s_ctx.m_properties.m_framesInFlight);
+	m_renderSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
+	m_presentSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
+
+	for (int i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
 	{
-		cmd.m_buffer = CommandBuffer();
-		cmd.m_fence = Fence(true);
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = VulkanDevice::s_ctx.m_instance->CommandPool();
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+		RHI_ASSERT(vkAllocateCommandBuffers(VulkanDevice::s_ctx.m_device, &allocInfo, &m_cmdBuffers[i]) == VK_SUCCESS);
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		RHI_ASSERT(vkCreateFence(VulkanDevice::s_ctx.m_device, &fenceInfo, nullptr, &m_fences[i]) == VK_SUCCESS);
+
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		RHI_ASSERT(vkCreateSemaphore(VulkanDevice::s_ctx.m_device, &semaphoreInfo, nullptr, &m_presentSemaphores[i]) == VK_SUCCESS);
+		RHI_ASSERT(vkCreateSemaphore(VulkanDevice::s_ctx.m_device, &semaphoreInfo, nullptr, &m_renderSemaphores[i]) == VK_SUCCESS);
 	}
 }
 
 VulkanDevice::~VulkanDevice()
 {
+	vkDeviceWaitIdle(s_ctx.m_device);
+	m_swapchain.reset();
+
+	for (int i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
+	{
+		vkDestroyFence(s_ctx.m_device, m_fences[i], nullptr);
+		vkDestroySemaphore(s_ctx.m_device, m_presentSemaphores[i], nullptr);
+		vkDestroySemaphore(s_ctx.m_device, m_renderSemaphores[i], nullptr);
+	}
+
 	vkDestroyCommandPool(s_ctx.m_device, m_commandPool, nullptr);
 	vmaDestroyAllocator(s_ctx.m_allocator);
 	vkDestroyDevice(s_ctx.m_device, nullptr);
@@ -222,16 +250,69 @@ std::shared_ptr<Pipeline> VulkanDevice::CreatePipeline(const PipelineDescriptor&
 
 void VulkanDevice::BeginFrame()
 {
+	if (m_isSwapchainDirty)
+	{
+		SwapchainDescriptor descriptor{};
+		descriptor.m_extent = m_presentExtent;
+		descriptor.m_presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+
+		m_swapchain = std::make_unique<Swapchain>(descriptor);
+		m_isSwapchainDirty = false;
+	}
+
+	RHI_ASSERT(m_presentExtent != glm::ivec2());
+
 	m_frameIndex += 1;
 	m_currentCmdBufferIndex = m_frameIndex % m_cmdBuffers.size();
+
 	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
-	cmdBuffer.m_buffer.Reset();
-	cmdBuffer.m_buffer.Begin();
+	RHI_ASSERT(vkResetCommandBuffer(cmdBuffer, 0) == VK_SUCCESS);
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	RHI_ASSERT(vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS);
+
+	auto& presentSemaphore = m_presentSemaphores[m_currentCmdBufferIndex];
+
+	m_swapchainImageIndex = m_swapchain->AcquireNextImage(s_ctx.m_device, m_presentSemaphores[m_currentCmdBufferIndex]);
 }
 
 void VulkanDevice::EndFrame()
 {
-	// TODO: Implement cmd buffer sending to queue or should we do that in present method?
+	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+	RHI_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS);
+
+	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pWaitDstStageMask = &waitStageMask;
+	submitInfo.pWaitSemaphores = &m_presentSemaphores[m_currentCmdBufferIndex];
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &m_renderSemaphores[m_currentCmdBufferIndex];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pCommandBuffers = &cmdBuffer;
+	submitInfo.commandBufferCount = 1;
+
+	RHI_ASSERT(vkResetFences(s_ctx.m_device, 1, &m_fences[m_currentCmdBufferIndex]) == VK_SUCCESS);
+	RHI_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_fences[m_currentCmdBufferIndex]) == VK_SUCCESS);
+
+	VkResult result;
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = nullptr;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = m_swapchain->Raw();
+	presentInfo.pImageIndices = &m_swapchainImageIndex;
+
+	presentInfo.pWaitSemaphores = &m_renderSemaphores[m_currentCmdBufferIndex];
+	presentInfo.waitSemaphoreCount = 1;
+	result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+	// TODO: Implement swapchain and renderpass resizing
+	RHI_ASSERT(result == VK_SUCCESS);
+
+	const uint32_t nextFrameIndex = (m_frameIndex + 1) % s_ctx.m_properties.m_framesInFlight;
+	RHI_ASSERT(vkWaitForFences(s_ctx.m_device, 1, &m_fences[nextFrameIndex], VK_TRUE, UINT64_MAX) == VK_SUCCESS);
 }
 
 void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
@@ -242,11 +323,8 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 	const auto& renderPassBeginInfo = vkRenderpass->BeginInfo(m_currentCmdBufferIndex);
 	const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline();
 
-	cmdBuffer.m_buffer.Push([&renderPassBeginInfo, vkPipeline](VkCommandBuffer buffer)
-		{
-			vkCmdBeginRenderPass(buffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
-		});
+	vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -260,21 +338,14 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 	scissor.offset = { 0, 0 };
 	scissor.extent = helpers::Extent(vkRenderpass->Descriptor().m_extent);
 
-	cmdBuffer.m_buffer.Push([&scissor, &viewport](VkCommandBuffer buffer)
-		{
-			vkCmdSetViewport(buffer, 0, 1, &viewport);
-			vkCmdSetScissor(buffer, 0, 1, &scissor);
-		});
+	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 }
 
 void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
 	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
-
-	cmdBuffer.m_buffer.Push([](VkCommandBuffer buffer)
-		{
-			vkCmdEndRenderPass(buffer);
-		});
+	vkCmdEndRenderPass(cmdBuffer);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)
@@ -309,17 +380,18 @@ QueueFamilyIndices VulkanDevice::FindQueueFamilies() const
 	return vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, s_ctx.m_surface);
 }
 
-Fence VulkanDevice::Execute(CommandBuffer buffer)
+std::shared_ptr<Fence> VulkanDevice::Execute(CommandBuffer buffer)
 {
 	const auto cmd = buffer.Raw();
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &cmd;
+	submitInfo.pCommandBuffers = cmd;
 
-	Fence fence;
-	vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, fence.Raw());
+	auto fence = std::make_shared<Fence>(true);
+	fence->Reset();
+	vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, *fence->Raw());
 
 	return fence;
 }
@@ -441,6 +513,12 @@ void VulkanDevice::FillProperties()
 
 	properties.m_minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
 	properties.m_maxSamplerAnisotropy = deviceProps.limits.maxSamplerAnisotropy;
+}
+
+void VulkanDevice::OnResize(uint32_t x, uint32_t y)
+{
+	m_presentExtent = { x, y };
+	m_isSwapchainDirty = true;
 }
 
 }

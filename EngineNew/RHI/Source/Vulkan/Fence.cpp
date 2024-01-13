@@ -21,6 +21,10 @@ Fence::~Fence()
 void Fence::Wait()
 {
 	vkWaitForFences(VulkanDevice::s_ctx.m_device, 1, &m_handle, VK_TRUE, UINT64_MAX);
+}
+
+void Fence::Reset()
+{
 	vkResetFences(VulkanDevice::s_ctx.m_device, 1, &m_handle);
 }
 

@@ -40,6 +40,9 @@ RenderService::RenderService()
 
     m_context = rhi::vulkan::CreateContext(std::move(initCtx));
     m_device = rhi::Device::Create(m_context);
+
+    const auto extent = Instance().Service<WindowService>().Extent();
+    m_device->OnResize(extent.x, extent.y);
 }
 
 RenderService::~RenderService()
@@ -50,10 +53,12 @@ RenderService::~RenderService()
 
 void RenderService::Update(float dt)
 {
+    m_device->BeginFrame();
 }
 
 void RenderService::PostUpdate(float dt)
 {
+    m_device->EndFrame();
 }
 
 std::shared_ptr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)

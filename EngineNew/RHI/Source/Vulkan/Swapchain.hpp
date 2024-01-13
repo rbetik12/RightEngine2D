@@ -2,11 +2,14 @@
 
 #include <RHI/Config.hpp>
 #include <RHI/Types.hpp>
+#include "Semaphore.hpp"
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 
 namespace rhi::vulkan
 {
+
+struct CommandBufferSync;
 
 struct SwapchainDescriptor
 {
@@ -20,7 +23,12 @@ public:
     Swapchain(const SwapchainDescriptor& desc);
     ~Swapchain();
 
+    uint32_t AcquireNextImage(VkDevice device, VkSemaphore presentSemaphore);
+
     const SwapchainDescriptor& Descriptor() const { return m_descriptor; }
+
+    VkSwapchainKHR* Raw() { return &m_swapchain; }
+
 private:
     SwapchainDescriptor         m_descriptor;
     VkSwapchainKHR              m_swapchain;

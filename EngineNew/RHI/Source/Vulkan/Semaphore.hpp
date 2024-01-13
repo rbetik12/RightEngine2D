@@ -12,7 +12,7 @@ public:
 	Semaphore();
 	~Semaphore();
 
-	VkSemaphore Raw() const { return m_handle; }
+	VkSemaphore* Raw() { return &m_handle; }
 
 private:
 	VkSemaphore m_handle;
