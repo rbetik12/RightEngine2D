@@ -11,6 +11,8 @@ class RHI_API RenderPass
 public:
 	virtual ~RenderPass() = default;
 
+	bool						HasDepth() const { return m_descriptor.m_depthStencilAttachment.m_texture != nullptr; }
+
 	const RenderPassDescriptor& Descriptor() const { return m_descriptor; }
 
 protected:

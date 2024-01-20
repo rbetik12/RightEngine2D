@@ -15,9 +15,10 @@ namespace rhi::vulkan
 namespace
 {
 
-const eastl::array<const char*> C_DEVICE_EXTENSIONS =
+const eastl::array<const char*, 2> C_DEVICE_EXTENSIONS =
 {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
 #ifdef R_APPLE
 		"VK_KHR_portability_subset",
 #endif
@@ -258,6 +259,8 @@ void VulkanDevice::BeginFrame()
 
 		m_swapchain = std::make_unique<Swapchain>(descriptor);
 		m_isSwapchainDirty = false;
+
+		// TODO: Probably we must notify engine about dirty swapchain, so it can resize it renderpasses properly
 	}
 
 	RHI_ASSERT(m_presentExtent != glm::ivec2());
@@ -318,25 +321,36 @@ void VulkanDevice::EndFrame()
 void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
 	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
-	
-	const auto vkRenderpass = std::static_pointer_cast<VulkanRenderPass>(pipeline->Descriptor().m_pass);
-	const auto& renderPassBeginInfo = vkRenderpass->BeginInfo(m_currentCmdBufferIndex);
-	const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline();
 
-	vkCmdBeginRenderPass(cmdBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+	const auto& renderpass = std::static_pointer_cast<VulkanRenderPass>(pipeline->Descriptor().m_pass);
+
+	VkRenderingInfoKHR renderingInfo{};
+	renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+	renderingInfo.renderArea = helpers::Rect(renderpass->Descriptor().m_extent);
+	renderingInfo.layerCount = 1;
+	renderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderpass->Descriptor().m_colorAttachments.size());
+	renderingInfo.pColorAttachments = renderpass->ColorAttachments().data();
+
+	if (renderpass->Descriptor().m_depthStencilAttachment.m_texture != nullptr)
+	{
+		renderingInfo.pDepthAttachment = &renderpass->DepthAttachment();
+		renderingInfo.pStencilAttachment = &renderpass->DepthAttachment();
+	}
+
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline());
+	vkCmdBeginRendering(cmdBuffer, &renderingInfo);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(vkRenderpass->Descriptor().m_extent.x);
-	viewport.height = static_cast<float>(vkRenderpass->Descriptor().m_extent.y);
+	viewport.width = static_cast<float>(pipeline->Descriptor().m_pass->Descriptor().m_extent.x);
+	viewport.height = static_cast<float>(pipeline->Descriptor().m_pass->Descriptor().m_extent.y);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
-	scissor.extent = helpers::Extent(vkRenderpass->Descriptor().m_extent);
+	scissor.extent = helpers::Extent(pipeline->Descriptor().m_pass->Descriptor().m_extent);
 
 	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
@@ -345,7 +359,7 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
 	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
-	vkCmdEndRenderPass(cmdBuffer);
+	vkCmdEndRendering(cmdBuffer);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)
@@ -451,6 +465,10 @@ void VulkanDevice::CreateLogicalDevice(const std::shared_ptr<VulkanContext>& con
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
+	dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+	dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -458,6 +476,7 @@ void VulkanDevice::CreateLogicalDevice(const std::shared_ptr<VulkanContext>& con
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(C_DEVICE_EXTENSIONS.size());
 	createInfo.ppEnabledExtensionNames = C_DEVICE_EXTENSIONS.data();
+	createInfo.pNext = &dynamicRenderingFeature;
 
 	const auto validationLayers = context->ValidationLayers();
 

@@ -148,6 +148,14 @@ inline VkExtent2D Extent(const glm::ivec2& extent)
     return { static_cast<uint32_t>(extent.x), static_cast<uint32_t>(extent.y) };
 }
 
+inline VkRect2D Rect(const glm::ivec2& extent)
+{
+    VkRect2D rect;
+    rect.extent = Extent(extent);
+    rect.offset = { 0, 0 };
+    return rect;
+}
+
 inline VkCullModeFlags CullMode(CullMode mode)
 {
     switch (mode)

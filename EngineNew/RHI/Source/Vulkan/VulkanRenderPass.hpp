@@ -13,33 +13,15 @@ public:
 
 	virtual ~VulkanRenderPass() override;
 
-	VkImageLayout	InitialLayoutColor(uint32_t idx) const { RHI_ASSERT(idx < m_descriptor.m_colorAttachments.size()); return m_initialLayoutColor[idx]; }
-	VkImageLayout	FinalLayoutColor(uint32_t idx) const { RHI_ASSERT(idx < m_descriptor.m_colorAttachments.size()); return m_finalLayoutColor[idx]; }
+	using AttachmentInfo = VkRenderingAttachmentInfoKHR;
+	using AttachmentInfoList = eastl::vector<VkRenderingAttachmentInfoKHR>;
 
-	VkImageLayout	InitialLayoutDepth() const { return m_initialLayoutDepth; }
-	VkImageLayout	FinalLayoutDepth() const { return m_finalLayoutDepth; }
-
-	bool			HasDepth() const { return m_descriptor.m_depthStencilAttachment.m_texture != nullptr; }
-
-	VkRenderPass	Pass() const { return m_pass; }
-	VkFramebuffer	Framebuffer() const { return m_framebuffer; }
-
-	const VkRenderPassBeginInfo&		BeginInfo(uint32_t frameInFlightIndex);
-	const eastl::vector<VkClearValue>&	ClearValues() const { return m_clearValues; }
+	const AttachmentInfoList&	ColorAttachments() const { return m_colorAttachmentInfos; }
+	const AttachmentInfo&		DepthAttachment() const { return m_depthAttachmentInfo; }
 
 private:
-	void CreateFramebuffer();
-
-	eastl::vector<VkImageLayout>	m_initialLayoutColor;
-	eastl::vector<VkImageLayout>	m_finalLayoutColor;
-	VkImageLayout					m_initialLayoutDepth = VK_IMAGE_LAYOUT_UNDEFINED;
-	VkImageLayout					m_finalLayoutDepth = VK_IMAGE_LAYOUT_UNDEFINED;
-	eastl::vector<VkClearValue>		m_clearValues;
-	VkRenderPass					m_pass = nullptr;
-	VkFramebuffer					m_framebuffer = nullptr;
-
-	// TODO: Reconsider storing that somewhere else
-	eastl::vector<VkRenderPassBeginInfo> m_beginInfos;
+	AttachmentInfoList				m_colorAttachmentInfos;
+	AttachmentInfo					m_depthAttachmentInfo;
 };
 
 }

@@ -165,8 +165,27 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
 
     RHI_ASSERT(vkCreatePipelineLayout(VulkanDevice::s_ctx.m_device, &pipelineLayoutInfo, nullptr, &m_layout) == VK_SUCCESS);
 
+    eastl::vector<VkFormat> colorAttachmentFormats;
+
+    for (auto& attachment : renderPassDescriptor.m_colorAttachments)
+    {
+        colorAttachmentFormats.emplace_back(helpers::Format(attachment.m_texture->Descriptor().m_format));
+    }
+
+	VkPipelineRenderingCreateInfoKHR pipelineRenderingInfo{};
+    pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    pipelineRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderPassDescriptor.m_colorAttachments.size());
+    pipelineRenderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
+
+    if (renderPassDescriptor.m_depthStencilAttachment.m_texture)
+    {
+        pipelineRenderingInfo.depthAttachmentFormat = helpers::Format(renderPassDescriptor.m_depthStencilAttachment.m_texture->Descriptor().m_format);
+        pipelineRenderingInfo.stencilAttachmentFormat = helpers::Format(renderPassDescriptor.m_depthStencilAttachment.m_texture->Descriptor().m_format);
+    }
+
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.pNext = &pipelineRenderingInfo;
     pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
     pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
@@ -178,9 +197,9 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = m_layout;
-    pipelineInfo.renderPass = std::static_pointer_cast<VulkanRenderPass>(descriptor.m_pass)->Pass();
+    pipelineInfo.renderPass = nullptr;
     pipelineInfo.subpass = 0;
-    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+    pipelineInfo.basePipelineHandle = nullptr; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
 
     RHI_ASSERT(vkCreateGraphicsPipelines(VulkanDevice::s_ctx.m_device, nullptr, 1, &pipelineInfo, nullptr, &m_pipeline) == VK_SUCCESS);
