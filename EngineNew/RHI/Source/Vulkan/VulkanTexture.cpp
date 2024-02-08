@@ -215,16 +215,44 @@ VulkanTexture::~VulkanTexture()
     vmaDestroyImage(VulkanDevice::s_ctx.m_allocator, m_image, m_allocation);
 }
 
-void VulkanTexture::ChangeImageLayout(VkImage image, 
-    VkImageLayout oldLayout, 
-    VkImageLayout newLayout,
-	Format format, 
-    int layers, 
-    int mipmaps, 
-    bool isDepth)
+void VulkanTexture::ChangeImageLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
-    CommandBuffer cmdBuffer;
-    cmdBuffer.Begin();
+    const bool isDepth = m_descriptor.m_format == Format::D32_SFLOAT
+	|| m_descriptor.m_format == Format::D32_SFLOAT_S8_UINT;
+
+    ChangeImageLayout(cmdBuffer,
+        m_image, 
+        oldLayout, 
+        newLayout, 
+        m_descriptor.m_format, 
+        m_descriptor.m_layersAmount,
+        m_descriptor.m_mipLevels,
+        isDepth);
+}
+
+void VulkanTexture::ChangeImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+    const bool isDepth = m_descriptor.m_format == Format::D32_SFLOAT
+        || m_descriptor.m_format == Format::D32_SFLOAT_S8_UINT;
+
+    ChangeImageLayout(m_image,
+        oldLayout,
+        newLayout,
+        m_descriptor.m_format,
+        m_descriptor.m_layersAmount,
+        m_descriptor.m_mipLevels,
+        isDepth);
+}
+
+void VulkanTexture::ChangeImageLayout(VkCommandBuffer cmdBuffer,
+                                      VkImage image,
+                                      VkImageLayout oldLayout, 
+                                      VkImageLayout newLayout,
+                                      Format format, 
+                                      int layers, 
+                                      int mipmaps, 
+                                      bool isDepth)
+{
     VkImageSubresourceRange srcSubRange = {};
     if (isDepth)
     {
@@ -252,15 +280,38 @@ void VulkanTexture::ChangeImageLayout(VkImage image,
     srcSubRange.levelCount = mipmaps;
     srcSubRange.layerCount = layers;
 
-    vks::tools::setImageLayout(*cmdBuffer.Raw(),
+    vks::tools::setImageLayout(cmdBuffer,
         image,
         oldLayout,
         newLayout,
         srcSubRange);
+
+    m_layout = newLayout;
+}
+
+void VulkanTexture::ChangeImageLayout(VkImage image, 
+									    VkImageLayout oldLayout,
+									    VkImageLayout newLayout, 
+									    Format format,
+										int layers, 
+									    int mipmaps, 
+									    bool isDepth)
+{
+    CommandBuffer cmdBuffer;
+    cmdBuffer.Begin();
+
+    ChangeImageLayout(cmdBuffer.Raw(),
+        m_image,
+        oldLayout,
+        newLayout,
+        m_descriptor.m_format,
+        m_descriptor.m_layersAmount,
+        m_descriptor.m_mipLevels,
+        isDepth);
+
     cmdBuffer.End();
 
     VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
-    m_layout = newLayout;
 }
 
 } // namespace rhi::vulkan

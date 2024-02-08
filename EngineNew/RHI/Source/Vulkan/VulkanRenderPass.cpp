@@ -20,7 +20,7 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassDescriptor& descriptor) : Ren
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
 		colorAttachment.loadOp = helpers::LoadOperation(attachment.m_loadOperation);
 		colorAttachment.storeOp = helpers::StoreOperation(attachment.m_storeOperation);
-		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachment.clearValue = clearValue;
 		colorAttachment.imageView = std::static_pointer_cast<VulkanTexture>(attachment.m_texture)->ImageView(0);
 

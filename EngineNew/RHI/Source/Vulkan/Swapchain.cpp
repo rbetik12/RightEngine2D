@@ -136,7 +136,7 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
 
     for (auto& image : m_images)
     {
-        vks::tools::setImageLayout(*cmdBuffer.Raw(),
+        vks::tools::setImageLayout(cmdBuffer.Raw(),
             image,
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,

@@ -9,10 +9,10 @@
 #include "Swapchain.hpp"
 #include <VulkanMemoryAllocator/vk_mem_alloc.h>
 
-#include "Semaphore.hpp"
-
 namespace rhi::vulkan
 {
+
+class VulkanTexture;
 
 struct SwapchainSupportDetails
 {
@@ -71,8 +71,10 @@ public:
 
 	virtual void							BeginFrame() override;
 	virtual void							EndFrame() override;
+	virtual void							Present() override;
 	virtual void							BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
 	virtual void							EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
+	virtual void							Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) override;
 
 	virtual void							OnResize(uint32_t x, uint32_t y) override;
 
@@ -95,10 +97,11 @@ private:
 	glm::ivec2					m_presentExtent = {0, 0};
 	bool						m_isSwapchainDirty = false;
 
-	eastl::vector<VkCommandBuffer>	m_cmdBuffers;
-	eastl::vector<VkFence>			m_fences;
-	eastl::vector<VkSemaphore>		m_presentSemaphores;
-	eastl::vector<VkSemaphore>		m_renderSemaphores;
+	eastl::vector<VkCommandBuffer>					m_cmdBuffers;
+	eastl::vector<VkFence>							m_fences;
+	eastl::vector<VkSemaphore>						m_presentSemaphores;
+	eastl::vector<VkSemaphore>						m_renderSemaphores;
+	eastl::vector<std::shared_ptr<VulkanTexture>>	m_texturesToReset;
 
 	// Initializer methods
 	void PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);

@@ -112,6 +112,8 @@ void VulkanShader::FillVertexData()
     }
 
     const auto& layoutElements = layout.Elements();
+
+    // Here we use negative offset, so we can correctly calculate offset of the first element - 0 bytes
     int32_t offset = -static_cast<int32_t>(layoutElements.front().GetSize());
     for (int i = 0; i < layoutElements.size(); i++)
     {

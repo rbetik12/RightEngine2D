@@ -298,7 +298,10 @@ void VulkanDevice::EndFrame()
 
 	RHI_ASSERT(vkResetFences(s_ctx.m_device, 1, &m_fences[m_currentCmdBufferIndex]) == VK_SUCCESS);
 	RHI_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_fences[m_currentCmdBufferIndex]) == VK_SUCCESS);
+}
 
+void VulkanDevice::Present()
+{
 	VkResult result;
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -337,8 +340,15 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 		renderingInfo.pStencilAttachment = &renderpass->DepthAttachment();
 	}
 
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline());
+	for (const auto& texture : renderpass->Descriptor().m_colorAttachments)
+	{
+		auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture.m_texture);
+		vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		m_texturesToReset.emplace_back(vkTexture);
+	}
+
 	vkCmdBeginRendering(cmdBuffer, &renderingInfo);
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline());
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -360,6 +370,22 @@ void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
 	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
 	vkCmdEndRendering(cmdBuffer);
+
+	for (auto& texture : m_texturesToReset)
+	{
+		texture->ChangeImageLayout(cmdBuffer, texture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	}
+	m_texturesToReset.clear();
+}
+
+void VulkanDevice::Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
+{
+	auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+	VkBuffer vertexBuffers[] = { std::static_pointer_cast<VulkanBuffer>(buffer)->Raw() };
+	VkDeviceSize offsets[] = { 0 };
+
+	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+	vkCmdDraw(cmdBuffer, vertexCount, instanceCount, 0, 0);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)
@@ -401,7 +427,7 @@ std::shared_ptr<Fence> VulkanDevice::Execute(CommandBuffer buffer)
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = cmd;
+	submitInfo.pCommandBuffers = &cmd;
 
 	auto fence = std::make_shared<Fence>(true);
 	fence->Reset();

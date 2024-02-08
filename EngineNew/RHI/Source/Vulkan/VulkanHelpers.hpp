@@ -160,6 +160,8 @@ inline VkCullModeFlags CullMode(CullMode mode)
 {
     switch (mode)
     {
+    case CullMode::NONE:
+        return VK_CULL_MODE_NONE;
     case CullMode::FRONT:
         return VK_CULL_MODE_FRONT_BIT;
     case CullMode::BACK:

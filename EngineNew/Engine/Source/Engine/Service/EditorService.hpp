@@ -10,6 +10,8 @@ class ENGINE_API EditorService final : public IService
 {
 	RTTR_ENABLE(IService);
 public:
+	struct Impl;
+
 	EditorService();
 	virtual ~EditorService() override;
 
@@ -17,7 +19,7 @@ public:
 	virtual void	PostUpdate(float dt) override;
 
 private:
-	std::shared_ptr<rhi::ShaderCompiler> m_shaderCompiler;
+	std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace engine

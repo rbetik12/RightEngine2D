@@ -24,6 +24,10 @@ public:
 	std::shared_ptr<rhi::RenderPass>		CreateRenderPass(const rhi::RenderPassDescriptor& desc);
 	std::shared_ptr<rhi::Pipeline>			CreatePipeline(const rhi::PipelineDescriptor& desc);
 
+	void									BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
+	void									EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
+	void									Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
+
 private:
 	std::shared_ptr<rhi::Device>	m_device;
 	std::shared_ptr<rhi::IContext>	m_context;

@@ -20,7 +20,8 @@ enum class CompareOp : uint8_t
 
 enum class CullMode : uint8_t
 {
-    BACK = 0,
+    NONE = 0,
+    BACK,
     FRONT
 };
 

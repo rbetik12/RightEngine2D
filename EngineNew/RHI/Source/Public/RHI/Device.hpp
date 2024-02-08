@@ -34,8 +34,10 @@ public:
 
 	virtual void							BeginFrame() = 0;
 	virtual void							EndFrame() = 0;
+	virtual void							Present() = 0;
 	virtual void							BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
 	virtual void							EndPipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
+	virtual void							Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) = 0;
 
 	virtual void							OnResize(uint32_t x, uint32_t y) = 0;
 

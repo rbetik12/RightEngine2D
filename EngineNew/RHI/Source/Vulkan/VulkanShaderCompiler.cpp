@@ -325,16 +325,34 @@ namespace rhi::vulkan
                 {
 					case spirv_cross::SPIRType::Float:
 					{
-                        layout.Push<float>(name, type.vecsize);
+                        if (type.vecsize == 1)
+                        {
+                            layout.Push<float>(name, type.vecsize);
+                        }
+                        if (type.vecsize == 2)
+                        {
+                            layout.Push<glm::vec2>(name, 1);
+                        }
+                        if (type.vecsize == 3)
+                        {
+                            layout.Push<glm::vec3>(name, 1);
+                        }
+                        if (type.vecsize == 4)
+                        {
+                            layout.Push<glm::vec4>(name, 1);
+                        }
                         break;
 					}
+                    // TODO: Implement vector mapping for uint and ubyte
                     case spirv_cross::SPIRType::UByte:
                     {
+                        RHI_ASSERT(type.vecsize == 1);
                         layout.Push<uint8_t>(name, type.vecsize);
                         break;
                     }
                     case spirv_cross::SPIRType::UInt:
                     {
+                        RHI_ASSERT(type.vecsize == 1);
                         layout.Push<uint32_t>(name, type.vecsize);
                         break;
                     }

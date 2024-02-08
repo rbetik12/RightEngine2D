@@ -17,6 +17,9 @@ namespace rhi
 		virtual void*	Map() const = 0;
 		virtual void	UnMap() const = 0;
 
+		const BufferDescriptor& Descriptor() const
+		{ return m_descriptor; }
+
 	protected:
 		BufferDescriptor m_descriptor;
 	};

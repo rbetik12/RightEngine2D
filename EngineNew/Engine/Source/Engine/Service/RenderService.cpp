@@ -59,6 +59,7 @@ void RenderService::Update(float dt)
 void RenderService::PostUpdate(float dt)
 {
     m_device->EndFrame();
+    m_device->Present();
 }
 
 std::shared_ptr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)
@@ -94,6 +95,21 @@ std::shared_ptr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::Rend
 std::shared_ptr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
 {
     return m_device->CreatePipeline(desc);
+}
+
+void RenderService::BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    m_device->BeginPipeline(pipeline);
+}
+
+void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    m_device->EndPipeline(pipeline);
+}
+
+void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
+{
+    m_device->Draw(buffer, vertexCount, instanceCount);
 }
 
 }
