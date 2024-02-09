@@ -2,6 +2,7 @@
 
 #include <RHI/Config.hpp>
 #include <RHI/TextureDescriptor.hpp>
+#include <RHI/Sampler.hpp>
 
 namespace rhi
 {
@@ -12,8 +13,11 @@ namespace rhi
 
 		const TextureDescriptor& Descriptor() const { return m_descriptor; }
 
+		const std::shared_ptr<Sampler>& GetSampler() const { return m_sampler; }
+
 	protected:
-		TextureDescriptor m_descriptor;
+		TextureDescriptor			m_descriptor;
+		std::shared_ptr<Sampler>	m_sampler;
 
 		Texture(const TextureDescriptor& desc) : m_descriptor(desc)
 		{}

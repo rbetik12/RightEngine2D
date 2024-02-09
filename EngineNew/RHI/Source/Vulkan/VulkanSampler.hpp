@@ -12,6 +12,8 @@ namespace rhi::vulkan
 
 		virtual ~VulkanSampler() override;
 
+		VkSampler Raw() const { return m_sampler; }
+
 	private:
 		VkSampler m_sampler;
 	};
