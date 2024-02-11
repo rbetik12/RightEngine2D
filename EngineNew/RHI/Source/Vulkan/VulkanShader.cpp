@@ -114,7 +114,7 @@ void VulkanShader::Sync()
         writeDescriptorSets.emplace_back(descriptorWrite);
     }
 
-    std::vector<VkDescriptorImageInfo> textureInfos;
+    eastl::vector<VkDescriptorImageInfo> textureInfos;
 
     for (auto& texture : m_texturesToSync)
     {
@@ -138,6 +138,8 @@ void VulkanShader::Sync()
 
         // TODO: Here we probably need to add some index somewhere to represent which part of the texture we want to get
         imageInfo.imageView = texPtr->ImageView(0);
+
+        // TODO: We need to see whether the texture we are currently using was changed (e.g. sampler changed) and update it here
         imageInfo.sampler = std::static_pointer_cast<VulkanSampler>(texPtr->GetSampler())->Raw();
 
         textureInfos.emplace_back(imageInfo);

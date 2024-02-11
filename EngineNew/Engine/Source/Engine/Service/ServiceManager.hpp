@@ -4,6 +4,7 @@
 #include <Engine/Assert.hpp>
 #include <Engine/Service/IService.hpp>
 #include <Engine/Registration.hpp>
+#include <Engine/Timer.hpp>
 #include <Core/Type.hpp>
 #include <Core/EASTLIntergration.hpp>
 #include <Core/RTTRIntegration.hpp>
@@ -42,12 +43,17 @@ public:
                 return false;
             }
 
+            core::log::info("[ServiceManager] Started registration of service '{}'", type.get_name());
+            Timer timer;
+
             auto service = std::make_shared<T>();
+
+            const auto creationTimeMs = timer.TimeInMilliseconds();
 
             m_services.push_back(service);
             m_servicesMap[type] = m_services.size() - 1;
 
-            core::log::info("[ServiceManager] Registered service '{}' successfully", type.get_name());
+            core::log::info("[ServiceManager] Registered service '{}' for {}ms successfully", type.get_name(), creationTimeMs);
             return true;
         }
         ENGINE_ASSERT(false);

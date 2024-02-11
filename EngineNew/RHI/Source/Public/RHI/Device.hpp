@@ -28,7 +28,7 @@ public:
 	virtual std::shared_ptr<Buffer>			CreateBuffer(const BufferDescriptor& desc, const void* data) = 0;
 	virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) = 0;
 	virtual std::shared_ptr<Sampler>		CreateSampler(const SamplerDescriptor& desc) = 0;
-	virtual std::shared_ptr<Texture>		CreateTexture(const TextureDescriptor& desc, const void* data = {}) = 0;
+	virtual std::shared_ptr<Texture>		CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) = 0;
 	virtual std::shared_ptr<RenderPass>		CreateRenderPass(const RenderPassDescriptor& desc) = 0;
 	virtual std::shared_ptr<Pipeline>		CreatePipeline(const PipelineDescriptor& desc) = 0;
 

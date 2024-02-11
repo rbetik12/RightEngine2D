@@ -179,16 +179,11 @@ namespace rhi::vulkan
         for (const auto& [stage, code] : ctx.m_stageCodeStr)
         {
             auto blob = CompileShader(code, path, stage);
+            RHI_ASSERT(!blob.empty());
             data.m_stageBlob[stage] = std::move(blob);
         }
 
         data.m_valid = true;
-
-        for (const auto& [stage, code] : ctx.m_stageCodeStr)
-        {
-            auto blob = CompileShader(code, path, stage);
-            data.m_stageBlob[stage] = std::move(blob);
-        }
 
         RHI_ASSERT(!data.m_stageBlob.empty());
 

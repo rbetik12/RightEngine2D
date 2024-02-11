@@ -22,6 +22,7 @@ public:
 	VkShaderModule								Module(ShaderStage stage) const { return m_modules[stage]; }
 
 	VkDescriptorSetLayout						Layout() const { return m_layout; }
+	VkDescriptorSet								DesciptorSet() const { return m_descriptorSet; }
 
 	const eastl::vector<VkPushConstantRange>&	Constants() const { return m_constants; }
 

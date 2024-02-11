@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 #include <rttr/string_view.h>
+#include <rttr/variant.h>
 
 FMT_BEGIN_NAMESPACE
 

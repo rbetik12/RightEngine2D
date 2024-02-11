@@ -7,6 +7,7 @@
 #include "VulkanRenderPass.hpp"
 #include "VulkanPipeline.hpp"
 #include "VulkanHelpers.hpp"
+#include <vk-tools/VulkanTools.h>
 #include <optional>
 
 namespace rhi::vulkan
@@ -168,7 +169,7 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	m_renderSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
 	m_presentSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
 
-	for (int i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
+	for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
 	{
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -194,7 +195,7 @@ VulkanDevice::~VulkanDevice()
 	vkDeviceWaitIdle(s_ctx.m_device);
 	m_swapchain.reset();
 
-	for (int i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
+	for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
 	{
 		vkDestroyFence(s_ctx.m_device, m_fences[i], nullptr);
 		vkDestroySemaphore(s_ctx.m_device, m_presentSemaphores[i], nullptr);
@@ -234,9 +235,9 @@ std::shared_ptr<Sampler> VulkanDevice::CreateSampler(const SamplerDescriptor& de
 	return std::make_shared<VulkanSampler>(desc);
 }
 
-std::shared_ptr<Texture> VulkanDevice::CreateTexture(const TextureDescriptor& desc, const void* data)
+std::shared_ptr<Texture> VulkanDevice::CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data)
 {
-	return std::make_shared<VulkanTexture>(desc, data);
+	return std::make_shared<VulkanTexture>(desc, sampler, data);
 }
 
 std::shared_ptr<RenderPass> VulkanDevice::CreateRenderPass(const RenderPassDescriptor& desc)
@@ -276,7 +277,7 @@ void VulkanDevice::BeginFrame()
 
 	auto& presentSemaphore = m_presentSemaphores[m_currentCmdBufferIndex];
 
-	m_swapchainImageIndex = m_swapchain->AcquireNextImage(s_ctx.m_device, m_presentSemaphores[m_currentCmdBufferIndex]);
+	m_swapchainImageIndex = m_swapchain->AcquireNextImage(s_ctx.m_device, presentSemaphore);
 }
 
 void VulkanDevice::EndFrame()
@@ -330,25 +331,76 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 	VkRenderingInfoKHR renderingInfo{};
 	renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
 	renderingInfo.renderArea = helpers::Rect(renderpass->Descriptor().m_extent);
-	renderingInfo.layerCount = 1;
-	renderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderpass->Descriptor().m_colorAttachments.size());
-	renderingInfo.pColorAttachments = renderpass->ColorAttachments().data();
 
-	if (renderpass->Descriptor().m_depthStencilAttachment.m_texture != nullptr)
+	if (pipeline->Descriptor().m_offscreen)
 	{
-		renderingInfo.pDepthAttachment = &renderpass->DepthAttachment();
-		renderingInfo.pStencilAttachment = &renderpass->DepthAttachment();
+		renderingInfo.layerCount = 1;
+		renderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderpass->Descriptor().m_colorAttachments.size());
+		renderingInfo.pColorAttachments = renderpass->ColorAttachments().data();
+
+		if (renderpass->Descriptor().m_depthStencilAttachment.m_texture != nullptr)
+		{
+			renderingInfo.pDepthAttachment = &renderpass->DepthAttachment();
+			renderingInfo.pStencilAttachment = &renderpass->DepthAttachment();
+		}
+
+		for (const auto& texture : renderpass->Descriptor().m_colorAttachments)
+		{
+			auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture.m_texture);
+			vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			m_texturesToReset.emplace_back(vkTexture);
+		}
+
+		vkCmdBeginRendering(cmdBuffer, &renderingInfo);
+	}
+	else
+	{
+		renderingInfo.layerCount = 1;
+
+		VkClearValue cv;
+		cv.depthStencil.stencil = 0;
+		cv.depthStencil.depth = 1.0f;
+		cv.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+		VkRenderingAttachmentInfoKHR colorAttachment{};
+		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		colorAttachment.imageView = m_swapchain->ImageView(m_swapchainImageIndex);
+		colorAttachment.clearValue = cv;
+		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		renderingInfo.colorAttachmentCount = 1;
+		renderingInfo.pColorAttachments = &colorAttachment;
+
+		VkImageSubresourceRange srcSubRange{};
+		srcSubRange.layerCount = 1;
+		srcSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		srcSubRange.baseMipLevel = 0;
+		srcSubRange.levelCount = 1;
+
+		vks::tools::setImageLayout(cmdBuffer,
+			m_swapchain->Image(m_swapchainImageIndex),
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			srcSubRange);
+
+		vkCmdBeginRendering(cmdBuffer, &renderingInfo);
 	}
 
-	for (const auto& texture : renderpass->Descriptor().m_colorAttachments)
-	{
-		auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture.m_texture);
-		vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		m_texturesToReset.emplace_back(vkTexture);
-	}
+	const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline->GetPipeline());
 
-	vkCmdBeginRendering(cmdBuffer, &renderingInfo);
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, std::static_pointer_cast<VulkanPipeline>(pipeline)->GetPipeline());
+	const auto shader = std::static_pointer_cast<VulkanShader>(pipeline->Descriptor().m_shader);
+	if (const auto descriptorSet = shader->DesciptorSet())
+	{
+		vkCmdBindDescriptorSets(cmdBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			vkPipeline->Layout(),
+			0, 1,
+			&descriptorSet
+			, 0, nullptr);
+	}
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -376,6 +428,21 @@ void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 		texture->ChangeImageLayout(cmdBuffer, texture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 	m_texturesToReset.clear();
+
+	if (!pipeline->Descriptor().m_offscreen)
+	{
+		VkImageSubresourceRange srcSubRange{};
+		srcSubRange.layerCount = 1;
+		srcSubRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		srcSubRange.baseMipLevel = 0;
+		srcSubRange.levelCount = 1;
+
+		vks::tools::setImageLayout(cmdBuffer,
+			m_swapchain->Image(m_swapchainImageIndex),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			srcSubRange);
+	}
 }
 
 void VulkanDevice::Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)

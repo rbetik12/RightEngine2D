@@ -39,7 +39,6 @@ struct AttachmentDescriptor
 struct RenderPassDescriptor
 {
     glm::ivec2                              m_extent{ 0, 0 };
-    bool                                    m_offscreen = true;
     eastl::vector<AttachmentDescriptor>     m_colorAttachments;
     AttachmentDescriptor                    m_depthStencilAttachment;
     std::string                             m_name;

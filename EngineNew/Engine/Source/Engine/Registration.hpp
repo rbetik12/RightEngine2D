@@ -39,6 +39,19 @@ private:
 	rttr::registration::class_<T>	m_class;
 };
 
+template<typename T>
+class ENGINE_API Class
+{
+public:
+	Class(rttr::string_view name) : m_class(name)
+	{
+		m_class.constructor();
+	}
+
+private:
+	rttr::registration::class_<T> m_class;
+};
+
 class ENGINE_API CommandLineArg
 {
 public:
@@ -127,4 +140,20 @@ private:
 	inline static argparse::ArgumentParser* m_parser = nullptr;
 };
 
-} // namespace engine::registration
+namespace helpers
+{
+
+template<typename T>
+inline bool typeRegistered()
+{
+	return rttr::type::get<T>().get_constructor().is_valid();
+}
+
+inline bool typeRegistered(rttr::type type)
+{
+	return type.get_constructor().is_valid();
+}
+
+} // helpers
+
+} // engine::registration

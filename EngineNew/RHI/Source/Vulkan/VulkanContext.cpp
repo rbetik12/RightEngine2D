@@ -142,7 +142,12 @@ VulkanContext::VulkanContext(VulkanInitContext&& ctx)
     }
 
 	//TODO: Add more info about current vulkan instance
-	rhi::log::info("[Vulkan] Successfully initialized Vulkan API with {} extensions", m_extensionAmount);
+	rhi::log::debug("[Vulkan] Successfully initialized Vulkan API with {} extensions:", ctx.m_requiredExtensions.size());
+
+    for (auto& ext : ctx.m_requiredExtensions)
+    {
+        rhi::log::debug("\t{}", ext);
+    }
 
     m_surface = ctx.m_surfaceConstructor(m_instance);
 }

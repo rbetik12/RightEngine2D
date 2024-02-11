@@ -23,11 +23,11 @@ public:
     Swapchain(const SwapchainDescriptor& desc);
     ~Swapchain();
 
-    uint32_t AcquireNextImage(VkDevice device, VkSemaphore presentSemaphore);
-
-    const SwapchainDescriptor& Descriptor() const { return m_descriptor; }
-
-    VkSwapchainKHR* Raw() { return &m_swapchain; }
+    uint32_t                    AcquireNextImage(VkDevice device, VkSemaphore presentSemaphore);
+    inline VkImage              Image(uint32_t idx) const { RHI_ASSERT(idx < m_images.size()); return m_images[idx]; }
+    inline VkImageView          ImageView(uint32_t idx) const { RHI_ASSERT(idx < m_imageViews.size()); return m_imageViews[idx]; }
+    const SwapchainDescriptor&  Descriptor() const { return m_descriptor; }
+    VkSwapchainKHR*             Raw() { return &m_swapchain; }
 
 private:
     SwapchainDescriptor         m_descriptor;

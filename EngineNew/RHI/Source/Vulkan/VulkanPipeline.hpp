@@ -13,7 +13,8 @@ public:
 
 	virtual ~VulkanPipeline() override;
 
-	VkPipeline GetPipeline() const { return m_pipeline; }
+	VkPipeline			GetPipeline() const { return m_pipeline; }
+	VkPipelineLayout	Layout() const { return m_layout; }
 
 private:
 	VkPipelineLayout	m_layout;

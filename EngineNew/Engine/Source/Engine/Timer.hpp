@@ -28,7 +28,7 @@ namespace engine
         inline void Restart()
         {
             m_startTime = m_endTime = std::chrono::high_resolution_clock::now();
-            m_running = false;
+            m_running = true;
         }
 
         inline float TimeInMilliseconds()

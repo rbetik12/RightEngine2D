@@ -16,7 +16,7 @@ class VulkanTexture;
 
 struct SwapchainSupportDetails
 {
-	VkSurfaceCapabilitiesKHR			m_capabilities;
+	VkSurfaceCapabilitiesKHR			m_capabilities = {};
 	eastl::vector<VkSurfaceFormatKHR>	m_formats;
 	eastl::vector<VkPresentModeKHR>		m_presentModes;
 };
@@ -65,7 +65,7 @@ public:
 	virtual std::shared_ptr<Buffer>			CreateBuffer(const BufferDescriptor& desc, const void* data) override;
 	virtual std::shared_ptr<Shader>			CreateShader(const ShaderDescriptor& desc) override;
 	virtual std::shared_ptr<Sampler>		CreateSampler(const SamplerDescriptor& desc) override;
-	virtual std::shared_ptr<Texture>		CreateTexture(const TextureDescriptor& desc, const void* data = {}) override;
+	virtual std::shared_ptr<Texture>		CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) override;
 	virtual std::shared_ptr<RenderPass>		CreateRenderPass(const RenderPassDescriptor& desc) override;
 	virtual std::shared_ptr<Pipeline>		CreatePipeline(const PipelineDescriptor& desc) override;
 

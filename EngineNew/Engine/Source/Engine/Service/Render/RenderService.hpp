@@ -18,7 +18,7 @@ public:
 
 	std::shared_ptr<rhi::ShaderCompiler>	CreateShaderCompiler(const rhi::ShaderCompiler::Options& options = {});
 	std::shared_ptr<rhi::Buffer>			CreateBuffer(const rhi::BufferDescriptor& desc, const void* data = nullptr);
-	std::shared_ptr<rhi::Texture>			CreateTexture(const rhi::TextureDescriptor& desc, const void* data = nullptr);
+	std::shared_ptr<rhi::Texture>			CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler = {}, const void* data = nullptr);
 	std::shared_ptr<rhi::Shader>			CreateShader(const rhi::ShaderDescriptor& desc);
 	std::shared_ptr<rhi::Sampler>			CreateSampler(const rhi::SamplerDescriptor& desc);
 	std::shared_ptr<rhi::RenderPass>		CreateRenderPass(const rhi::RenderPassDescriptor& desc);
@@ -30,6 +30,7 @@ public:
 
 private:
 	std::shared_ptr<rhi::Device>	m_device;
+	std::shared_ptr<rhi::Sampler>	m_defaultSampler;
 	std::shared_ptr<rhi::IContext>	m_context;
 };
 

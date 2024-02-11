@@ -19,6 +19,8 @@ namespace rhi
 
 	struct SamplerDescriptor
     {
+        float                   m_minLod = 0.0f;
+        float                   m_maxLod = 1.0f;
         SamplerFilter           m_minFilter = SamplerFilter::NEAREST;
         SamplerFilter           m_magFilter = SamplerFilter::NEAREST;
         SamplerFilter           m_mipMapFilter = SamplerFilter::NEAREST;
@@ -26,7 +28,5 @@ namespace rhi
         AddressMode             m_addressModeV = AddressMode::REPEAT;
         AddressMode             m_addressModeW = AddressMode::REPEAT;
         bool                    m_isMipMapped = false;
-        float                   m_minLod = 0.0f;
-        float                   m_maxLod = 1.0f;
     };
 }

@@ -1,4 +1,4 @@
-#include <Engine/Service/RenderService.hpp>
+#include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Engine.hpp>
 #pragma warning(push)
@@ -43,6 +43,8 @@ RenderService::RenderService()
 
     const auto extent = Instance().Service<WindowService>().Extent();
     m_device->OnResize(extent.x, extent.y);
+
+    m_defaultSampler = m_device->CreateSampler({});
 }
 
 RenderService::~RenderService()
@@ -72,9 +74,13 @@ std::shared_ptr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescri
     return m_device->CreateBuffer(desc, data);
 }
 
-std::shared_ptr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const void* data)
+std::shared_ptr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler, const void* data)
 {
-    return m_device->CreateTexture(desc, data);
+    if (sampler)
+    {
+        return m_device->CreateTexture(desc, sampler, data);
+    }
+    return m_device->CreateTexture(desc, m_defaultSampler, data);
 }
 
 std::shared_ptr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)

@@ -10,7 +10,7 @@ namespace rhi::vulkan
 	class RHI_API VulkanTexture : public Texture
 	{
 	public:
-		VulkanTexture(const TextureDescriptor& desc, const void* data = nullptr);
+		VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = nullptr);
 
 		virtual ~VulkanTexture() override;
 

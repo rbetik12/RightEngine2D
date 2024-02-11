@@ -56,9 +56,10 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
 
 } // namespace unnamed
 
-VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const void* data) : Texture(desc), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data) : Texture(desc, sampler), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
 {
     RHI_ASSERT(desc.m_mipLevels > 0);
+    RHI_ASSERT(sampler);
 
     if (data)
     {

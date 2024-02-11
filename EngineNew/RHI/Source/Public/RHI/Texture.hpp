@@ -19,7 +19,7 @@ namespace rhi
 		TextureDescriptor			m_descriptor;
 		std::shared_ptr<Sampler>	m_sampler;
 
-		Texture(const TextureDescriptor& desc) : m_descriptor(desc)
+		Texture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler) : m_descriptor(desc), m_sampler(sampler)
 		{}
 	};
 }

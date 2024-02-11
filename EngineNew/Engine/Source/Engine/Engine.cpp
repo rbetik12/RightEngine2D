@@ -3,7 +3,7 @@
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/EditorService.hpp>
-#include <Engine/Service/RenderService.hpp>
+#include <Engine/Service/Render/RenderService.hpp>
 
 RTTR_REGISTRATION
 {
@@ -42,16 +42,13 @@ Engine::Engine(int argCount, char* argPtr[])
 	m_serviceManager = std::make_unique<ServiceManager>(m_config.m_domain);
 
 	m_serviceManager->RegisterService<ThreadService>();
-
 	m_serviceManager->RegisterService<WindowService>();
-
 	m_serviceManager->RegisterService<RenderService>();
-
 	m_serviceManager->RegisterService<EditorService>();
 
 	m_running = true;
 
-	core::log::info("Engine was initialized successfully for {} ms", m_timer.TimeInMilliseconds());
+	core::log::info("Engine was initialized successfully for {}s", m_timer.TimeInSeconds());
 }
 
 Engine::~Engine()
