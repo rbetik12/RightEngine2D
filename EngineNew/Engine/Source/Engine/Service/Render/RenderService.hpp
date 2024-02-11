@@ -28,10 +28,12 @@ public:
 	void									EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
 	void									Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
 
+	void									WaitAll();
+
 private:
 	std::shared_ptr<rhi::Device>	m_device;
 	std::shared_ptr<rhi::Sampler>	m_defaultSampler;
 	std::shared_ptr<rhi::IContext>	m_context;
 };
 
-} // namespace engine
+} // engine

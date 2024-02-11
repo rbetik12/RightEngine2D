@@ -21,10 +21,9 @@ void ServiceManager::PostUpdate(float dt)
 
 void ServiceManager::Destroy()
 {
-	std::reverse(m_services.begin(), m_services.end());
-
-	for (auto& service: m_services)
+	for (int i = static_cast<int>(m_services.size()) - 1; i > -1; i--)
 	{
+		auto& service = m_services[i];
 		const auto type = service->get_type();
 		service.reset();
 		core::log::debug("[ServiceManager] Destroyed service '{}' successfully", type.get_name());

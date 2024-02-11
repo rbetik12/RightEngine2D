@@ -78,6 +78,8 @@ public:
 
 	virtual void							OnResize(uint32_t x, uint32_t y) override;
 
+	virtual void							WaitForIdle() override;
+
 	VkPhysicalDevice						PhysicalDevice() const { return s_ctx.m_physicalDevice; }
 	VkCommandPool							CommandPool() const { return m_commandPool; }
 	const SwapchainSupportDetails&			GetSwapchainSupportDetails() const { return m_swapchainDetails; }
@@ -86,16 +88,17 @@ public:
 	std::shared_ptr<Fence>					Execute(CommandBuffer buffer);
 
 private:
-	VkQueue						m_graphicsQueue = nullptr;
-	VkQueue						m_presentQueue = nullptr;
-	VkCommandPool				m_commandPool = nullptr;
-	SwapchainSupportDetails		m_swapchainDetails;
-	std::unique_ptr<Swapchain>	m_swapchain;
-	uint32_t					m_frameIndex = 0;
-	uint32_t					m_swapchainImageIndex = 0;
-	uint32_t					m_currentCmdBufferIndex = 0;
-	glm::ivec2					m_presentExtent = {0, 0};
-	bool						m_isSwapchainDirty = false;
+	VkQueue							m_graphicsQueue = nullptr;
+	VkQueue							m_presentQueue = nullptr;
+	VkCommandPool					m_commandPool = nullptr;
+	SwapchainSupportDetails			m_swapchainDetails;
+	std::unique_ptr<Swapchain>		m_swapchain;
+	uint32_t						m_frameIndex = 0;
+	uint32_t						m_swapchainImageIndex = 0;
+	uint32_t						m_currentCmdBufferIndex = 0;
+	glm::ivec2						m_presentExtent = {0, 0};
+	bool							m_isSwapchainDirty = false;
+	std::shared_ptr<VulkanContext>	m_context;
 
 	eastl::vector<VkCommandBuffer>					m_cmdBuffers;
 	eastl::vector<VkFence>							m_fences;

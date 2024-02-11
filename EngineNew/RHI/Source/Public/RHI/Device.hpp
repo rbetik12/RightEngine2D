@@ -41,6 +41,8 @@ public:
 
 	virtual void							OnResize(uint32_t x, uint32_t y) = 0;
 
+	virtual void							WaitForIdle() = 0;
+
 	static std::shared_ptr<Device>			Create(const std::shared_ptr<IContext>& ctx);
 };
 

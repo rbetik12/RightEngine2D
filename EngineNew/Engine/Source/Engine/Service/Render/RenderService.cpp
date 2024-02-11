@@ -49,6 +49,7 @@ RenderService::RenderService()
 
 RenderService::~RenderService()
 {
+    m_defaultSampler.reset();
     m_device.reset();
     m_context.reset();
 }
@@ -118,4 +119,9 @@ void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t ve
     m_device->Draw(buffer, vertexCount, instanceCount);
 }
 
+void RenderService::WaitAll()
+{
+    m_device->WaitForIdle();
 }
+
+} // engine

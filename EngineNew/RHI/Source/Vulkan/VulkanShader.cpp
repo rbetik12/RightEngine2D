@@ -41,6 +41,9 @@ VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descript
 
 VulkanShader::~VulkanShader()
 {
+    vkDestroyDescriptorPool(VulkanDevice::s_ctx.m_device, m_descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(VulkanDevice::s_ctx.m_device, m_layout, nullptr);
+
     for (const auto [_, module] : m_modules)
     {
         vkDestroyShaderModule(VulkanDevice::s_ctx.m_device, module, nullptr);

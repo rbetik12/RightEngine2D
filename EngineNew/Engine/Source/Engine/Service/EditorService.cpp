@@ -156,6 +156,8 @@ EditorService::EditorService()
 
 EditorService::~EditorService()
 {
+	auto& rs = Instance().Service<RenderService>();
+	rs.WaitAll();
 }
 
 void EditorService::Update(float dt)

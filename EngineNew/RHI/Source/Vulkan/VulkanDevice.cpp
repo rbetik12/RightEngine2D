@@ -164,6 +164,8 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	s_ctx.m_surface = context->Surface();
 	s_ctx.m_instance = this;
 
+	m_context = context;
+
 	m_cmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
 	m_fences.resize(s_ctx.m_properties.m_framesInFlight);
 	m_renderSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
@@ -631,6 +633,11 @@ void VulkanDevice::OnResize(uint32_t x, uint32_t y)
 {
 	m_presentExtent = { x, y };
 	m_isSwapchainDirty = true;
+}
+
+void VulkanDevice::WaitForIdle()
+{
+	vkDeviceWaitIdle(s_ctx.m_device);
 }
 
 }
