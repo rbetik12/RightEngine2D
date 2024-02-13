@@ -2,6 +2,8 @@
 #include <Engine/Engine.hpp>
 #include <Engine/Registration.hpp>
 
+#include "Render/RenderService.hpp"
+
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::WindowService>("engine::WindowService")
@@ -16,7 +18,6 @@ WindowService::WindowService()
 	ENGINE_ASSERT(glfwInit());
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	m_window = glfwCreateWindow(1920, 1080, "Right Engine", nullptr, nullptr);
 
 	ENGINE_ASSERT(m_window);
@@ -24,6 +25,12 @@ WindowService::WindowService()
 	glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window)
 		{
 			Instance().Stop();
+		});
+
+	glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
+		{
+			auto& rs = Instance().Service<RenderService>();
+			rs.OnResize(width, height);
 		});
 }
 

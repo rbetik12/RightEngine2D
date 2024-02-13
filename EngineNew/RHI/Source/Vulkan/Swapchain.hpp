@@ -14,7 +14,8 @@ struct CommandBufferSync;
 struct SwapchainDescriptor
 {
     VkPresentModeKHR    m_presentMode;
-    glm::ivec2          m_extent;
+    VkSurfaceKHR        m_surface;
+    glm::uvec2          m_extent;
 };
 
 class RHI_API Swapchain

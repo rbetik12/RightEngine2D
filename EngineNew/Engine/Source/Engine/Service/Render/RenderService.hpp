@@ -29,11 +29,18 @@ public:
 	void									Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
 
 	void									WaitAll();
+	void									OnResize(uint32_t weight, uint32_t height);
 
 private:
+
+	void									CreateRenderResources(uint32_t width, uint32_t height);
+	void									LoadSystemResources();
+	struct Impl;
+
 	std::shared_ptr<rhi::Device>	m_device;
 	std::shared_ptr<rhi::Sampler>	m_defaultSampler;
 	std::shared_ptr<rhi::IContext>	m_context;
+	std::unique_ptr<Impl> m_impl;
 };
 
 } // engine

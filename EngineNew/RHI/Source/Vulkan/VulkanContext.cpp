@@ -150,6 +150,7 @@ VulkanContext::VulkanContext(VulkanInitContext&& ctx)
     }
 
     m_surface = ctx.m_surfaceConstructor(m_instance);
+    m_ctx = std::move(ctx);
 }
 
 VulkanContext::~VulkanContext()
@@ -168,6 +169,12 @@ const eastl::vector<const char*>& VulkanContext::ValidationLayers() const
     {
         return {};
     }
+}
+
+void VulkanContext::RecreateSurface()
+{
+    vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+    m_surface = m_ctx.m_surfaceConstructor(m_instance);
 }
 
 } // namespace rhi::vulkan

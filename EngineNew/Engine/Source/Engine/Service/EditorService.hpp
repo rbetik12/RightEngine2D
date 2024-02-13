@@ -19,7 +19,6 @@ public:
 	virtual void	PostUpdate(float dt) override;
 
 private:
-	std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace engine

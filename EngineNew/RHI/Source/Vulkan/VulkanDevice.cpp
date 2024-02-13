@@ -159,9 +159,7 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 	FillProperties();
 	SetupAllocator(context);
 	SetupCommandPool(context);
-	FillSwapchainSupportDetails(context);
 
-	s_ctx.m_surface = context->Surface();
 	s_ctx.m_instance = this;
 
 	m_context = context;
@@ -256,14 +254,18 @@ void VulkanDevice::BeginFrame()
 {
 	if (m_isSwapchainDirty)
 	{
+		vkDeviceWaitIdle(s_ctx.m_device);
+		m_context->RecreateSurface();
+		FillSwapchainSupportDetails(m_context);
+		m_swapchain.reset();
+
 		SwapchainDescriptor descriptor{};
 		descriptor.m_extent = m_presentExtent;
 		descriptor.m_presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+		descriptor.m_surface = m_context->Surface();
 
 		m_swapchain = std::make_unique<Swapchain>(descriptor);
 		m_isSwapchainDirty = false;
-
-		// TODO: Probably we must notify engine about dirty swapchain, so it can resize it renderpasses properly
 	}
 
 	RHI_ASSERT(m_presentExtent != glm::ivec2());
@@ -317,8 +319,17 @@ void VulkanDevice::Present()
 	presentInfo.waitSemaphoreCount = 1;
 	result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
 
-	// TODO: Implement swapchain and renderpass resizing
-	RHI_ASSERT(result == VK_SUCCESS);
+	if (result != VK_SUCCESS)
+	{
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			m_isSwapchainDirty = true;
+		}
+		else
+		{
+			RHI_ASSERT(false);
+		}
+	}
 
 	const uint32_t nextFrameIndex = (m_frameIndex + 1) % s_ctx.m_properties.m_framesInFlight;
 	RHI_ASSERT(vkWaitForFences(s_ctx.m_device, 1, &m_fences[nextFrameIndex], VK_TRUE, UINT64_MAX) == VK_SUCCESS);
@@ -486,7 +497,7 @@ void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanConte
 
 QueueFamilyIndices VulkanDevice::FindQueueFamilies() const
 {
-	return vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, s_ctx.m_surface);
+	return vulkan::FindQueueFamilies(s_ctx.m_physicalDevice, m_context->Surface());
 }
 
 std::shared_ptr<Fence> VulkanDevice::Execute(CommandBuffer buffer)

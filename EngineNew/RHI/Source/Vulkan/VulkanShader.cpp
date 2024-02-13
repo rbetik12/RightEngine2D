@@ -164,6 +164,9 @@ void VulkanShader::Sync()
         writeDescriptorSets.data(), 
         0,
         nullptr);
+
+    m_texturesToSync.clear();
+    m_buffersToSync.clear();
 }
 
 void VulkanShader::CreateDescriptorSetLayout()

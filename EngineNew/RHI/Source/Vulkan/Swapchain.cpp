@@ -26,33 +26,41 @@ VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const eastl::vector<VkSurfaceFormatKH
 
 VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const SwapchainDescriptor& descriptor)
 {
-    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+    if (descriptor.m_extent.x > capabilities.maxImageExtent.width
+        || descriptor.m_extent.x < capabilities.minImageExtent.width
+        || descriptor.m_extent.y > capabilities.maxImageExtent.height
+        || descriptor.m_extent.y < capabilities.minImageExtent.height)
     {
-        return capabilities.currentExtent;
-    }
-    else
-    {
-        VkExtent2D actualExtent =
-        {
-        static_cast<uint32_t>(descriptor.m_extent.x),
-        static_cast<uint32_t>(descriptor.m_extent.y)
-        };
-
-        actualExtent.width = glm::clamp(actualExtent.width,
+        rhi::log::warning("Swapchain has size that is out of bound of surface size. Swapchain: {}x{} Surface bounds: {}-{}x{}-{}",
+            descriptor.m_extent.x,
+            descriptor.m_extent.y,
             capabilities.minImageExtent.width,
-            capabilities.maxImageExtent.width);
-        actualExtent.height = glm::clamp(actualExtent.height,
+            capabilities.maxImageExtent.width,
             capabilities.minImageExtent.height,
             capabilities.maxImageExtent.height);
-
-        return actualExtent;
     }
+
+    VkExtent2D actualExtent =
+    {
+    static_cast<uint32_t>(descriptor.m_extent.x),
+    static_cast<uint32_t>(descriptor.m_extent.y)
+    };
+
+    actualExtent.width = glm::clamp(actualExtent.width,
+        capabilities.minImageExtent.width,
+        capabilities.maxImageExtent.width);
+    actualExtent.height = glm::clamp(actualExtent.height,
+        capabilities.minImageExtent.height,
+        capabilities.maxImageExtent.height);
+
+    return actualExtent;
 }
 
 } // namespace unnamed
 
 Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
 {
+    RHI_ASSERT(desc.m_surface);
     auto& device = *VulkanDevice::s_ctx.m_instance;
     SwapchainSupportDetails details = VulkanDevice::s_ctx.m_instance->GetSwapchainSupportDetails();
 
@@ -68,7 +76,7 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = VulkanDevice::s_ctx.m_surface;
+    createInfo.surface = desc.m_surface;
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = imageFormat.format;
@@ -98,7 +106,8 @@ Swapchain::Swapchain(const SwapchainDescriptor& desc) : m_descriptor(desc)
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    RHI_ASSERT(vkCreateSwapchainKHR(VulkanDevice::s_ctx.m_device, &createInfo, nullptr, &m_swapchain) == VK_SUCCESS);
+    const auto error = vkCreateSwapchainKHR(VulkanDevice::s_ctx.m_device, &createInfo, nullptr, &m_swapchain);
+    RHI_ASSERT(error == VK_SUCCESS);
 
     vkGetSwapchainImagesKHR(VulkanDevice::s_ctx.m_device, m_swapchain, &imageCount, nullptr);
     m_images.resize(imageCount);

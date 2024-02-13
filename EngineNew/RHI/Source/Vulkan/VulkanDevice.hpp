@@ -49,7 +49,6 @@ public:
 		VkDevice			m_device = nullptr;
 		VmaAllocator		m_allocator = nullptr;
 		VkPhysicalDevice	m_physicalDevice = nullptr;
-		VkSurfaceKHR		m_surface = nullptr;
 		Properties			m_properties;
 		VulkanDevice*		m_instance = nullptr;
 	};
