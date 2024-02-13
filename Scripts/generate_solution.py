@@ -72,9 +72,9 @@ def copy_dll_files(source_dir, destination_dir):
 
 
 print(f"Generating solution...")
-sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/lib --build=missing --profile=win-64 -s build_type={build_type}")
+sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/Win/.lib --build=missing --profile=win-64 -s build_type={build_type}")
 
-copy_dll_files(".build/lib/dll", f".build/Win/.bin/{build_type}")
+copy_dll_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}")
 
 try:
     completed_process = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)

@@ -1,9 +1,0 @@
-[submodule "Lib/easyargs"]
-	path = Lib/easyargs
-	url = https://github.com/rbetik12/easyargs.git
-[submodule "Lib/crossguid"]
-	path = Lib/crossguid
-	url = git@github.com:rbetik12/crossguid.git
-[submodule "Lib/yaml-cpp"]
-	path = Lib/yaml-cpp
-	url = git@github.com:rbetik12/yaml-cpp.git
