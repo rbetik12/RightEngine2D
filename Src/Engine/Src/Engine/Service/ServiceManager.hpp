@@ -10,6 +10,8 @@
 #include <Core/RTTRIntegration.hpp>
 #include <Core/Log.hpp>
 #include <EASTL/unordered_map.h>
+#include <EASTL/vector_map.h>
+#include <EASTL/vector_set.h>
 #include <fmt/format.h>
 #include <rttr/type>
 
@@ -82,11 +84,15 @@ public:
     void Update(float dt);
     void PostUpdate(float dt);
 
+    void UpdateDependencyOrder();
+
     void Destroy();
 
 private:
 	eastl::unordered_map<rttr::type, size_t>    m_servicesMap;
     eastl::vector<std::shared_ptr<IService>>    m_services;
+    eastl::vector<std::shared_ptr<IService>>    m_updateOrder;
+    eastl::vector<std::shared_ptr<IService>>    m_postUpdateOrder;
     Domain                                      m_domain;
 };
 

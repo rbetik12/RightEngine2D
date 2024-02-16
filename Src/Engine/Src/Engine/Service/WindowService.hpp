@@ -19,6 +19,7 @@ public:
 	virtual void		PostUpdate(float dt) override;
 
 	glm::ivec2          Extent() const;
+	glm::vec2			WindowScale() const;
 
 	GLFWwindow*			Window() { return m_window; }
 	const GLFWwindow*	Window() const { return m_window; }

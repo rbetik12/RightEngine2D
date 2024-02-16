@@ -1,4 +1,7 @@
 sources:
+  "1.83.2":
+    url: "https://github.com/RGameStudio/ImGuizmo/archive/refs/tags/1.83.2.tar.gz"
+    sha256: "9f8465a4142790553cf55ce819e7516cfcd955b43a452714ec59e89aaa4f4896"
   "1.83.1":
-    url: "https://github.com/rbetik12/ImGuizmo/archive/refs/tags/1.83.1.tar.gz"
+    url: "https://github.com/RGameStudio/ImGuizmo/archive/refs/tags/1.83.1.tar.gz"
     sha256: "f0fd3ae3fac8f88679c448ec727b8b48a96df37bf58c758221b1305412a913b4"

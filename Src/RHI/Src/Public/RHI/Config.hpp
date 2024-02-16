@@ -1,7 +1,7 @@
 #pragma once
 
 // Platform-specific macros for importing/exporting symbols
-#if defined(R_WIN32)
+#if defined(R_WIN32) & 0
 
 	#ifdef RHI_EXPORT
 	    // We are building the library, so export the symbols

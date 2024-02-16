@@ -11,6 +11,8 @@
 
 #include <EASTL/unordered_set.h>
 #include <EASTL/unordered_map.h>
+#include <EASTL/vector_set.h>
+#include <EASTL/vector_map.h>
 #include <EASTL/vector.h>
 #include <EASTL/functional.h>
 #include <EASTL/span.h>

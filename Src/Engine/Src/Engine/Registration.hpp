@@ -34,6 +34,46 @@ public:
 		return *this;
 	}
 
+	template<typename TOther>
+	Service& UpdateAfter()
+	{
+		static_assert(std::is_base_of_v<IService, TOther>, "TOther must be derived of engine::IService");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in service update order");
+
+		m_meta.m_updateAfter.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
+	template<typename TOther>
+	Service& UpdateBefore()
+	{
+		static_assert(std::is_base_of_v<IService, TOther>, "TOther must be derived of engine::IService");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in service update order");
+
+		m_meta.m_updateBefore.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
+	template<typename TOther>
+	Service& PostUpdateAfter()
+	{
+		static_assert(std::is_base_of_v<IService, TOther>, "TOther must be derived of engine::IService");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in service post update order");
+
+		m_meta.m_postUpdateAfter.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
+	template<typename TOther>
+	Service& PostUpdateBefore()
+	{
+		static_assert(std::is_base_of_v<IService, TOther>, "TOther must be derived of engine::IService");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in service post update order");
+
+		m_meta.m_postUpdateBefore.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
 private:
 	IService::MetaInfo				m_meta;
 	rttr::registration::class_<T>	m_class;

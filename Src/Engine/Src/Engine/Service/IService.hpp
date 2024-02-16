@@ -3,7 +3,8 @@
 #include <Engine/Config.hpp>
 #include <Engine/Domain.hpp>
 #include <Core/Type.hpp>
-#include <rttr/rttr_enable.h>
+#include <Core/RTTRIntegration.hpp>
+#include <EASTL/vector.h>
 
 namespace engine
 {
@@ -15,6 +16,10 @@ public:
 	struct MetaInfo
 	{
 		Domain m_domain = Domain::ALL;
+		eastl::vector<rttr::type> m_updateAfter;
+		eastl::vector<rttr::type> m_updateBefore;
+		eastl::vector<rttr::type> m_postUpdateAfter;
+		eastl::vector<rttr::type> m_postUpdateBefore;
 	};
 
 	virtual ~IService() = default;

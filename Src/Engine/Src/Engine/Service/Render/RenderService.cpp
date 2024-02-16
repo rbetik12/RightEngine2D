@@ -27,13 +27,13 @@ const eastl::vector<float> vertexBufferRaw =
 
 const eastl::vector<float> presentVBRaw =
 {
-	1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-	1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	-1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+	1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 
-	-1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-	-1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-	1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+	1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
 } // unnamed
@@ -53,6 +53,8 @@ struct RenderService::Impl
     std::shared_ptr<rhi::Pipeline>			m_pipeline;
     std::shared_ptr<rhi::Pipeline>			m_presentPipeline;
     std::unique_ptr<render::Material>		m_presentMaterial;
+
+	std::shared_ptr<rhi::RenderPass>		m_imguiRenderPass;
 };
 
 RenderService::RenderService()
@@ -107,15 +109,15 @@ void RenderService::Update(float dt)
 	Draw(m_impl->m_buffer, m_impl->m_buffer->Descriptor().m_size /
 		m_impl->m_pipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
 	EndPass(m_impl->m_pipeline);
-
-	BeginPass(m_impl->m_presentPipeline);
-	Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
-		m_impl->m_presentPipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
-	EndPass(m_impl->m_presentPipeline);
 }
 
 void RenderService::PostUpdate(float dt)
 {
+	BeginPass(m_impl->m_presentPipeline);
+	Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
+		m_impl->m_presentPipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
+	EndPass(m_impl->m_presentPipeline);
+
     m_device->EndFrame();
     m_device->Present();
 }
@@ -185,6 +187,11 @@ void RenderService::OnResize(uint32_t weight, uint32_t height)
 	CreateRenderResources(weight, height);
 }
 
+const std::shared_ptr<rhi::RenderPass>& RenderService::ImGuiPass() const
+{
+	return m_impl->m_imguiRenderPass;
+}
+
 void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 {
 	rhi::TextureDescriptor textureDescriptor;
@@ -193,7 +200,7 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 	textureDescriptor.m_componentAmount = 4;
 	textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
 	textureDescriptor.m_layersAmount = 1;
-	textureDescriptor.m_format = rhi::Format::RGBA8_UINT;
+	textureDescriptor.m_format = rhi::Format::BGRA8_UNORM;
 
 	m_impl->m_texture = CreateTexture(textureDescriptor);
 
@@ -232,6 +239,20 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 
 	m_impl->m_presentMaterial->SetTexture(m_impl->m_texture, 0);
 	m_impl->m_presentMaterial->Sync();
+
+	{
+		rhi::RenderPassDescriptor imguiPassDesc{};
+		imguiPassDesc.m_extent = { width, height };
+		imguiPassDesc.m_name = "ImGui";
+
+		rhi::AttachmentDescriptor desc{};
+		desc.m_texture = m_impl->m_texture;
+		desc.m_loadOperation = rhi::AttachmentLoadOperation::LOAD;
+
+		imguiPassDesc.m_colorAttachments.emplace_back(desc);
+
+		m_impl->m_imguiRenderPass = CreateRenderPass(imguiPassDesc);
+	}
 }
 
 void RenderService::LoadSystemResources()

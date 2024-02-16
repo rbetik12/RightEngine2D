@@ -1,20 +1,19 @@
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/WindowService.hpp>
-#include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/Render/Material.hpp>
 #include <Engine/Engine.hpp>
 #include <Engine/Registration.hpp>
-#include <RHI/Texture.hpp>
-#include <RHI/PipelineDescriptor.hpp>
-#include <RHI/Buffer.hpp>
-#include <RHI/Pipeline.hpp>
+#include <Engine/Service/Imgui/ImguiService.hpp>
 #include <RHI/Shader.hpp>
+#include <imgui.h>
 
 
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::EditorService>("engine::EditorService")
+	.UpdateAfter<engine::ImguiService>()
+	.PostUpdateBefore<engine::ImguiService>()
 	.Domain(engine::Domain::EDITOR);
 }
 
@@ -36,6 +35,10 @@ EditorService::~EditorService()
 
 void EditorService::Update(float dt)
 {
+	ImGui::ShowDemoWindow();
+	ImGui::Begin("Test");
+	ImGui::Text("");
+	ImGui::End();
 }
 
 void EditorService::PostUpdate(float dt)

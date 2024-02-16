@@ -83,6 +83,9 @@ public:
 	VkCommandPool							CommandPool() const { return m_commandPool; }
 	const SwapchainSupportDetails&			GetSwapchainSupportDetails() const { return m_swapchainDetails; }
 	QueueFamilyIndices						FindQueueFamilies() const;
+	const std::shared_ptr<VulkanContext>&	Context() const { return m_context; }
+	VkQueue									GraphicsQueue() const { return m_graphicsQueue; }
+	VkCommandBuffer							CurrentCmdBuffer() const { return m_cmdBuffers[m_currentCmdBufferIndex]; }
 
 	std::shared_ptr<Fence>					Execute(CommandBuffer buffer);
 

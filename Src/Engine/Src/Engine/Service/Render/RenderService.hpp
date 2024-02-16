@@ -31,6 +31,9 @@ public:
 	void									WaitAll();
 	void									OnResize(uint32_t weight, uint32_t height);
 
+	// TODO: Should be removed after all material and passes systems will be done
+	const std::shared_ptr<rhi::RenderPass>& ImGuiPass() const;
+
 private:
 
 	void									CreateRenderResources(uint32_t width, uint32_t height);

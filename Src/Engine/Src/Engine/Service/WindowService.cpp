@@ -7,6 +7,7 @@
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::WindowService>("engine::WindowService")
+	.UpdateBefore<engine::RenderService>()
 	.Domain(engine::Domain::UI);
 }
 
@@ -56,4 +57,10 @@ glm::ivec2 WindowService::Extent() const
 	return extent;
 }
 
+glm::vec2 WindowService::WindowScale() const
+{
+	glm::vec2 scale;
+	glfwGetWindowContentScale(m_window, &scale.x, &scale.y);
+	return scale;
+}
 } // namespace engine

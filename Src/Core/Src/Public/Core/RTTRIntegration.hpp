@@ -3,6 +3,8 @@
 #include <fmt/format.h>
 #include <rttr/string_view.h>
 #include <rttr/variant.h>
+#include <rttr/registration>
+#include <rttr/rttr_enable.h>
 
 FMT_BEGIN_NAMESPACE
 

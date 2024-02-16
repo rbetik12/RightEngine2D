@@ -5,11 +5,12 @@ set(PROJECT_NAME Engine)
 
 find_package(glfw3 REQUIRED)
 find_package(taskflow REQUIRED)
-find_package(argparse)
+find_package(argparse REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.h"
         )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

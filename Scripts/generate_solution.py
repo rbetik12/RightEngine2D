@@ -36,9 +36,9 @@ def check_lib_version(package_name, version):
 
 print("Preparing conan packages...")
 #imguizmo
-if not check_lib_version("imguizmo", "1.83.1"):
-    sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Debug --version 1.83.1")
-    sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Release --version 1.83.1")
+if not check_lib_version("imguizmo", "1.83.2"):
+    sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Debug --version 1.83.2")
+    sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Release --version 1.83.2")
 
 if not check_lib_version("rttr", "0.9.6.1"):
     sub.run("conan create Scripts/lib/rttr/all -s build_type=Debug --version 0.9.6.1")
