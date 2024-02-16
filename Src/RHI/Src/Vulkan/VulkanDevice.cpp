@@ -255,9 +255,9 @@ void VulkanDevice::BeginFrame()
 	if (m_isSwapchainDirty)
 	{
 		vkDeviceWaitIdle(s_ctx.m_device);
+		m_swapchain.reset();
 		m_context->RecreateSurface();
 		FillSwapchainSupportDetails(m_context);
-		m_swapchain.reset();
 
 		SwapchainDescriptor descriptor{};
 		descriptor.m_extent = m_presentExtent;
