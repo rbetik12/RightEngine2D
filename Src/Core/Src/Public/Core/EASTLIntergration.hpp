@@ -7,6 +7,7 @@
 #include <rttr/type>
 #include <string>
 #include <typeindex>
+#include <filesystem>
 
 namespace eastl
 {
@@ -35,6 +36,15 @@ struct hash<rttr::type>
 	size_t operator()(rttr::type type) const
 	{
 		return type.get_id();
+	}
+};
+
+template<>
+struct hash<std::filesystem::path>
+{
+	size_t operator()(const std::filesystem::path& path) const
+	{
+		return hash<std::string>{}(path.generic_u8string());
 	}
 };
 

@@ -3,6 +3,7 @@
 #include <Engine/Engine.hpp>
 #include <Engine/Service/WindowService.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
+#include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 #include <Core/RTTRIntegration.hpp>
 #include <imgui.h>
 #include "imgui_impl_glfw.h"
@@ -44,8 +45,9 @@ ImguiService::ImguiService()
 
     io.DisplaySize = { displayScale.x, displayScale.y };
 
-    // TODO: Add font loading after VFS will be implemented
-    /* io.Fonts->AddFontFromFileTTF("./Inter-Regular.ttf", C_DEFAULT_FONT_SIZE * displayScale.x); */
+    auto& vfs = Instance().Service<io::VirtualFilesystemService>();
+    // TODO: Move that to project config file later
+    io.Fonts->AddFontFromFileTTF(vfs.Absolute("/Fonts/Inter-Regular.ttf").generic_u8string().c_str(), C_DEFAULT_FONT_SIZE * displayScale.x);
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text] = C_UI_TEXT_COLOR;

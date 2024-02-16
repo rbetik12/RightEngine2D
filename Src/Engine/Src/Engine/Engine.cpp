@@ -5,6 +5,7 @@
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/ImGui/ImguiService.hpp>
+#include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 
 RTTR_REGISTRATION
 {
@@ -41,6 +42,11 @@ Engine::Engine(int argCount, char* argPtr[])
 	core::log::info("Engine domain: {}", DomainToString(m_config.m_domain));
 
 	m_serviceManager = std::make_unique<ServiceManager>(m_config.m_domain);
+
+	m_serviceManager->RegisterService<io::VirtualFilesystemService>();
+
+	auto& vfs = m_serviceManager->Service<io::VirtualFilesystemService>();
+	vfs.Assign("/", ROOT_DIR);
 
 	m_serviceManager->RegisterService<ThreadService>();
 	m_serviceManager->RegisterService<WindowService>();

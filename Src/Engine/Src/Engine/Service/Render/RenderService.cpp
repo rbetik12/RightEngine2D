@@ -1,6 +1,7 @@
 #include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/Render/Material.hpp>
 #include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 #include <Engine/Engine.hpp>
 #include <RHI/Pipeline.hpp>
 
@@ -257,10 +258,12 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 
 void RenderService::LoadSystemResources()
 {
+	auto& vfs = Instance().Service<io::VirtualFilesystemService>();
+
 	m_impl->m_shaderCompiler = CreateShaderCompiler();
 
-	const auto shaderPath = "C:\\Users\\Vitaliy\\code\\RightEngine\\Resources\\Shaders\\basic.glsl";
-	const auto compiledShader = m_impl->m_shaderCompiler->Compile(shaderPath);
+	const auto shaderPath = "/Shaders/basic.glsl";
+	const auto compiledShader = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(shaderPath)).generic_u8string());
 
 	rhi::ShaderDescriptor shaderDescriptor;
 	shaderDescriptor.m_path = shaderPath;
@@ -271,8 +274,8 @@ void RenderService::LoadSystemResources()
 
 	m_impl->m_shader = CreateShader(shaderDescriptor);
 
-	const auto presentShaderPath = "C:\\Users\\Vitaliy\\code\\RightEngine\\Resources\\Shaders\\present.glsl";
-	const auto presentShaderData = m_impl->m_shaderCompiler->Compile(presentShaderPath);
+	const auto presentShaderPath = "/Shaders/present.glsl";
+	const auto presentShaderData = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(presentShaderPath)).generic_u8string());
 
 	rhi::ShaderDescriptor presentShaderDesc{};
 	presentShaderDesc.m_path = presentShaderPath;

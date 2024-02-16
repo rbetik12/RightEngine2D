@@ -8,13 +8,12 @@
 #include <RHI/Shader.hpp>
 #include <imgui.h>
 
-
 RTTR_REGISTRATION
 {
-engine::registration::Service<engine::EditorService>("engine::EditorService")
-	.UpdateAfter<engine::ImguiService>()
-	.PostUpdateBefore<engine::ImguiService>()
-	.Domain(engine::Domain::EDITOR);
+	engine::registration::Service<engine::EditorService>("engine::EditorService")
+		.UpdateAfter<engine::ImguiService>()
+		.PostUpdateBefore<engine::ImguiService>()
+		.Domain(engine::Domain::EDITOR);
 }
 
 namespace engine

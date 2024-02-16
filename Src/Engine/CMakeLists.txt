@@ -27,6 +27,9 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/S
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Src/")
 target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/.bin)
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}/Resources")
+message("${CMAKE_SOURCE_DIR}/Resources")
+
 # Create source groups for each directory
 foreach(FILE ${SOURCE_FILES})
     # Get the path relative to the source directory
