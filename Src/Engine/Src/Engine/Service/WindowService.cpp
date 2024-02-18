@@ -42,11 +42,13 @@ WindowService::~WindowService()
 
 void WindowService::Update(float dt)
 {
+	PROFILER_CPU_ZONE;
 	glfwPollEvents();
 }
 
 void WindowService::PostUpdate(float dt)
 {
+	PROFILER_CPU_ZONE;
 	glfwSwapBuffers(m_window);
 }
 

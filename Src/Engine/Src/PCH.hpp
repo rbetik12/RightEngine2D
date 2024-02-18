@@ -6,6 +6,7 @@
 #include <Core/EASTLIntergration.hpp>
 #include <Core/Hash.hpp>
 #include <Core/Log.hpp>
+#include <Core/Profiling.hpp>
 
 #include <Engine/Assert.hpp>
 

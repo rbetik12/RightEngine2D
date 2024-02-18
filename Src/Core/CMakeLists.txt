@@ -11,10 +11,11 @@ find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(EASTL REQUIRED)
 find_package(rttr REQUIRED)
+find_package(Tracy REQUIRED)
 
 add_library(Core SHARED ${SOURCE_FILES})
 target_sources(Core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Src/EASTL.natvis")
-target_link_libraries(Core PUBLIC EASTL::EASTL spdlog::spdlog fmt::fmt RTTR::Core)
+target_link_libraries(Core PUBLIC EASTL::EASTL spdlog::spdlog fmt::fmt RTTR::Core Tracy::TracyClient)
 target_compile_definitions(Core PRIVATE CORE_EXPORT)
 target_precompile_headers(Core PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Src/PCH.hpp")
 

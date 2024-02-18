@@ -2,8 +2,14 @@ cmake_minimum_required(VERSION 3.19)
 project(RightEngine)
 
 set(CMAKE_CXX_STANDARD 17)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
+
+option(R_ENABLE_TRACY "Enable tracy profiling" ON)
+
+if (R_ENABLE_TRACY)
+    add_compile_definitions(R_ENABLE_TRACY)
+    add_compile_definitions(TRACY_ENABLE)
+endif()
 
 add_compile_definitions(R_ENABLE_ASSERTS)
 if (WIN32)

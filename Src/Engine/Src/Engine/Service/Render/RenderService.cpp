@@ -104,6 +104,7 @@ RenderService::~RenderService()
 
 void RenderService::Update(float dt)
 {
+	PROFILER_CPU_ZONE;
     m_device->BeginFrame();
 
 	BeginPass(m_impl->m_pipeline);
@@ -114,6 +115,7 @@ void RenderService::Update(float dt)
 
 void RenderService::PostUpdate(float dt)
 {
+	PROFILER_CPU_ZONE;
 	BeginPass(m_impl->m_presentPipeline);
 	Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
 		m_impl->m_presentPipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
@@ -184,6 +186,7 @@ void RenderService::WaitAll()
 
 void RenderService::OnResize(uint32_t weight, uint32_t height)
 {
+	PROFILER_CPU_ZONE;
     m_device->OnResize(weight, height);
 	CreateRenderResources(weight, height);
 }
@@ -195,6 +198,7 @@ const std::shared_ptr<rhi::RenderPass>& RenderService::ImGuiPass() const
 
 void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 {
+	PROFILER_CPU_ZONE;
 	rhi::TextureDescriptor textureDescriptor;
 	textureDescriptor.m_width = static_cast<uint16_t>(width);
 	textureDescriptor.m_height = static_cast<uint16_t>(height);

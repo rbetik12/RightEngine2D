@@ -34,6 +34,7 @@ EditorService::~EditorService()
 
 void EditorService::Update(float dt)
 {
+	PROFILER_CPU_ZONE;
 	ImGui::ShowDemoWindow();
 	ImGui::Begin("Test");
 	ImGui::Text("");
@@ -42,7 +43,7 @@ void EditorService::Update(float dt)
 
 void EditorService::PostUpdate(float dt)
 {
-	
+	PROFILER_CPU_ZONE;
 }
 
 }

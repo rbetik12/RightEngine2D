@@ -39,6 +39,8 @@ void SetThreadName(std::string_view name)
 	}
 	nameSet = true;
 
+	PROFILER_SET_THREAD_NAME(name.data());
+
 #if defined(R_WIN32)
 	using SetThreadDescriptionPtr = HRESULT(__stdcall*)(HANDLE, PCWSTR);
 	static const auto SetThreadDescription = reinterpret_cast<SetThreadDescriptionPtr>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "SetThreadDescription"));
@@ -90,7 +92,7 @@ private:
 ThreadService::ThreadService()
 {
 	const auto workersAmount = std::max(4u, std::thread::hardware_concurrency() / 2);
-	m_executor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Worker", workersAmount));
+	m_executor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Background Thread", workersAmount));
 }
 
 ThreadService::~ThreadService()
@@ -99,10 +101,12 @@ ThreadService::~ThreadService()
 
 void ThreadService::Update(float dt)
 {
+	PROFILER_CPU_ZONE;
 }
 
 void ThreadService::PostUpdate(float dt)
 {
+	PROFILER_CPU_ZONE;
 }
 
 tf::Future<void> ThreadService::AddBackgroundTaskflow(tf::Taskflow&& taskflow)

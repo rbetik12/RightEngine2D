@@ -46,20 +46,20 @@ if not check_lib_version("rttr", "0.9.6.1"):
 
 #Generate solution and copy all prebuilt binaries to binary folder
 
-def copy_dll_files(source_dir, destination_dir):
+def copy_files(source_dir, destination_dir, extension=".dll"):
     if not os.path.exists(destination_dir):
         os.makedirs(destination_dir)
 
-    copied_dlls = set()
+    copied_files = set()
 
     for root, _, files in os.walk(source_dir):
         for filename in files:
-            if filename.lower().endswith(".dll"):
+            if filename.lower().endswith(extension):
 
-                if (filename in copied_dlls):
+                if (filename in copied_files):
                     continue
                 else:
-                    copied_dlls.add(filename)
+                    copied_files.add(filename)
 
                 source_path = os.path.join(root, filename)
                 destination_path = os.path.join(destination_dir, filename)
@@ -74,7 +74,8 @@ def copy_dll_files(source_dir, destination_dir):
 print(f"Generating solution...")
 sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/Win/.lib --build=missing --profile=win-64 -s build_type={build_type}")
 
-copy_dll_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}")
+copy_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}", ".dll")
+copy_files("Scripts/bin", f".build/Win/.bin/{build_type}", ".exe")
 
 try:
     completed_process = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)

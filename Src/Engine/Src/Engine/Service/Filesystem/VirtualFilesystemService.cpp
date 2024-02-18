@@ -20,10 +20,12 @@ VirtualFilesystemService::~VirtualFilesystemService()
 
 void VirtualFilesystemService::Update(float dt)
 {
+	PROFILER_CPU_ZONE;
 }
 
 void VirtualFilesystemService::PostUpdate(float dt)
 {
+	PROFILER_CPU_ZONE;
 }
 
 void VirtualFilesystemService::Assign(fs::path alias, fs::path rootPath, FilesystemType type)

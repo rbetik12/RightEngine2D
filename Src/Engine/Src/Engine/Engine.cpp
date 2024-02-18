@@ -6,6 +6,7 @@
 #include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/ImGui/ImguiService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
+#include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
 {
@@ -75,6 +76,7 @@ int Engine::Run()
 	while (m_running)
 	{
 		Update();
+		PROFILER_FRAME_END;
 	}
 
 	core::log::info("Stopped engine loop");
@@ -89,6 +91,7 @@ void Engine::Stop()
 
 void Engine::Update()
 {
+	PROFILER_CPU_ZONE;
 	m_timer.Stop();
 
 	const float dt = std::max<float>(0.0001f, m_timer.TimeInMilliseconds() * 0.001f);
