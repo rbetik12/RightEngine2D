@@ -266,7 +266,7 @@ void RenderService::LoadSystemResources()
 
 	m_impl->m_shaderCompiler = CreateShaderCompiler();
 
-	const auto shaderPath = "/Shaders/basic.glsl";
+	const auto shaderPath = "/System/Shaders/basic.glsl";
 	const auto compiledShader = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(shaderPath)).generic_u8string());
 
 	rhi::ShaderDescriptor shaderDescriptor;
@@ -278,7 +278,7 @@ void RenderService::LoadSystemResources()
 
 	m_impl->m_shader = CreateShader(shaderDescriptor);
 
-	const auto presentShaderPath = "/Shaders/present.glsl";
+	const auto presentShaderPath = "/System/Shaders/present.glsl";
 	const auto presentShaderData = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(presentShaderPath)).generic_u8string());
 
 	rhi::ShaderDescriptor presentShaderDesc{};

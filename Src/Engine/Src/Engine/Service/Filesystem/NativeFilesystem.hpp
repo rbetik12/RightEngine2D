@@ -8,7 +8,7 @@ namespace engine::io
 class ENGINE_API NativeFilesystem : public IFilesystem
 {
 public:
-	NativeFilesystem(fs::path root);
+	NativeFilesystem(const fs::path& alias, const fs::path& root);
 
 	virtual ~NativeFilesystem() override;
 

@@ -6,6 +6,7 @@
 #include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/ImGui/ImguiService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
+#include <Engine/Service/Project/ProjectService.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -44,10 +45,18 @@ Engine::Engine(int argCount, char* argPtr[])
 
 	m_serviceManager = std::make_unique<ServiceManager>(m_config.m_domain);
 
+	m_serviceManager->RegisterService<ProjectService>();
+
+	auto& ps = m_serviceManager->Service<ProjectService>();
+	ps.Load(m_config.m_projectPath);
+
 	m_serviceManager->RegisterService<io::VirtualFilesystemService>();
 
 	auto& vfs = m_serviceManager->Service<io::VirtualFilesystemService>();
-	vfs.Assign("/", ROOT_DIR);
+	for (auto& setting : ps.CurrentProject()->Setting<io::VFSSettings>().m_settings)
+	{
+		vfs.Assign(setting.m_alias, setting.m_path);
+	}
 
 	m_serviceManager->RegisterService<ThreadService>();
 	m_serviceManager->RegisterService<WindowService>();
@@ -110,6 +119,9 @@ void Engine::ParseCfg(int argCount, char* argPtr[])
 								.get_enumeration()
 								.name_to_value(launchMode.data())
 								.get_value<Domain>();
+
+	const auto projectPath = registration::CommandLineArgs::Get("--project");
+	m_config.m_projectPath = projectPath;
 }
 
 } // namespace engine

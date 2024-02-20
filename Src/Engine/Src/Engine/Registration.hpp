@@ -2,13 +2,14 @@
 
 #include <Engine/Service/IService.hpp>
 #include <Core/Hash.hpp>
+#include <Core/RTTRIntegration.hpp>
 #include <argparse/argparse.hpp>
-#include <rttr/registration>
 
 namespace engine::registration
 {
 
 constexpr uint64_t C_METADATA_KEY = core::hash::HashString("Metadata");
+constexpr uint64_t C_PROJECT_SETTINGS_METADATA_KEY = core::hash::HashString("Project Settings Metadata");
 
 template<typename T>
 class ENGINE_API Service
@@ -88,8 +89,38 @@ public:
 		m_class.constructor();
 	}
 
-private:
+	template <typename PropType, typename ClassType>
+	Class& property(rttr::string_view name, PropType ClassType::* field)
+	{
+		static_assert(std::is_base_of_v<ClassType, T>);
+
+		m_class.property(name, field);
+		return *this;
+	}
+
+protected:
 	rttr::registration::class_<T> m_class;
+};
+
+template<typename T>
+class ENGINE_API ProjectSettings : public Class<T>
+{
+public:
+	ProjectSettings(rttr::string_view name) : Class<T>(name) {}
+
+	template <typename PropType, typename ClassType>
+	ProjectSettings& property(rttr::string_view name, PropType ClassType::* field)
+	{
+		Class<T>::property(name, field);
+		return *this;
+	}
+
+	~ProjectSettings()
+	{
+		Class<T>::m_class(
+			rttr::metadata(C_PROJECT_SETTINGS_METADATA_KEY, C_PROJECT_SETTINGS_METADATA_KEY)
+		);
+	}
 };
 
 class ENGINE_API CommandLineArg

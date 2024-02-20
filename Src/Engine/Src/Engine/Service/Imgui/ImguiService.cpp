@@ -10,10 +10,10 @@
 
 RTTR_REGISTRATION
 {
-engine::registration::Service<engine::ImguiService>("engine::ImguiService")
-    .UpdateAfter<engine::RenderService>()
-    .PostUpdateBefore<engine::RenderService>()
-    .Domain(engine::Domain::EDITOR);
+	engine::registration::Service<engine::ImguiService>("engine::ImguiService")
+	    .UpdateAfter<engine::RenderService>()
+	    .PostUpdateBefore<engine::RenderService>()
+	    .Domain(engine::Domain::EDITOR);
 }
 
 namespace
@@ -47,7 +47,7 @@ ImguiService::ImguiService()
 
     auto& vfs = Instance().Service<io::VirtualFilesystemService>();
     // TODO: Move that to project config file later
-    io.Fonts->AddFontFromFileTTF(vfs.Absolute("/Fonts/Inter-Regular.ttf").generic_u8string().c_str(), C_DEFAULT_FONT_SIZE * displayScale.x);
+    io.Fonts->AddFontFromFileTTF(vfs.Absolute("/System/Fonts/Inter-Regular.ttf").generic_u8string().c_str(), C_DEFAULT_FONT_SIZE * displayScale.x);
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text] = C_UI_TEXT_COLOR;

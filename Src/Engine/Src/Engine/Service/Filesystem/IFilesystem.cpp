@@ -3,7 +3,7 @@
 namespace engine::io
 {
 
-IFilesystem::IFilesystem(fs::path root) : m_fullPath(root)
+IFilesystem::IFilesystem(const fs::path& alias, const fs::path& root) : m_fullPath(ROOT_DIR + root.generic_u8string()), m_alias(alias)
 {
 }
 

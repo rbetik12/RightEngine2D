@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 class ENGINE_API IFilesystem
 {
 public:
-	IFilesystem(fs::path root);
+	IFilesystem(const fs::path& alias, const fs::path& root);
 
 	virtual ~IFilesystem() {}
 
@@ -19,6 +19,8 @@ public:
 
 protected:
 	fs::path m_fullPath;
+	fs::path m_alias;
+	fs::path m_root;
 };
 
 } // engine::io

@@ -5,9 +5,15 @@
 #include <Engine/Timer.hpp>
 #include <Engine/Service/ServiceManager.hpp>
 #include <Core/Type.hpp>
+#include <filesystem>
 
 namespace engine
 {
+
+namespace io
+{
+namespace fs = std::filesystem;
+} // io
 
 class ENGINE_API Engine final : private core::NonCopyable
 {
@@ -15,7 +21,8 @@ class ENGINE_API Engine final : private core::NonCopyable
 public:
 	struct Config
 	{
-		Domain m_domain = Domain::NONE;
+		io::fs::path	m_projectPath;
+		Domain			m_domain = Domain::NONE;
 	};
 
 	Engine(int argCount, char* argPtr[]);
