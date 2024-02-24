@@ -7,6 +7,7 @@
 #include <Engine/Service/ImGui/ImguiService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 #include <Engine/Service/Project/ProjectService.hpp>
+#include <Engine/Service/WorldService.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -63,6 +64,7 @@ Engine::Engine(int argCount, char* argPtr[])
 	m_serviceManager->RegisterService<RenderService>();
 	m_serviceManager->RegisterService<ImguiService>();
 	m_serviceManager->RegisterService<EditorService>();
+	m_serviceManager->RegisterService<WorldService>();
 
 	m_running = true;
 

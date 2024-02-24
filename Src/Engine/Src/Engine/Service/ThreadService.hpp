@@ -20,15 +20,18 @@ public:
 	template <typename F>
 	auto							AddBackgroundTask(F&& f)
 	{
-		return m_executor->async(std::move(f));
+		return m_bgExecutor->async(std::move(f));
 	}
 
 	tf::Future<void>				AddBackgroundTaskflow(tf::Taskflow&& taskflow);
 
+	tf::Future<void>				AddForegroundTaskflow(tf::Taskflow& taskflow);
+
 	std::shared_ptr<tf::Executor>	NamedExecutor(std::string_view name, int threadAmount) const;
 
 private:
-	std::unique_ptr<tf::Executor>	m_executor;
+	std::unique_ptr<tf::Executor>	m_bgExecutor;
+	std::unique_ptr<tf::Executor>	m_fgExecutor;
 	std::list<tf::Taskflow>			m_taskflows;
 	std::mutex						m_mutex;
 };

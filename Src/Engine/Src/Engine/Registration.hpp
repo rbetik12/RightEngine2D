@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Engine/Service/IService.hpp>
+#include <Engine/ECS/Component.hpp>
+#include <Engine/ECS/System.hpp>
 #include <Core/Hash.hpp>
 #include <Core/RTTRIntegration.hpp>
 #include <argparse/argparse.hpp>
@@ -81,6 +83,55 @@ private:
 };
 
 template<typename T>
+class ENGINE_API System
+{
+public:
+	System(rttr::string_view name) : m_class(name)
+	{
+		static_assert(std::is_base_of_v<engine::ecs::System, T>, "T must be derived of engine::ecs::System");
+
+		m_class.constructor<ecs::World*>();
+	}
+
+	~System()
+	{
+		m_class(
+			rttr::metadata(C_METADATA_KEY, std::move(m_meta))
+		);
+	}
+
+	System& Domain(Domain domain)
+	{
+		m_meta.m_domain = domain;
+		return *this;
+	}
+
+	template<typename TOther>
+	System& UpdateAfter()
+	{
+		static_assert(std::is_base_of_v<engine::ecs::System, TOther>, "TOther must be derived of engine::ecs::System");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in system update order");
+
+		m_meta.m_updateAfter.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
+	template<typename TOther>
+	System& UpdateBefore()
+	{
+		static_assert(std::is_base_of_v<System, TOther>, "TOther must be derived of engine::ecs::System");
+		static_assert(!std::is_same_v<T, TOther>, "Cycle in system update order");
+
+		m_meta.m_updateBefore.emplace_back(rttr::type::get<TOther>());
+		return *this;
+	}
+
+private:
+	engine::ecs::System::MetaInfo	m_meta;
+	rttr::registration::class_<T>	m_class;
+};
+
+template<typename T>
 class ENGINE_API Class
 {
 public:
@@ -121,6 +172,30 @@ public:
 			rttr::metadata(C_PROJECT_SETTINGS_METADATA_KEY, C_PROJECT_SETTINGS_METADATA_KEY)
 		);
 	}
+};
+
+template<typename T>
+class ENGINE_API Component : public Class<T>
+{
+public:
+	Component(ecs::Component::Type type, rttr::string_view name) : Class<T>(name) {}
+
+	template <typename PropType, typename ClassType>
+	Component& property(rttr::string_view name, PropType ClassType::* field)
+	{
+		Class<T>::property(name, field);
+		return *this;
+	}
+
+	~Component()
+	{
+		Class<T>::m_class(
+			rttr::metadata(C_METADATA_KEY, std::move(m_meta))
+		);
+	}
+
+private:
+	engine::ecs::Component::MetaInfo m_meta;
 };
 
 class ENGINE_API CommandLineArg

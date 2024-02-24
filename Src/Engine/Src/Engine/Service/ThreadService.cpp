@@ -91,8 +91,9 @@ private:
 
 ThreadService::ThreadService()
 {
-	const auto workersAmount = std::max(4u, std::thread::hardware_concurrency() / 2);
-	m_executor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Background Thread", workersAmount));
+	const auto workersAmount = std::thread::hardware_concurrency() / 2;
+	m_bgExecutor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Background Thread", workersAmount));
+	m_fgExecutor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Foreground Thread", workersAmount));
 }
 
 ThreadService::~ThreadService()
@@ -115,7 +116,12 @@ tf::Future<void> ThreadService::AddBackgroundTaskflow(tf::Taskflow&& taskflow)
 
 	// TODO: Add some logic to update to clear taskflows list
 	m_taskflows.emplace_back(std::move(taskflow));
-	return m_executor->run(m_taskflows.back());
+	return m_bgExecutor->run(m_taskflows.back());
+}
+
+tf::Future<void> ThreadService::AddForegroundTaskflow(tf::Taskflow& taskflow)
+{
+	return m_fgExecutor->run(taskflow);
 }
 
 std::shared_ptr<tf::Executor> ThreadService::NamedExecutor(std::string_view name, int threadAmount) const

@@ -2,7 +2,7 @@
 argparse/2.9
 assimp/5.2.2
 eastl/3.21.12
-entt/3.12.2
+entt/3.13.0
 fmt/[~10]
 glfw/3.3.8
 glm/cci.20230113
@@ -14,6 +14,7 @@ rttr/0.9.6.2
 spdlog/1.12.0
 spirv-cross/1.3.243.0
 stb/cci.20220909
+stduuid/1.2.3
 taskflow/3.6.0
 tracy/0.10
 
