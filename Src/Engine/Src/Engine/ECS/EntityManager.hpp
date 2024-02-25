@@ -35,11 +35,20 @@ public:
 	void			RemoveEntity(entt::entity e);
 
 	template<typename T, typename... Args>
+	T& AddComponent(const uuids::uuid& uuid, Args&&... args)
+	{
+		const auto it = m_uuidToEntity.find(uuid);
+		ENGINE_ASSERT(it != m_uuidToEntity.end());
+
+		return AddComponent<T>(it->second, std::forward<Args>(args)...);
+	}
+
+	template<typename T, typename... Args>
 	T&				AddComponent(entt::entity e, Args&&... args)
 	{
 		static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
 		ENGINE_ASSERT(rttr::type::get<T>().get_constructor().is_valid());
-		ENGINE_ASSERT(!m_registry.try_get<T>());
+		ENGINE_ASSERT(!m_registry.try_get<T>(e));
 
 		return m_registry.emplace<T>(e, std::forward<Args>(args)...);
 	}
@@ -52,6 +61,15 @@ public:
 		ENGINE_ASSERT(rttr::type::get<T>().get_constructor().is_valid());
 
 		return m_registry.remove<T>(e);
+	}
+
+	template<typename T>
+	T& RemoveComponent(const uuids::uuid& uuid)
+	{
+		const auto it = m_uuidToEntity.find(uuid);
+		ENGINE_ASSERT(it != m_uuidToEntity.end());
+
+		return RemoveComponent<T>(it->second);
 	}
 
 private:

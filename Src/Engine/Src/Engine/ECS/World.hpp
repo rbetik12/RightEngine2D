@@ -22,6 +22,7 @@ public:
 	}
 
 	std::unique_ptr<SystemManager>& GetSystemManager() { return m_systemManager; }
+	std::unique_ptr<EntityManager>& GetEntityManager() { return m_entityManager; }
 
 private:
 	std::unique_ptr<SystemManager> m_systemManager;

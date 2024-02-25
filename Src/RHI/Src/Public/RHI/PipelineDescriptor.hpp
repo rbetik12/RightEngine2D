@@ -1,8 +1,5 @@
 #pragma once
 
-#include <RHI/ShaderDescriptor.hpp>
-#include <glm/vec4.hpp>
-#include <EASTL/vector_map.h>
 #include <cstdint>
 
 namespace rhi

@@ -20,7 +20,7 @@ public:
 	std::unique_ptr<ecs::World>& CurrentWorld() { return m_world; }
 
 private:
-	std::unique_ptr<ecs::World> m_world;
+	std::unique_ptr<ecs::World>		m_world;
 };
 
 } // engine

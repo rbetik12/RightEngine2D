@@ -18,6 +18,8 @@ class ENGINE_API Material
 public:
 	Material(const std::shared_ptr<rhi::Shader>& shader);
 
+	const std::shared_ptr<rhi::Shader>& Shader() { return m_shader; }
+
 	template<typename T>
 	inline void SetBuffer(T& bufferObject, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0)
 	{

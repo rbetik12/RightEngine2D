@@ -26,7 +26,7 @@ public:
 
 	virtual void Update(float dt) = 0;
 
-	const World* W() const { return m_world; }
+	World* W() { return m_world; }
 
 private:
 	World* m_world;

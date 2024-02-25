@@ -5,11 +5,6 @@
 #include <Engine/Engine.hpp>
 #include <RHI/Pipeline.hpp>
 
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#include <glslang/Public/ShaderLang.h>
-#pragma warning(pop)
-
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::RenderService>("engine::RenderService")
@@ -18,13 +13,6 @@ engine::registration::Service<engine::RenderService>("engine::RenderService")
 
 namespace
 {
-
-const eastl::vector<float> vertexBufferRaw =
-{
-	-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-	0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-};
 
 const eastl::vector<float> presentVBRaw =
 {
@@ -45,14 +33,13 @@ namespace engine
 struct RenderService::Impl
 {
     std::shared_ptr<rhi::ShaderCompiler>	m_shaderCompiler;
-    std::shared_ptr<rhi::Shader>			m_shader;
-	std::shared_ptr<rhi::Shader>			m_presentShader;
-    std::shared_ptr<rhi::Buffer>			m_buffer;
     std::shared_ptr<rhi::Buffer>			m_presentVB;
     std::shared_ptr<rhi::Texture>			m_texture;
     std::shared_ptr<rhi::RenderPass>		m_renderPass;
     std::shared_ptr<rhi::Pipeline>			m_pipeline;
     std::shared_ptr<rhi::Pipeline>			m_presentPipeline;
+
+	std::shared_ptr<rhi::Shader>			m_defaultShader;
     std::unique_ptr<render::Material>		m_presentMaterial;
 
 	std::shared_ptr<rhi::RenderPass>		m_imguiRenderPass;
@@ -106,11 +93,6 @@ void RenderService::Update(float dt)
 {
 	PROFILER_CPU_ZONE;
     m_device->BeginFrame();
-
-	BeginPass(m_impl->m_pipeline);
-	Draw(m_impl->m_buffer, m_impl->m_buffer->Descriptor().m_size /
-		m_impl->m_pipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
-	EndPass(m_impl->m_pipeline);
 }
 
 void RenderService::PostUpdate(float dt)
@@ -125,17 +107,17 @@ void RenderService::PostUpdate(float dt)
     m_device->Present();
 }
 
-std::shared_ptr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)
+RPtr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)
 {
     return m_device->CreateShaderCompiler(options);
 }
 
-std::shared_ptr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescriptor& desc, const void* data)
+RPtr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescriptor& desc, const void* data)
 {
     return m_device->CreateBuffer(desc, data);
 }
 
-std::shared_ptr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler, const void* data)
+RPtr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler, const void* data)
 {
     if (sampler)
     {
@@ -144,22 +126,22 @@ std::shared_ptr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDes
     return m_device->CreateTexture(desc, m_defaultSampler, data);
 }
 
-std::shared_ptr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
+RPtr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
 {
     return m_device->CreateShader(desc);
 }
 
-std::shared_ptr<rhi::Sampler> RenderService::CreateSampler(const rhi::SamplerDescriptor& desc)
+RPtr<rhi::Sampler> RenderService::CreateSampler(const rhi::SamplerDescriptor& desc)
 {
     return m_device->CreateSampler(desc);
 }
 
-std::shared_ptr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::RenderPassDescriptor& desc)
+RPtr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::RenderPassDescriptor& desc)
 {
     return m_device->CreateRenderPass(desc);
 }
 
-std::shared_ptr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
+RPtr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
 {
     return m_device->CreatePipeline(desc);
 }
@@ -191,9 +173,24 @@ void RenderService::OnResize(uint32_t weight, uint32_t height)
 	CreateRenderResources(weight, height);
 }
 
-const std::shared_ptr<rhi::RenderPass>& RenderService::ImGuiPass() const
+const RPtr<rhi::RenderPass>& RenderService::ImGuiPass() const
 {
 	return m_impl->m_imguiRenderPass;
+}
+
+const RPtr<rhi::ShaderCompiler>& RenderService::ShaderCompiler() const
+{
+	return m_impl->m_shaderCompiler;
+}
+
+const RPtr<rhi::Shader>& RenderService::DefaultShader() const
+{
+	return m_impl->m_defaultShader;
+}
+
+const RPtr<rhi::Pipeline>& RenderService::DefaultPipeline() const
+{
+	return m_impl->m_pipeline;
 }
 
 void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
@@ -218,7 +215,7 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 
 	rhi::PipelineDescriptor pipelineDescriptor{};
 	pipelineDescriptor.m_pass = m_impl->m_renderPass;
-	pipelineDescriptor.m_shader = m_impl->m_shader;
+	pipelineDescriptor.m_shader = m_impl->m_defaultShader;
 	pipelineDescriptor.m_cullMode = rhi::CullMode::NONE;
 
 	m_impl->m_pipeline = CreatePipeline(pipelineDescriptor);
@@ -233,14 +230,9 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 	presentPipelineDescritor.m_cullMode = rhi::CullMode::NONE;
 	presentPipelineDescritor.m_offscreen = false;
 	presentPipelineDescritor.m_pass = presentRenderpass;
-	presentPipelineDescritor.m_shader = m_impl->m_presentShader;
+	presentPipelineDescritor.m_shader = m_impl->m_presentMaterial->Shader();
 
 	m_impl->m_presentPipeline = CreatePipeline(presentPipelineDescritor);
-
-	if (!m_impl->m_presentMaterial)
-	{
-		m_impl->m_presentMaterial = std::make_unique<render::Material>(m_impl->m_presentShader);
-	}
 
 	m_impl->m_presentMaterial->SetTexture(m_impl->m_texture, 0);
 	m_impl->m_presentMaterial->Sync();
@@ -276,7 +268,7 @@ void RenderService::LoadSystemResources()
 	shaderDescriptor.m_reflection = compiledShader.m_reflection;
 	shaderDescriptor.m_type = rhi::ShaderType::FX;
 
-	m_impl->m_shader = CreateShader(shaderDescriptor);
+	m_impl->m_defaultShader = CreateShader(shaderDescriptor);
 
 	const auto presentShaderPath = "/System/Shaders/present.glsl";
 	const auto presentShaderData = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(presentShaderPath)).generic_u8string());
@@ -288,14 +280,7 @@ void RenderService::LoadSystemResources()
 	presentShaderDesc.m_type = rhi::ShaderType::FX;
 	presentShaderDesc.m_reflection = presentShaderData.m_reflection;
 
-	m_impl->m_presentShader = CreateShader(presentShaderDesc);
-
-	rhi::BufferDescriptor bufferDesc{};
-	bufferDesc.m_memoryType = rhi::MemoryType::CPU_GPU;
-	bufferDesc.m_type = rhi::BufferType::VERTEX;
-	bufferDesc.m_size = sizeof(vertexBufferRaw[0]) * static_cast<uint32_t>(vertexBufferRaw.size());
-
-	m_impl->m_buffer = CreateBuffer(bufferDesc, vertexBufferRaw.data());
+	const auto presentShader = CreateShader(presentShaderDesc);
 
 	rhi::BufferDescriptor presentVBDesc{};
 	presentVBDesc.m_size = sizeof(presentVBRaw[0]) * static_cast<uint32_t>(presentVBRaw.size());
@@ -304,6 +289,8 @@ void RenderService::LoadSystemResources()
 	presentVBDesc.m_type = rhi::BufferType::VERTEX;
 
 	m_impl->m_presentVB = CreateBuffer(presentVBDesc, presentVBRaw.data());
+
+	m_impl->m_presentMaterial = std::make_unique<render::Material>(presentShader);
 }
 
 } // engine

@@ -70,6 +70,8 @@ Engine::Engine(int argCount, char* argPtr[])
 
 	m_serviceManager->UpdateDependencyOrder();
 
+	m_serviceManager->Service<EditorService>().Initialize();
+
 	core::log::info("Engine was initialized successfully for {}s", m_timer.TimeInSeconds());
 }
 

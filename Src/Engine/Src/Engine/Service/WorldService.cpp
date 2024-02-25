@@ -11,7 +11,7 @@ RTTR_REGISTRATION
 	engine::registration::Service<engine::WorldService>("engine::WorldService")
 		.UpdateBefore<engine::ImguiService>()
 		.UpdateAfter<engine::WindowService>()
-		.UpdateBefore<engine::RenderService>();
+		.UpdateAfter<engine::RenderService>();
 }
 
 namespace engine
