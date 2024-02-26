@@ -35,8 +35,8 @@ namespace engine
 
 struct EditorService::Impl
 {
-    std::shared_ptr<render::Mesh>    m_mesh;
-    std::shared_ptr<render::Material>    m_material;
+    std::shared_ptr<render::Mesh>       m_mesh;
+    std::shared_ptr<render::Material>   m_material;
 };
 
 EditorService::EditorService()
@@ -96,4 +96,4 @@ void EditorService::Initialize()
     em->AddComponent<MeshComponent>(uuid, meshComponent);
 }
 
-}
+} // engine

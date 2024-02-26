@@ -19,7 +19,7 @@ namespace engine
 
 WorldService::WorldService()
 {
-    m_world = std::make_unique<ecs::World>();
+    m_world = std::make_unique<ecs::World>("Test world");
     m_world->GetSystemManager()->Add<RenderSystem>();
     m_world->GetSystemManager()->UpdateDependenciesOrder();
 }

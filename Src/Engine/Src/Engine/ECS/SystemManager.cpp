@@ -18,6 +18,7 @@ SystemManager::~SystemManager()
 
 void SystemManager::Update(float dt)
 {
+    PROFILER_CPU_ZONE;
     m_execParams.dt = dt;
     auto& ts = Instance().Service<ThreadService>();
     ts.AddForegroundTaskflow(m_taskflow).wait();
