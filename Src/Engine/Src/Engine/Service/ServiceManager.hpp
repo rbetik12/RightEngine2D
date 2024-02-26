@@ -24,9 +24,9 @@ public:
     ServiceManager(Domain engineDomain) : m_domain(engineDomain)
     {}
 
-	template<typename T>
-	bool RegisterService()
-	{
+    template<typename T>
+    bool RegisterService()
+    {
         static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
 
         const auto type = rttr::type::get<T>();
@@ -60,7 +60,7 @@ public:
         }
         ENGINE_ASSERT(false);
         return false;
-	}
+    }
 
     template <class T>
     T& Service()
@@ -89,7 +89,7 @@ public:
     void Destroy();
 
 private:
-	eastl::unordered_map<rttr::type, size_t>    m_servicesMap;
+    eastl::unordered_map<rttr::type, size_t>    m_servicesMap;
     eastl::vector<std::shared_ptr<IService>>    m_services;
     eastl::vector<std::shared_ptr<IService>>    m_updateOrder;
     eastl::vector<std::shared_ptr<IService>>    m_postUpdateOrder;

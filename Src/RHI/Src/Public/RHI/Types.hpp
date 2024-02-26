@@ -7,14 +7,14 @@ namespace rhi
 
 constexpr uint32_t Bit(uint32_t x)
 {
-	return 1 << x;
+    return 1 << x;
 }
 
 enum class MemoryType : uint8_t
 {
-	CPU_ONLY,
-	CPU_GPU,
-	GPU_ONLY
+    CPU_ONLY,
+    CPU_GPU,
+    GPU_ONLY
 };
 
 enum class Format : uint8_t

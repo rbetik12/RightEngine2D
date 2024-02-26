@@ -32,9 +32,9 @@ VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descript
         m_modules[stage] = module;
     }
 
-	log::debug("[Vulkan] Successfully created shader '{}'", descriptor.m_path);
+    log::debug("[Vulkan] Successfully created shader '{}'", descriptor.m_path);
 
-	FillVertexData();
+    FillVertexData();
     CreateDescriptorSetLayout();
     AllocateDescriptorSet();
 }
@@ -89,11 +89,11 @@ void VulkanShader::Sync()
 
     for (auto& buffer : m_buffersToSync)
     {
-	    if (buffer.m_buffer.expired())
-	    {
+        if (buffer.m_buffer.expired())
+        {
             rhi::log::warning("Expired buffer ptr in slot {} for shader '{}'", buffer.m_slot, m_descriptor.m_name);
-		    continue;
-	    }
+            continue;
+        }
 
         const auto bufferPtr = buffer.m_buffer.lock();
 
@@ -121,11 +121,11 @@ void VulkanShader::Sync()
 
     for (auto& texture : m_texturesToSync)
     {
-	    if (texture.m_texture.expired())
-	    {
+        if (texture.m_texture.expired())
+        {
             rhi::log::warning("Texture in slot {} in shader '{}' is expired", texture.m_slot, m_descriptor.m_name);
-		    continue;
-	    }
+            continue;
+        }
 
         const auto texPtr = std::static_pointer_cast<VulkanTexture>(texture.m_texture.lock());
 
@@ -232,7 +232,7 @@ void VulkanShader::FillVertexData()
     m_inputDescription.stride = layout.Stride();
     m_inputDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	if (layout.Empty())
+    if (layout.Empty())
     {
         return;
     }

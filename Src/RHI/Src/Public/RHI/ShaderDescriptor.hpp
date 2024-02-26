@@ -26,17 +26,17 @@ enum class ShaderStage : uint8_t
 
 inline std::string_view ShaderStageToString(ShaderStage stage)
 {
-	switch (stage)
-	{
-	case ShaderStage::NONE: return "None";
-	case ShaderStage::VERTEX: return "Vertex";
-	case ShaderStage::FRAGMENT: return "Fragment";
-	default:
-		{
-			RHI_ASSERT(false);
-			return "";
-		}
-	}
+    switch (stage)
+    {
+    case ShaderStage::NONE: return "None";
+    case ShaderStage::VERTEX: return "Vertex";
+    case ShaderStage::FRAGMENT: return "Fragment";
+    default:
+        {
+            RHI_ASSERT(false);
+            return "";
+        }
+    }
 }
 
 struct ShaderReflection
@@ -76,7 +76,7 @@ struct ShaderDescriptor
 
     using BlobMap = eastl::unordered_map<ShaderStage, core::Blob>;
 
-	BlobMap             m_blobByStage;
+    BlobMap             m_blobByStage;
 };
 
 }

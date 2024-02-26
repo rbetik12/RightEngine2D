@@ -23,7 +23,7 @@ namespace rhi
         uint32_t static GetSizeOfType(Format format)
         {
             switch (format)
-        	{
+            {
             case Format::BGRA8_SRGB:
                 return 1;
             case Format::RG32_SFLOAT:

@@ -6,23 +6,23 @@
 
 namespace rhi::vulkan
 {
-	class RHI_API VulkanBuffer : public Buffer
-	{
-	public:
-		VulkanBuffer(const BufferDescriptor& desc, const void* data);
+    class RHI_API VulkanBuffer : public Buffer
+    {
+    public:
+        VulkanBuffer(const BufferDescriptor& desc, const void* data);
 
-		virtual ~VulkanBuffer();
+        virtual ~VulkanBuffer();
 
-		virtual void*	Map() const;
-		virtual void	UnMap() const;
+        virtual void*    Map() const;
+        virtual void    UnMap() const;
 
-		VkBuffer		Raw() const { return m_buffer; }
+        VkBuffer        Raw() const { return m_buffer; }
 
-	private:
-		VkBuffer			m_buffer = nullptr;
-		VmaAllocation		m_allocation = nullptr;
+    private:
+        VkBuffer            m_buffer = nullptr;
+        VmaAllocation        m_allocation = nullptr;
 
-		// Is used only for constant buffer
-		mutable uint8_t*	m_bufferData = nullptr;
-	};
+        // Is used only for constant buffer
+        mutable uint8_t*    m_bufferData = nullptr;
+    };
 }

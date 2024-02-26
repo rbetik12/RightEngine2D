@@ -8,7 +8,7 @@ namespace rhi
 {
     enum class TextureType : uint8_t
     {
-	    NONE,
+        NONE,
         TEXTURE_2D,
         TEXTURE_2D_ARRAY,
         TEXTURE_CUBEMAP

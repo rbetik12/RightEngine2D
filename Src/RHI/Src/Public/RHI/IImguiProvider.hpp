@@ -10,17 +10,17 @@ namespace rhi::imgui
 class RHI_API IImguiProvider : public core::NonCopyable
 {
 public:
-	virtual ~IImguiProvider() {}
+    virtual ~IImguiProvider() {}
 
-	virtual void Begin() = 0;
-	virtual void End() = 0;
+    virtual void Begin() = 0;
+    virtual void End() = 0;
 
-	void SetRenderPass(const std::shared_ptr<rhi::RenderPass>& pass) { m_renderPass = pass; }
+    void SetRenderPass(const std::shared_ptr<rhi::RenderPass>& pass) { m_renderPass = pass; }
 
-	static std::shared_ptr<IImguiProvider> Create();
+    static std::shared_ptr<IImguiProvider> Create();
 
 protected:
-	std::shared_ptr<rhi::RenderPass> m_renderPass;
+    std::shared_ptr<rhi::RenderPass> m_renderPass;
 };
 
 } // rhi::imgui

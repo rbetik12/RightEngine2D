@@ -12,10 +12,10 @@ namespace rhi
 class RHI_API IContext : public core::NonCopyable
 {
 public:
-	virtual ~IContext() = default;
+    virtual ~IContext() = default;
 
 protected:
-	IContext() = default;
+    IContext() = default;
 };
 
 namespace vulkan
@@ -24,10 +24,10 @@ namespace vulkan
 // To be filled by user
 struct VulkanInitContext
 {
-	using VulkanSurfaceFn = std::function<VkSurfaceKHR(VkInstance)>;
+    using VulkanSurfaceFn = std::function<VkSurfaceKHR(VkInstance)>;
 
-	VulkanSurfaceFn				m_surfaceConstructor;
-	eastl::vector<const char*>	m_requiredExtensions;
+    VulkanSurfaceFn                m_surfaceConstructor;
+    eastl::vector<const char*>    m_requiredExtensions;
 };
 
 std::shared_ptr<IContext> RHI_API CreateContext(VulkanInitContext&& ctx);

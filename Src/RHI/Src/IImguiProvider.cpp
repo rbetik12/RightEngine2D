@@ -6,11 +6,11 @@ namespace rhi::imgui
 
 std::shared_ptr<IImguiProvider> IImguiProvider::Create()
 {
-	static bool created = false;
-	RHI_ASSERT(!created);
-	created = true;
+    static bool created = false;
+    RHI_ASSERT(!created);
+    created = true;
 
-	return std::make_shared<vulkan::imgui::VulkanImguiProvider>();
+    return std::make_shared<vulkan::imgui::VulkanImguiProvider>();
 }
 
 } // rhi::imgui

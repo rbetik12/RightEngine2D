@@ -17,7 +17,7 @@ namespace rhi
         CLAMP_TO_BORDER
     };
 
-	struct SamplerDescriptor
+    struct SamplerDescriptor
     {
         float                   m_minLod = 0.0f;
         float                   m_maxLod = 1.0f;

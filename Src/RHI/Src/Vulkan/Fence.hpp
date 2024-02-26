@@ -9,17 +9,17 @@ namespace rhi::vulkan
 class RHI_API Fence
 {
 public:
-	Fence(bool signaled = false);
-	~Fence();
+    Fence(bool signaled = false);
+    ~Fence();
 
-	void Wait();
-	void Reset();
-	bool IsSignaled();
+    void Wait();
+    void Reset();
+    bool IsSignaled();
 
-	VkFence* Raw() { return &m_handle; }
+    VkFence* Raw() { return &m_handle; }
 
 private:
-	VkFence m_handle;
+    VkFence m_handle;
 };
 
 }

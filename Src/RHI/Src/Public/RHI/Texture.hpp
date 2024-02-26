@@ -6,20 +6,20 @@
 
 namespace rhi
 {
-	class RHI_API Texture
-	{
-	public:
-		virtual ~Texture() = default;
+    class RHI_API Texture
+    {
+    public:
+        virtual ~Texture() = default;
 
-		const TextureDescriptor& Descriptor() const { return m_descriptor; }
+        const TextureDescriptor& Descriptor() const { return m_descriptor; }
 
-		const std::shared_ptr<Sampler>& GetSampler() const { return m_sampler; }
+        const std::shared_ptr<Sampler>& GetSampler() const { return m_sampler; }
 
-	protected:
-		TextureDescriptor			m_descriptor;
-		std::shared_ptr<Sampler>	m_sampler;
+    protected:
+        TextureDescriptor            m_descriptor;
+        std::shared_ptr<Sampler>    m_sampler;
 
-		Texture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler) : m_descriptor(desc), m_sampler(sampler)
-		{}
-	};
+        Texture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler) : m_descriptor(desc), m_sampler(sampler)
+        {}
+    };
 }

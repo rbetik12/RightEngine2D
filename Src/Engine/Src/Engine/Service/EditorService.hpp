@@ -8,20 +8,20 @@ namespace engine
 
 class ENGINE_API EditorService final : public IService
 {
-	RTTR_ENABLE(IService);
+    RTTR_ENABLE(IService);
 public:
-	struct Impl;
+    struct Impl;
 
-	EditorService();
-	virtual ~EditorService() override;
+    EditorService();
+    virtual ~EditorService() override;
 
-	virtual void	Update(float dt) override;
-	virtual void	PostUpdate(float dt) override;
+    virtual void    Update(float dt) override;
+    virtual void    PostUpdate(float dt) override;
 
-	void Initialize();
+    void Initialize();
 
 private:
-	std::unique_ptr<Impl> m_impl;
+    std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace engine

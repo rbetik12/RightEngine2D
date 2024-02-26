@@ -9,13 +9,13 @@ namespace rhi::vulkan
 class RHI_API Semaphore
 {
 public:
-	Semaphore();
-	~Semaphore();
+    Semaphore();
+    ~Semaphore();
 
-	VkSemaphore* Raw() { return &m_handle; }
+    VkSemaphore* Raw() { return &m_handle; }
 
 private:
-	VkSemaphore m_handle;
+    VkSemaphore m_handle;
 };
 
 }

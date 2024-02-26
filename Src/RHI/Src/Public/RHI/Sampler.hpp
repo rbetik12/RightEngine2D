@@ -5,15 +5,15 @@
 
 namespace rhi
 {
-	class RHI_API Sampler
-	{
-	public:
-		virtual ~Sampler() = default;
+    class RHI_API Sampler
+    {
+    public:
+        virtual ~Sampler() = default;
 
-	protected:
-		SamplerDescriptor m_descriptor;
+    protected:
+        SamplerDescriptor m_descriptor;
 
-		Sampler(const SamplerDescriptor& desc) : m_descriptor(desc)
-		{}
-	};
+        Sampler(const SamplerDescriptor& desc) : m_descriptor(desc)
+        {}
+    };
 }

@@ -9,20 +9,20 @@ namespace engine
 
 class ENGINE_API ProjectService : public IService
 {
-	RTTR_ENABLE(IService);
+    RTTR_ENABLE(IService);
 public:
-	ProjectService();
-	~ProjectService();
+    ProjectService();
+    ~ProjectService();
 
-	virtual void						Update(float dt) override;
-	virtual	void						PostUpdate(float dt) override;
+    virtual void                        Update(float dt) override;
+    virtual    void                        PostUpdate(float dt) override;
 
-	void								Load(const io::fs::path& path);
+    void                                Load(const io::fs::path& path);
 
-	const std::unique_ptr<Project>&		CurrentProject() const { ENGINE_ASSERT(m_project);  return m_project; }
+    const std::unique_ptr<Project>&        CurrentProject() const { ENGINE_ASSERT(m_project);  return m_project; }
 
 private:
-	std::unique_ptr<Project> m_project;
+    std::unique_ptr<Project> m_project;
 };
 
 } // engine

@@ -8,10 +8,10 @@
 
 RTTR_REGISTRATION
 {
-	engine::registration::Service<engine::WorldService>("engine::WorldService")
-		.UpdateBefore<engine::ImguiService>()
-		.UpdateAfter<engine::WindowService>()
-		.UpdateAfter<engine::RenderService>();
+    engine::registration::Service<engine::WorldService>("engine::WorldService")
+        .UpdateBefore<engine::ImguiService>()
+        .UpdateAfter<engine::WindowService>()
+        .UpdateAfter<engine::RenderService>();
 }
 
 namespace engine
@@ -19,9 +19,9 @@ namespace engine
 
 WorldService::WorldService()
 {
-	m_world = std::make_unique<ecs::World>();
-	m_world->GetSystemManager()->Add<RenderSystem>();
-	m_world->GetSystemManager()->UpdateDependenciesOrder();
+    m_world = std::make_unique<ecs::World>();
+    m_world->GetSystemManager()->Add<RenderSystem>();
+    m_world->GetSystemManager()->UpdateDependenciesOrder();
 }
 
 WorldService::~WorldService()
@@ -30,13 +30,13 @@ WorldService::~WorldService()
 
 void WorldService::Update(float dt)
 {
-	PROFILER_CPU_ZONE;
-	m_world->Update(dt);
+    PROFILER_CPU_ZONE;
+    m_world->Update(dt);
 }
 
 void WorldService::PostUpdate(float dt)
 {
-	PROFILER_CPU_ZONE;
+    PROFILER_CPU_ZONE;
 }
 
 } // engine

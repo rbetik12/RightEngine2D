@@ -136,9 +136,9 @@ glslang_stage_t RHITypeToGLSLangType(rhi::ShaderStage type)
 {
     switch (type)
     {
-		case rhi::ShaderStage::VERTEX: return GLSLANG_STAGE_VERTEX;
-		case rhi::ShaderStage::FRAGMENT: return GLSLANG_STAGE_FRAGMENT;
-	    default:
+        case rhi::ShaderStage::VERTEX: return GLSLANG_STAGE_VERTEX;
+        case rhi::ShaderStage::FRAGMENT: return GLSLANG_STAGE_FRAGMENT;
+        default:
         {
             RHI_ASSERT(false);
             return static_cast<glslang_stage_t>(-1);
@@ -161,14 +161,14 @@ namespace rhi::vulkan
     }
 
     CompiledShaderData VulkanShaderCompiler::Compile(std::string_view path, ShaderType type)
-	{
+    {
         RHI_ASSERT(fs::path(path).is_absolute());
         rhi::log::info("[VulkanShaderCompiler] Compiling {}", path);
 
         Context ctx;
         ctx.m_path = path;
 
-    	ReadShader(ReadShader(path), ctx);
+        ReadShader(ReadShader(path), ctx);
 
         PreprocessShader(ctx);
 
@@ -199,8 +199,8 @@ namespace rhi::vulkan
 
         rhi::log::info("[VulkanShaderCompiler] Successfully compiled: {}", path);
 
-		return data;
-	}
+        return data;
+    }
 
     core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std::string_view path, ShaderStage stage)
     {
@@ -233,9 +233,9 @@ namespace rhi::vulkan
         if (!glslang_shader_preprocess(shader, &input))
         {
             rhi::log::error("[glslang] Shader {} preprocessing failed.\n{}\n{}",
-									path,
-					                glslang_shader_get_info_log(shader),
-					                glslang_shader_get_info_debug_log(shader));
+                                    path,
+                                    glslang_shader_get_info_log(shader),
+                                    glslang_shader_get_info_debug_log(shader));
             glslang_shader_delete(shader);
             return {};
         }
@@ -243,9 +243,9 @@ namespace rhi::vulkan
         if (!glslang_shader_parse(shader, &input))
         {
             rhi::log::error("[glslang] Shader {} parsing failed.\n{}\n{}",
-									path,
-					                glslang_shader_get_info_log(shader),
-					                glslang_shader_get_info_debug_log(shader));
+                                    path,
+                                    glslang_shader_get_info_log(shader),
+                                    glslang_shader_get_info_debug_log(shader));
             glslang_shader_delete(shader);
             return {};
         }
@@ -256,9 +256,9 @@ namespace rhi::vulkan
         if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
         {
             rhi::log::error("[glslang] Shader {} linking failed.\n{}\n{}",
-									path,
-					                glslang_program_get_info_log(program),
-					                glslang_program_get_info_debug_log(program));
+                                    path,
+                                    glslang_program_get_info_log(program),
+                                    glslang_program_get_info_debug_log(program));
             glslang_program_delete(program);
             glslang_shader_delete(shader);
             return {};
@@ -318,8 +318,8 @@ namespace rhi::vulkan
 
                 switch (type.basetype)
                 {
-					case spirv_cross::SPIRType::Float:
-					{
+                    case spirv_cross::SPIRType::Float:
+                    {
                         if (type.vecsize == 1)
                         {
                             layout.Push<float>(name, type.vecsize);
@@ -337,7 +337,7 @@ namespace rhi::vulkan
                             layout.Push<glm::vec4>(name, 1);
                         }
                         break;
-					}
+                    }
                     // TODO: Implement vector mapping for uint and ubyte
                     case spirv_cross::SPIRType::UByte:
                     {
@@ -364,10 +364,10 @@ namespace rhi::vulkan
     }
 
     void VulkanShaderCompiler::ReadShader(const std::string& text, Context& ctx) const
-	{
+    {
         std::istringstream stream(std::string{ text });
 
-    	std::string line;
+        std::string line;
         std::stringstream ss;
         ShaderStage stage = ShaderStage::NONE;
 
@@ -396,7 +396,7 @@ namespace rhi::vulkan
         }
 
         RHI_ASSERT(stage != ShaderStage::NONE);
-	}
+    }
 
     std::string VulkanShaderCompiler::ReadShader(std::string_view path)
     {
@@ -420,7 +420,7 @@ namespace rhi::vulkan
     }
 
     void VulkanShaderCompiler::PreprocessShader(Context& ctx)
-	{
+    {
         ShaderMap processedShaders;
 
         for (const auto& [stage, code] : ctx.m_stageCodeStr)
@@ -472,7 +472,7 @@ namespace rhi::vulkan
             line.clear();
             stream.clear();
         }
-	}
+    }
 
     ShaderReflection VulkanShaderCompiler::MergeReflection(const ReflectionMap& reflectionMap, std::string_view path)
     {
@@ -485,10 +485,10 @@ namespace rhi::vulkan
             auto& mergedBufferMap = mergedReflection.m_bufferMap;
             for (const auto& [slot, buffer] : reflection.m_bufferMap)
             {
-	            if (mergedBufferMap.find(slot) == mergedBufferMap.end())
-	            {
+                if (mergedBufferMap.find(slot) == mergedBufferMap.end())
+                {
                     mergedBufferMap[slot] = buffer;
-	            }
+                }
                 else
                 {
                     RHI_ASSERT_WITH_MESSAGE(false, fmt::format("Slot {} has assigned buffer '{}' already", slot, buffer.m_name));
@@ -512,7 +512,7 @@ namespace rhi::vulkan
             
             if (reflection.m_inputLayout.Empty())
             {
-	            continue;
+                continue;
             }
 
             RHI_ASSERT_WITH_MESSAGE(!hasInputLayout, fmt::format("Input layout for '{}' was already registered", path));

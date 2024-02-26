@@ -15,7 +15,7 @@
 
 
 #define HELPER_DEFAULT_RETURN(TypeName) RHI_ASSERT(false); \
-										return static_cast<TypeName>(-1)
+                                        return static_cast<TypeName>(-1)
 
 namespace rhi::vulkan::helpers
 {

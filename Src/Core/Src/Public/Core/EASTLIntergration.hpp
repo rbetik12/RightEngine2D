@@ -24,37 +24,37 @@ namespace eastl
 template<>
 struct hash<std::string>
 {
-	size_t operator()(const std::string& str) const
-	{
-		return core::hash::HashString(str);
-	}
+    size_t operator()(const std::string& str) const
+    {
+        return core::hash::HashString(str);
+    }
 };
 
 template<>
 struct hash<std::string_view>
 {
-	size_t operator()(std::string_view str) const
-	{
-		return core::hash::HashString(str);
-	}
+    size_t operator()(std::string_view str) const
+    {
+        return core::hash::HashString(str);
+    }
 };
 
 template<>
 struct hash<std::type_index>
 {
-	size_t operator()(const std::type_index& tIdx) const
-	{
-		return tIdx.hash_code();
-	}
+    size_t operator()(const std::type_index& tIdx) const
+    {
+        return tIdx.hash_code();
+    }
 };
 
 template<>
 struct hash<std::filesystem::path>
 {
-	size_t operator()(const std::filesystem::path& path) const
-	{
-		return hash<std::string>{}(path.generic_u8string());
-	}
+    size_t operator()(const std::filesystem::path& path) const
+    {
+        return hash<std::string>{}(path.generic_u8string());
+    }
 };
 
 } // eastl

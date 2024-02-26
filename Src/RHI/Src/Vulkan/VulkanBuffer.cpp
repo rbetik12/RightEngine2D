@@ -3,13 +3,13 @@
 
 namespace rhi::vulkan
 {
-	namespace 
-	{
+    namespace 
+    {
         constexpr const uint8_t C_MAX_CONSTANT_BUFFER_SIZE = 128;
-	}
+    }
 
-	VulkanBuffer::VulkanBuffer(const BufferDescriptor& desc, const void* data) : Buffer(desc)
-	{
+    VulkanBuffer::VulkanBuffer(const BufferDescriptor& desc, const void* data) : Buffer(desc)
+    {
         if (desc.m_type == BufferType::CONSTANT)
         {
             RHI_ASSERT(desc.m_size <= C_MAX_CONSTANT_BUFFER_SIZE);
@@ -48,20 +48,20 @@ namespace rhi::vulkan
             memcpy(bufferPtr, data, desc.m_size);
             UnMap();
         }
-	}
+    }
 
-	VulkanBuffer::~VulkanBuffer()
-	{
+    VulkanBuffer::~VulkanBuffer()
+    {
         if (m_descriptor.m_type == BufferType::CONSTANT)
         {
             delete[] m_bufferData;
             return;
         }
         vmaDestroyBuffer(VulkanDevice::s_ctx.m_allocator, m_buffer, m_allocation);
-	}
+    }
 
-	void* VulkanBuffer::Map() const
-	{
+    void* VulkanBuffer::Map() const
+    {
         if (m_descriptor.m_type == BufferType::CONSTANT)
         {
             if (!m_bufferData)
@@ -74,14 +74,14 @@ namespace rhi::vulkan
         void* data;
         vmaMapMemory(VulkanDevice::s_ctx.m_allocator, m_allocation, &data);
         return data;
-	}
+    }
 
-	void VulkanBuffer::UnMap() const
-	{
+    void VulkanBuffer::UnMap() const
+    {
         if (m_descriptor.m_type == BufferType::CONSTANT)
         {
             return;
         }
         vmaUnmapMemory(VulkanDevice::s_ctx.m_allocator, m_allocation);
-	}
+    }
 }

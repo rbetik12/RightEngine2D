@@ -9,16 +9,16 @@ namespace engine
 
 class ENGINE_API ImguiService : public IService
 {
-	RTTR_ENABLE(IService);
+    RTTR_ENABLE(IService);
 public:
-	ImguiService();
-	virtual ~ImguiService() override;
+    ImguiService();
+    virtual ~ImguiService() override;
 
-	virtual void Update(float dt) override;
-	virtual void PostUpdate(float dt) override;
+    virtual void Update(float dt) override;
+    virtual void PostUpdate(float dt) override;
 
 private:
-	std::shared_ptr<rhi::imgui::IImguiProvider> m_imguiProvider;
+    std::shared_ptr<rhi::imgui::IImguiProvider> m_imguiProvider;
 };
 
 } // engine

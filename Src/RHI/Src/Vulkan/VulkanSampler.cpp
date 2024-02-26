@@ -5,8 +5,8 @@
 namespace rhi::vulkan
 {
 
-	VulkanSampler::VulkanSampler(const SamplerDescriptor& descriptor) : Sampler(descriptor)
-	{
+    VulkanSampler::VulkanSampler(const SamplerDescriptor& descriptor) : Sampler(descriptor)
+    {
         // TODO: Set magFilter, minFilter and mipmapMode through descriptor data
 
         VkSamplerCreateInfo samplerInfo{};
@@ -28,11 +28,11 @@ namespace rhi::vulkan
         samplerInfo.maxLod = descriptor.m_maxLod;
 
         RHI_ASSERT(vkCreateSampler(VulkanDevice::s_ctx.m_device, &samplerInfo, nullptr, &m_sampler) == VK_SUCCESS);
-	}
+    }
 
-	VulkanSampler::~VulkanSampler()
-	{
+    VulkanSampler::~VulkanSampler()
+    {
         vkDestroySampler(VulkanDevice::s_ctx.m_device, m_sampler, nullptr);
-	}
+    }
 
 } // namespace rhi::vulkan

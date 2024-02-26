@@ -5,25 +5,25 @@
 namespace rhi::vulkan
 {
 
-	class RHI_API VulkanContext : public IContext
-	{
-	public:
-		VulkanContext(VulkanInitContext&& ctx);
+    class RHI_API VulkanContext : public IContext
+    {
+    public:
+        VulkanContext(VulkanInitContext&& ctx);
 
-		virtual ~VulkanContext() override;
+        virtual ~VulkanContext() override;
 
-		inline VkInstance					Instance() const { return m_instance; }
-		inline VkSurfaceKHR					Surface() const { return m_surface; }
+        inline VkInstance                    Instance() const { return m_instance; }
+        inline VkSurfaceKHR                    Surface() const { return m_surface; }
 
-		const eastl::vector<const char*>&	ValidationLayers() const;
+        const eastl::vector<const char*>&    ValidationLayers() const;
 
-		void								RecreateSurface();
+        void                                RecreateSurface();
 
-	private:
-		uint32_t									m_extensionAmount{ 0 };
-		VkSurfaceKHR								m_surface;
-		VkInstance									m_instance;
-		VulkanInitContext							m_ctx;
-	};
+    private:
+        uint32_t                                    m_extensionAmount{ 0 };
+        VkSurfaceKHR                                m_surface;
+        VkInstance                                    m_instance;
+        VulkanInitContext                            m_ctx;
+    };
 
 }

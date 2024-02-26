@@ -16,20 +16,20 @@ using namespace engine::registration;
 using namespace rttr;
 
 CommandLineArgs()
-			.Argument(
-				CommandLineArg("-m", "--mode")
-				.Help("Engine launch mode - client, server, server_no_ui or editor")
-				.DefaultValue("editor")
-			);
+            .Argument(
+                CommandLineArg("-m", "--mode")
+                .Help("Engine launch mode - client, server, server_no_ui or editor")
+                .DefaultValue("editor")
+            );
 
 
 registration::enumeration<engine::Domain>("engine::Domain")(
-		value("none", engine::Domain::NONE),
-		value("editor", engine::Domain::ALL),
-		value("client", engine::Domain::CLIENT),
-		value("server", engine::Domain::SERVER_UI),
-		value("server_no_ui", engine::Domain::SERVER_NO_UI)
-	);
+        value("none", engine::Domain::NONE),
+        value("editor", engine::Domain::ALL),
+        value("client", engine::Domain::CLIENT),
+        value("server", engine::Domain::SERVER_UI),
+        value("server_no_ui", engine::Domain::SERVER_NO_UI)
+    );
 }
 
 namespace engine
@@ -37,95 +37,95 @@ namespace engine
 
 Engine::Engine(int argCount, char* argPtr[])
 {
-	m_timer.Restart();
-	s_instance = this;
+    m_timer.Restart();
+    s_instance = this;
 
-	ParseCfg(argCount, argPtr);
+    ParseCfg(argCount, argPtr);
 
-	core::log::info("Engine domain: {}", DomainToString(m_config.m_domain));
+    core::log::info("Engine domain: {}", DomainToString(m_config.m_domain));
 
-	m_serviceManager = std::make_unique<ServiceManager>(m_config.m_domain);
+    m_serviceManager = std::make_unique<ServiceManager>(m_config.m_domain);
 
-	m_serviceManager->RegisterService<ProjectService>();
+    m_serviceManager->RegisterService<ProjectService>();
 
-	auto& ps = m_serviceManager->Service<ProjectService>();
-	ps.Load(m_config.m_projectPath);
+    auto& ps = m_serviceManager->Service<ProjectService>();
+    ps.Load(m_config.m_projectPath);
 
-	m_serviceManager->RegisterService<io::VirtualFilesystemService>();
+    m_serviceManager->RegisterService<io::VirtualFilesystemService>();
 
-	auto& vfs = m_serviceManager->Service<io::VirtualFilesystemService>();
-	for (auto& setting : ps.CurrentProject()->Setting<io::VFSSettings>().m_settings)
-	{
-		vfs.Assign(setting.m_alias, setting.m_path);
-	}
+    auto& vfs = m_serviceManager->Service<io::VirtualFilesystemService>();
+    for (auto& setting : ps.CurrentProject()->Setting<io::VFSSettings>().m_settings)
+    {
+        vfs.Assign(setting.m_alias, setting.m_path);
+    }
 
-	m_serviceManager->RegisterService<ThreadService>();
-	m_serviceManager->RegisterService<WindowService>();
-	m_serviceManager->RegisterService<RenderService>();
-	m_serviceManager->RegisterService<ImguiService>();
-	m_serviceManager->RegisterService<EditorService>();
-	m_serviceManager->RegisterService<WorldService>();
+    m_serviceManager->RegisterService<ThreadService>();
+    m_serviceManager->RegisterService<WindowService>();
+    m_serviceManager->RegisterService<RenderService>();
+    m_serviceManager->RegisterService<ImguiService>();
+    m_serviceManager->RegisterService<EditorService>();
+    m_serviceManager->RegisterService<WorldService>();
 
-	m_running = true;
+    m_running = true;
 
-	m_serviceManager->UpdateDependencyOrder();
+    m_serviceManager->UpdateDependencyOrder();
 
-	m_serviceManager->Service<EditorService>().Initialize();
+    m_serviceManager->Service<EditorService>().Initialize();
 
-	core::log::info("Engine was initialized successfully for {}s", m_timer.TimeInSeconds());
+    core::log::info("Engine was initialized successfully for {}s", m_timer.TimeInSeconds());
 }
 
 Engine::~Engine()
 {
-	m_serviceManager->Destroy();
-	core::log::info("Engine was destroyed successfully");
+    m_serviceManager->Destroy();
+    core::log::info("Engine was destroyed successfully");
 }
 
 int Engine::Run()
 {
-	core::log::info("Starting engine loop");
+    core::log::info("Starting engine loop");
 
-	m_timer.Restart();
-	while (m_running)
-	{
-		Update();
-		PROFILER_FRAME_END;
-	}
+    m_timer.Restart();
+    while (m_running)
+    {
+        Update();
+        PROFILER_FRAME_END;
+    }
 
-	core::log::info("Stopped engine loop");
-	return 0;
+    core::log::info("Stopped engine loop");
+    return 0;
 }
 
 void Engine::Stop()
 {
-	core::log::info("Engine loop stop requested");
-	m_running = false;
+    core::log::info("Engine loop stop requested");
+    m_running = false;
 }
 
 void Engine::Update()
 {
-	PROFILER_CPU_ZONE;
-	m_timer.Stop();
+    PROFILER_CPU_ZONE;
+    m_timer.Stop();
 
-	const float dt = std::max<float>(0.0001f, m_timer.TimeInMilliseconds() * 0.001f);
-	m_timer.Start();
+    const float dt = std::max<float>(0.0001f, m_timer.TimeInMilliseconds() * 0.001f);
+    m_timer.Start();
 
-	m_serviceManager->Update(dt);
-	m_serviceManager->PostUpdate(dt);
+    m_serviceManager->Update(dt);
+    m_serviceManager->PostUpdate(dt);
 }
 
 void Engine::ParseCfg(int argCount, char* argPtr[])
 {
-	registration::CommandLineArgs::Parse(argCount, argPtr);
+    registration::CommandLineArgs::Parse(argCount, argPtr);
 
-	const auto launchMode = registration::CommandLineArgs::Get("--mode");
-	m_config.m_domain = rttr::type::get_by_name("engine::Domain")
-								.get_enumeration()
-								.name_to_value(launchMode.data())
-								.get_value<Domain>();
+    const auto launchMode = registration::CommandLineArgs::Get("--mode");
+    m_config.m_domain = rttr::type::get_by_name("engine::Domain")
+                                .get_enumeration()
+                                .name_to_value(launchMode.data())
+                                .get_value<Domain>();
 
-	const auto projectPath = registration::CommandLineArgs::Get("--project");
-	m_config.m_projectPath = projectPath;
+    const auto projectPath = registration::CommandLineArgs::Get("--project");
+    m_config.m_projectPath = projectPath;
 }
 
 } // namespace engine

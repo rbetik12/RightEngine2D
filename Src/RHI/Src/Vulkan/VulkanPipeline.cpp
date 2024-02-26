@@ -172,7 +172,7 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
         colorAttachmentFormats.emplace_back(helpers::Format(attachment.m_texture->Descriptor().m_format));
     }
 
-	VkPipelineRenderingCreateInfoKHR pipelineRenderingInfo{};
+    VkPipelineRenderingCreateInfoKHR pipelineRenderingInfo{};
     pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     pipelineRenderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderPassDescriptor.m_colorAttachments.size());
     pipelineRenderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();

@@ -7,30 +7,30 @@
 
 namespace rhi
 {
-	class RHI_API Buffer : public core::NonCopyable
-	{
-	public:
-		Buffer(const BufferDescriptor& descriptor) : m_descriptor(descriptor)
-		{}
+    class RHI_API Buffer : public core::NonCopyable
+    {
+    public:
+        Buffer(const BufferDescriptor& descriptor) : m_descriptor(descriptor)
+        {}
 
-		virtual ~Buffer() = default;
+        virtual ~Buffer() = default;
 
-		virtual void*	Map() const = 0;
-		virtual void	UnMap() const = 0;
+        virtual void*    Map() const = 0;
+        virtual void    UnMap() const = 0;
 
-		inline void		CopyToBuffer(const void* ptr, size_t size)
-		{
-			RHI_ASSERT(size < m_descriptor.m_size);
+        inline void        CopyToBuffer(const void* ptr, size_t size)
+        {
+            RHI_ASSERT(size < m_descriptor.m_size);
 
-			auto* dst = Map();
-			std::memcpy(dst, ptr, size);
-			UnMap();
-		}
+            auto* dst = Map();
+            std::memcpy(dst, ptr, size);
+            UnMap();
+        }
 
-		const BufferDescriptor& Descriptor() const
-		{ return m_descriptor; }
+        const BufferDescriptor& Descriptor() const
+        { return m_descriptor; }
 
-	protected:
-		BufferDescriptor m_descriptor;
-	};
+    protected:
+        BufferDescriptor m_descriptor;
+    };
 }

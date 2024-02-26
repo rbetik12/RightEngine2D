@@ -46,9 +46,9 @@ bool CheckValidationLayerSupport()
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-											 VkDebugUtilsMessageTypeFlagsEXT messageType,
-											 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-											 void* pUserData)
+                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                             void* pUserData)
 {
 #if VULKAN_LOG_VERBOSE
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
@@ -92,7 +92,7 @@ void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 
 VulkanContext::VulkanContext(VulkanInitContext&& ctx)
 {
-	vkEnumerateInstanceExtensionProperties(nullptr, &m_extensionAmount, nullptr);
+    vkEnumerateInstanceExtensionProperties(nullptr, &m_extensionAmount, nullptr);
 
     if (C_ENABLE_VALIDATION_LAYERS)
     {
@@ -141,8 +141,8 @@ VulkanContext::VulkanContext(VulkanInitContext&& ctx)
         RHI_ASSERT_WITH_MESSAGE(false, "Failed to create vulkan instance!");
     }
 
-	//TODO: Add more info about current vulkan instance
-	rhi::log::debug("[Vulkan] Successfully initialized Vulkan API with {} extensions:", ctx.m_requiredExtensions.size());
+    //TODO: Add more info about current vulkan instance
+    rhi::log::debug("[Vulkan] Successfully initialized Vulkan API with {} extensions:", ctx.m_requiredExtensions.size());
 
     for (auto& ext : ctx.m_requiredExtensions)
     {

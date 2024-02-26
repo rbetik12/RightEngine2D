@@ -10,7 +10,7 @@ namespace rhi
     struct CompiledShaderData
     {
         ShaderReflection                                m_reflection;
-        eastl::unordered_map<ShaderStage, core::Blob>	m_stageBlob;
+        eastl::unordered_map<ShaderStage, core::Blob>    m_stageBlob;
         bool                                            m_valid = false;
     };
 

@@ -11,34 +11,34 @@ namespace engine::ecs
 class ENGINE_API SystemManager : public core::NonCopyable
 {
 public:
-	SystemManager(World* world);
-	~SystemManager();
+    SystemManager(World* world);
+    ~SystemManager();
 
-	void Update(float dt);
+    void Update(float dt);
 
-	template<typename T>
-	void Add()
-	{
-		static_assert(std::is_base_of_v<System, T>);
-		ENGINE_ASSERT(rttr::type::get<T>().get_constructor({rttr::type::get<World*>()}).is_valid());
+    template<typename T>
+    void Add()
+    {
+        static_assert(std::is_base_of_v<System, T>);
+        ENGINE_ASSERT(rttr::type::get<T>().get_constructor({rttr::type::get<World*>()}).is_valid());
 
-		m_systems.emplace_back(std::make_unique<T>(m_world));
-		m_typeToSystem[rttr::type::get<T>()] = m_systems.back().get();
-	}
+        m_systems.emplace_back(std::make_unique<T>(m_world));
+        m_typeToSystem[rttr::type::get<T>()] = m_systems.back().get();
+    }
 
-	void UpdateDependenciesOrder();
+    void UpdateDependenciesOrder();
 
 private:
-	struct ExecutionParams
-	{
-		float dt;
-	};
+    struct ExecutionParams
+    {
+        float dt;
+    };
 
-	eastl::vector<std::unique_ptr<System>>						m_systems;
-	eastl::unordered_map<rttr::type, System*>					m_typeToSystem;
-	World*														m_world;
-	tf::Taskflow												m_taskflow;
-	ExecutionParams												m_execParams;
+    eastl::vector<std::unique_ptr<System>>                        m_systems;
+    eastl::unordered_map<rttr::type, System*>                    m_typeToSystem;
+    World*                                                        m_world;
+    tf::Taskflow                                                m_taskflow;
+    ExecutionParams                                                m_execParams;
 };
 
 } // engine::ecs

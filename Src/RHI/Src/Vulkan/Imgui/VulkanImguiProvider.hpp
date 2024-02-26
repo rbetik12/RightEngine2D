@@ -9,16 +9,16 @@ namespace rhi::vulkan::imgui
 class RHI_API VulkanImguiProvider : public rhi::imgui::IImguiProvider
 {
 public:
-	VulkanImguiProvider();
-	virtual ~VulkanImguiProvider() override;
+    VulkanImguiProvider();
+    virtual ~VulkanImguiProvider() override;
 
-	virtual void Begin() override;
-	virtual void End() override;
+    virtual void Begin() override;
+    virtual void End() override;
 
 private:
-	void CreateDescriptorPool();
+    void CreateDescriptorPool();
 
-	VkDescriptorPool m_descriptorPool = nullptr;
+    VkDescriptorPool m_descriptorPool = nullptr;
 };
 
 } // rhi::vulkan::imgui

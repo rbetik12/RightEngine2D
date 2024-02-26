@@ -67,7 +67,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
         stagingBufferDesc.m_size = desc.Size();
         stagingBufferDesc.m_type = BufferType::TRANSFER_SRC;
         stagingBufferDesc.m_memoryType = MemoryType::CPU_ONLY;
-		m_stagingBuffer = VulkanDevice::s_ctx.m_instance->CreateBuffer(stagingBufferDesc, nullptr);
+        m_stagingBuffer = VulkanDevice::s_ctx.m_instance->CreateBuffer(stagingBufferDesc, nullptr);
         auto ptr = m_stagingBuffer->Map();
         memcpy(ptr, data, stagingBufferDesc.m_size);
         m_stagingBuffer->UnMap();
@@ -115,7 +115,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
     {
         case TextureType::TEXTURE_2D_ARRAY:
         {
-			imageCreateInfo.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+            imageCreateInfo.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
             break;
         }
         case TextureType::TEXTURE_CUBEMAP:
@@ -219,7 +219,7 @@ VulkanTexture::~VulkanTexture()
 void VulkanTexture::ChangeImageLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     const bool isDepth = m_descriptor.m_format == Format::D32_SFLOAT
-	|| m_descriptor.m_format == Format::D32_SFLOAT_S8_UINT;
+    || m_descriptor.m_format == Format::D32_SFLOAT_S8_UINT;
 
     ChangeImageLayout(cmdBuffer,
         m_image, 
@@ -291,12 +291,12 @@ void VulkanTexture::ChangeImageLayout(VkCommandBuffer cmdBuffer,
 }
 
 void VulkanTexture::ChangeImageLayout(VkImage image, 
-									    VkImageLayout oldLayout,
-									    VkImageLayout newLayout, 
-									    Format format,
-										int layers, 
-									    int mipmaps, 
-									    bool isDepth)
+                                        VkImageLayout oldLayout,
+                                        VkImageLayout newLayout, 
+                                        Format format,
+                                        int layers, 
+                                        int mipmaps, 
+                                        bool isDepth)
 {
     CommandBuffer cmdBuffer;
     cmdBuffer.Begin();

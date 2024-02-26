@@ -10,10 +10,10 @@
 
 RTTR_REGISTRATION
 {
-	engine::registration::Service<engine::ImguiService>("engine::ImguiService")
-	    .UpdateAfter<engine::RenderService>()
-	    .PostUpdateBefore<engine::RenderService>()
-	    .Domain(engine::Domain::EDITOR);
+    engine::registration::Service<engine::ImguiService>("engine::ImguiService")
+        .UpdateAfter<engine::RenderService>()
+        .PostUpdateBefore<engine::RenderService>()
+        .Domain(engine::Domain::EDITOR);
 }
 
 namespace

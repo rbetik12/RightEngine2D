@@ -5,16 +5,16 @@
 
 namespace rhi::vulkan
 {
-	class RHI_API VulkanSampler : public Sampler
-	{
-	public:
-		VulkanSampler(const SamplerDescriptor& descriptor);
+    class RHI_API VulkanSampler : public Sampler
+    {
+    public:
+        VulkanSampler(const SamplerDescriptor& descriptor);
 
-		virtual ~VulkanSampler() override;
+        virtual ~VulkanSampler() override;
 
-		VkSampler Raw() const { return m_sampler; }
+        VkSampler Raw() const { return m_sampler; }
 
-	private:
-		VkSampler m_sampler;
-	};
+    private:
+        VkSampler m_sampler;
+    };
 }
