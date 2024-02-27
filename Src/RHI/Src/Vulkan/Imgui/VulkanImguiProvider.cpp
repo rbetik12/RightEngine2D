@@ -3,6 +3,7 @@
 #include <Vulkan/VulkanRenderPass.hpp>
 #include <Vulkan/VulkanHelpers.hpp>
 #include <Vulkan/VulkanTexture.hpp>
+#include <Vulkan/VulkanSampler.hpp>
 #include <imgui.h>
 #include "imgui_impl_vulkan.h"
 
@@ -71,7 +72,7 @@ void VulkanImguiProvider::End()
     renderingInfo.colorAttachmentCount = static_cast<uint32_t>(renderPass->Descriptor().m_colorAttachments.size());
     renderingInfo.pColorAttachments = renderPass->ColorAttachments().data();
 
-    if (renderPass->Descriptor().m_depthStencilAttachment.m_texture != nullptr)
+    if (renderPass->Descriptor().m_depthStencilAttachment.m_texture != nullptr) 
     {
         renderingInfo.pDepthAttachment = &renderPass->DepthAttachment();
         renderingInfo.pStencilAttachment = &renderPass->DepthAttachment();
@@ -79,7 +80,7 @@ void VulkanImguiProvider::End()
 
     auto cmdBuffer = VulkanDevice::s_ctx.m_instance->CurrentCmdBuffer();
 
-    for (auto& texture : renderPass->Descriptor().m_colorAttachments)
+    for (auto &texture : renderPass->Descriptor().m_colorAttachments) 
     {
         auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture.m_texture);
         vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -91,11 +92,17 @@ void VulkanImguiProvider::End()
 
     vkCmdEndRendering(cmdBuffer);
 
-    for (auto& texture : renderPass->Descriptor().m_colorAttachments)
+    for (auto &texture : renderPass->Descriptor().m_colorAttachments) 
     {
         auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture.m_texture);
         vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
+}
+void VulkanImguiProvider::Image(const std::shared_ptr<Texture>& texture, const ImVec2& size, 
+        const ImVec2& uv0, const ImVec2& uv1)
+{
+    const auto set = GetDescriptorSet(texture);
+    ImGui::Image(set, size, uv0, uv1);
 }
 
 void VulkanImguiProvider::CreateDescriptorPool()
@@ -107,7 +114,25 @@ void VulkanImguiProvider::CreateDescriptorPool()
     poolInfo.poolSizeCount = static_cast<uint32_t>(std::size(poolSizes));
     poolInfo.pPoolSizes = poolSizes;
 
-    RHI_ASSERT(vkCreateDescriptorPool(VulkanDevice::s_ctx.m_device, &poolInfo, nullptr, &m_descriptorPool) == VK_SUCCESS);
+    RHI_ASSERT(vkCreateDescriptorPool(VulkanDevice::s_ctx.m_device, &poolInfo,
+                                      nullptr,
+                                      &m_descriptorPool) == VK_SUCCESS);
+}
+
+VkDescriptorSet VulkanImguiProvider::GetDescriptorSet(const std::shared_ptr<Texture>& texture)
+{
+    RHI_ASSERT(texture->GetSampler() && texture->Descriptor().m_width > 0 && texture->Descriptor().m_height > 0);
+
+    const auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture);
+    const auto vkSampler = std::static_pointer_cast<VulkanSampler>(vkTexture->GetSampler());
+
+    if (m_imageViewToDescSet.find(vkTexture->ImageView(0)) == m_imageViewToDescSet.end())
+    {
+        m_imageViewToDescSet[vkTexture->ImageView(0)] = ImGui_ImplVulkan_AddTexture(vkSampler->Raw(),
+            vkTexture->ImageView(0),
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+    return m_imageViewToDescSet.at(vkTexture->ImageView(0));
 }
 
 } // rhi::vulkan::imgui

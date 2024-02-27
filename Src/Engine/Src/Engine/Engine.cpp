@@ -32,6 +32,13 @@ registration::enumeration<engine::Domain>("engine::Domain")(
     );
 }
 
+namespace
+{
+
+constexpr float C_TARGET_FRAME_TIME = 16.6f;
+
+} // unnamed
+
 namespace engine
 {
 
@@ -110,8 +117,23 @@ void Engine::Update()
     const float dt = std::max<float>(0.0001f, m_timer.TimeInMilliseconds() * 0.001f);
     m_timer.Start();
 
+    m_frameLimiterTimer.Restart();
+
     m_serviceManager->Update(dt);
     m_serviceManager->PostUpdate(dt);
+
+    {
+        // TODO: Add more configuration for more stable frame rate
+        PROFILER_CPU_ZONE_NAME("Framelimiter wait");
+        float deltaWait = C_TARGET_FRAME_TIME - m_frameLimiterTimer.TimeInMilliseconds();
+
+        if (deltaWait > 0)
+        {
+            deltaWait /= 2;
+            const auto microseconds = std::chrono::microseconds(static_cast<long long>(deltaWait * 1000));
+            std::this_thread::sleep_for(microseconds);
+        }
+    }
 }
 
 void Engine::ParseCfg(int argCount, char* argPtr[])

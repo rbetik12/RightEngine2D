@@ -11,43 +11,45 @@
 
 namespace rhi::vulkan
 {
-    class RHI_API VulkanTexture : public Texture
-    {
-    public:
-        VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = nullptr);
 
-        virtual ~VulkanTexture() override;
+class RHI_API VulkanTexture : public Texture
+{
+public:
+    VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = nullptr);
 
-        void            ChangeImageLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
-        void            ChangeImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
+    virtual ~VulkanTexture() override;
 
-        VkImageLayout    Layout() const { return m_layout; }
-        VkImage            Image() const { return m_image; }
-        VkImageView        ImageView(uint32_t idx) const { RHI_ASSERT(idx < m_imageViews.size());  return m_imageViews[idx]; }
+    void            ChangeImageLayout(VkCommandBuffer cmdBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void            ChangeImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
 
-    private:
-        void ChangeImageLayout(VkCommandBuffer cmdBuffer,
-            VkImage image,
-            VkImageLayout oldLayout,
-            VkImageLayout newLayout,
-            Format format,
-            int layers,
-            int mipmaps,
-            bool isDepth = false);
+    VkImageLayout   Layout() const { return m_layout; }
+    VkImage         Image() const { return m_image; }
+    VkImageView     ImageView(uint32_t idx) const { RHI_ASSERT(idx < m_imageViews.size());  return m_imageViews[idx]; }
 
-        // Immediate change, may cause deadlocks!
-        void ChangeImageLayout(VkImage image,
-            VkImageLayout oldLayout,
-            VkImageLayout newLayout,
-            Format format,
-            int layers,
-            int mipmaps,
-            bool isDepth = false);
+private:
+    void ChangeImageLayout(VkCommandBuffer cmdBuffer,
+        VkImage image,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout,
+        Format format,
+        int layers,
+        int mipmaps,
+        bool isDepth = false);
 
-        std::shared_ptr<Buffer>        m_stagingBuffer;
-        VkImage                        m_image = nullptr;
-        eastl::vector<VkImageView>    m_imageViews;
-        VmaAllocation                m_allocation = nullptr;
-        VkImageLayout                m_layout;
-    };
-}
+    // Immediate change, may cause deadlocks!
+    void ChangeImageLayout(VkImage image,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout,
+        Format format,
+        int layers,
+        int mipmaps,
+        bool isDepth = false);
+
+    std::shared_ptr<Buffer>         m_stagingBuffer;
+    VkImage                         m_image = nullptr;
+    eastl::vector<VkImageView>      m_imageViews;
+    VmaAllocation                   m_allocation = nullptr;
+    VkImageLayout                   m_layout;
+};
+
+} // rhi::vulkan

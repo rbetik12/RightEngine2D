@@ -3,6 +3,7 @@
 #include <RHI/Config.hpp>
 #include <RHI/RenderPass.hpp>
 #include <Core/Type.hpp>
+#include <imgui.h>
 
 namespace rhi::imgui
 {
@@ -14,6 +15,7 @@ public:
 
     virtual void Begin() = 0;
     virtual void End() = 0;
+    virtual void Image(const std::shared_ptr<Texture>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1) = 0;
 
     void SetRenderPass(const std::shared_ptr<rhi::RenderPass>& pass) { m_renderPass = pass; }
 

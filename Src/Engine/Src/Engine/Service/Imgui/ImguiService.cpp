@@ -96,4 +96,10 @@ void ImguiService::PostUpdate(float dt)
     m_imguiProvider->End();
 }
 
+void ImguiService::Image(const std::shared_ptr<rhi::Texture>& texture, const ImVec2& size, const ImVec2& uv0,
+    const ImVec2& uv1)
+{
+    m_imguiProvider->Image(texture, size, uv0, uv1);
+}
+
 } // engine

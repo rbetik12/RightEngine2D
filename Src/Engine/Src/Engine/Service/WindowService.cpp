@@ -1,8 +1,7 @@
 #include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Engine.hpp>
 #include <Engine/Registration.hpp>
-
-#include "Render/RenderService.hpp"
 
 RTTR_REGISTRATION
 {
@@ -31,7 +30,7 @@ WindowService::WindowService()
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
         {
             auto& rs = Instance().Service<RenderService>();
-            rs.OnResize(width, height);
+            rs.OnWindowResize(width, height);
         });
 }
 

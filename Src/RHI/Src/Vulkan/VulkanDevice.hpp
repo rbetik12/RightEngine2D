@@ -17,8 +17,8 @@ class VulkanTexture;
 struct SwapchainSupportDetails
 {
     VkSurfaceCapabilitiesKHR            m_capabilities = {};
-    eastl::vector<VkSurfaceFormatKHR>    m_formats;
-    eastl::vector<VkPresentModeKHR>        m_presentModes;
+    eastl::vector<VkSurfaceFormatKHR>   m_formats;
+    eastl::vector<VkPresentModeKHR>     m_presentModes;
 };
 
 struct QueueFamilyIndices
@@ -39,8 +39,8 @@ public:
     struct Properties
     {
         uint32_t    m_framesInFlight = 2;
-        size_t        m_minUniformBufferOffsetAlignment = 0;
-        float        m_maxSamplerAnisotropy = 0;
+        size_t      m_minUniformBufferOffsetAlignment = 0;
+        float       m_maxSamplerAnisotropy = 0;
     };
 
     // Global context needed for operations with memory (buffers, texture and other allocations)
@@ -49,8 +49,8 @@ public:
         VkDevice            m_device = nullptr;
         VmaAllocator        m_allocator = nullptr;
         VkPhysicalDevice    m_physicalDevice = nullptr;
-        Properties            m_properties;
-        VulkanDevice*        m_instance = nullptr;
+        Properties          m_properties;
+        VulkanDevice*       m_instance = nullptr;
     };
 
     inline static ContextHolder s_ctx;
@@ -60,13 +60,13 @@ public:
 
     virtual ~VulkanDevice() override;
 
-    virtual std::shared_ptr<ShaderCompiler> CreateShaderCompiler(const ShaderCompiler::Options& options = {}) override;
-    virtual std::shared_ptr<Buffer>            CreateBuffer(const BufferDescriptor& desc, const void* data) override;
-    virtual std::shared_ptr<Shader>            CreateShader(const ShaderDescriptor& desc) override;
-    virtual std::shared_ptr<Sampler>        CreateSampler(const SamplerDescriptor& desc) override;
-    virtual std::shared_ptr<Texture>        CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) override;
-    virtual std::shared_ptr<RenderPass>        CreateRenderPass(const RenderPassDescriptor& desc) override;
-    virtual std::shared_ptr<Pipeline>        CreatePipeline(const PipelineDescriptor& desc) override;
+    virtual std::shared_ptr<ShaderCompiler>     CreateShaderCompiler(const ShaderCompiler::Options& options = {}) override;
+    virtual std::shared_ptr<Buffer>             CreateBuffer(const BufferDescriptor& desc, const void* data) override;
+    virtual std::shared_ptr<Shader>             CreateShader(const ShaderDescriptor& desc) override;
+    virtual std::shared_ptr<Sampler>            CreateSampler(const SamplerDescriptor& desc) override;
+    virtual std::shared_ptr<Texture>            CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) override;
+    virtual std::shared_ptr<RenderPass>         CreateRenderPass(const RenderPassDescriptor& desc) override;
+    virtual std::shared_ptr<Pipeline>           CreatePipeline(const PipelineDescriptor& desc) override;
 
     virtual void                            BeginFrame() override;
     virtual void                            EndFrame() override;
@@ -80,33 +80,33 @@ public:
     virtual void                            WaitForIdle() override;
 
     VkPhysicalDevice                        PhysicalDevice() const { return s_ctx.m_physicalDevice; }
-    VkCommandPool                            CommandPool() const { return m_commandPool; }
-    const SwapchainSupportDetails&            GetSwapchainSupportDetails() const { return m_swapchainDetails; }
-    QueueFamilyIndices                        FindQueueFamilies() const;
-    const std::shared_ptr<VulkanContext>&    Context() const { return m_context; }
-    VkQueue                                    GraphicsQueue() const { return m_graphicsQueue; }
-    VkCommandBuffer                            CurrentCmdBuffer() const { return m_cmdBuffers[m_currentCmdBufferIndex]; }
+    VkCommandPool                           CommandPool() const { return m_commandPool; }
+    const SwapchainSupportDetails&          GetSwapchainSupportDetails() const { return m_swapchainDetails; }
+    QueueFamilyIndices                      FindQueueFamilies() const;
+    const std::shared_ptr<VulkanContext>&   Context() const { return m_context; }
+    VkQueue                                 GraphicsQueue() const { return m_graphicsQueue; }
+    VkCommandBuffer                         CurrentCmdBuffer() const { return m_cmdBuffers[m_currentCmdBufferIndex]; }
 
-    std::shared_ptr<Fence>                    Execute(CommandBuffer buffer);
+    std::shared_ptr<Fence>                  Execute(CommandBuffer buffer);
 
 private:
-    VkQueue                            m_graphicsQueue = nullptr;
-    VkQueue                            m_presentQueue = nullptr;
-    VkCommandPool                    m_commandPool = nullptr;
-    SwapchainSupportDetails            m_swapchainDetails;
-    std::unique_ptr<Swapchain>        m_swapchain;
+    VkQueue                         m_graphicsQueue = nullptr;
+    VkQueue                         m_presentQueue = nullptr;
+    VkCommandPool                   m_commandPool = nullptr;
+    SwapchainSupportDetails         m_swapchainDetails;
+    std::unique_ptr<Swapchain>      m_swapchain;
     uint32_t                        m_frameIndex = 0;
     uint32_t                        m_swapchainImageIndex = 0;
     uint32_t                        m_currentCmdBufferIndex = 0;
-    glm::ivec2                        m_presentExtent = {0, 0};
+    glm::ivec2                      m_presentExtent = {0, 0};
     bool                            m_isSwapchainDirty = false;
-    std::shared_ptr<VulkanContext>    m_context;
+    std::shared_ptr<VulkanContext>  m_context;
 
-    eastl::vector<VkCommandBuffer>                    m_cmdBuffers;
-    eastl::vector<VkFence>                            m_fences;
-    eastl::vector<VkSemaphore>                        m_presentSemaphores;
-    eastl::vector<VkSemaphore>                        m_renderSemaphores;
-    eastl::vector<std::shared_ptr<VulkanTexture>>    m_texturesToReset;
+    eastl::vector<VkCommandBuffer>                  m_cmdBuffers;
+    eastl::vector<VkFence>                          m_fences;
+    eastl::vector<VkSemaphore>                      m_presentSemaphores;
+    eastl::vector<VkSemaphore>                      m_renderSemaphores;
+    eastl::vector<std::shared_ptr<VulkanTexture>>   m_texturesToReset;
 
     // Initializer methods
     void PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);
