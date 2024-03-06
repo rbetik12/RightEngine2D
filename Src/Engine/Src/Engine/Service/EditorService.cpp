@@ -10,6 +10,8 @@
 #include <Engine/System/RenderSystem.hpp>
 #include <imgui.h>
 
+#include "Filesystem/VirtualFilesystemService.hpp"
+
 RTTR_REGISTRATION
 {
     engine::registration::Service<engine::EditorService>("engine::EditorService")
@@ -37,6 +39,7 @@ struct EditorService::Impl
 {
     std::shared_ptr<render::Mesh>       m_mesh;
     std::shared_ptr<render::Material>   m_material;
+    std::shared_ptr<rhi::Pipeline>      m_computePipeline;
     ImVec2                              m_viewportSize;
 };
 
@@ -107,6 +110,7 @@ void EditorService::PostUpdate(float dt)
 void EditorService::Initialize()
 {
     auto& rs = Instance().Service<RenderService>();
+    auto& vfs = Instance().Service<io::VirtualFilesystemService>();
 
     rhi::BufferDescriptor bufferDesc{};
     bufferDesc.m_memoryType = rhi::MemoryType::CPU_GPU;
@@ -129,6 +133,24 @@ void EditorService::Initialize()
     em->Update();
 
     em->AddComponent<MeshComponent>(uuid, meshComponent);
+
+    const auto computeShaderPath = "/System/Shaders/equirectangle_to_cubemap.glsl";
+    const auto computeCompiledShader = rs.ShaderCompiler()->Compile(vfs.Absolute(io::fs::path(computeShaderPath)).generic_u8string(), rhi::ShaderType::COMPUTE);
+
+    rhi::ShaderDescriptor computeShaderDesc{};
+    computeShaderDesc.m_path = computeShaderPath;
+    computeShaderDesc.m_blobByStage = computeCompiledShader.m_stageBlob;
+    computeShaderDesc.m_name = "Compute";
+    computeShaderDesc.m_type = rhi::ShaderType::COMPUTE;
+    computeShaderDesc.m_reflection = computeCompiledShader.m_reflection;
+
+    const auto computeShader = rs.CreateShader(computeShaderDesc);
+
+    rhi::PipelineDescriptor computePipelineDesc{};
+    computePipelineDesc.m_compute = true;
+    computePipelineDesc.m_shader = computeShader;
+
+    m_impl->m_computePipeline = rs.CreatePipeline(computePipelineDesc);
 }
 
 } // engine

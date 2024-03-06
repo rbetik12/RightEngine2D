@@ -21,7 +21,8 @@ enum class ShaderStage : uint8_t
 {
     NONE = 0,
     VERTEX,
-    FRAGMENT
+    FRAGMENT,
+    COMPUTE
 };
 
 inline std::string_view ShaderStageToString(ShaderStage stage)
@@ -31,6 +32,7 @@ inline std::string_view ShaderStageToString(ShaderStage stage)
     case ShaderStage::NONE: return "None";
     case ShaderStage::VERTEX: return "Vertex";
     case ShaderStage::FRAGMENT: return "Fragment";
+    case ShaderStage::COMPUTE: return "Compute";
     default:
         {
             RHI_ASSERT(false);
@@ -64,6 +66,7 @@ struct ShaderReflection
 
     BufferMap           m_bufferMap;
     TextureList         m_textures;
+    TextureList         m_storageImages;
     VertexBufferLayout  m_inputLayout;
 };
 

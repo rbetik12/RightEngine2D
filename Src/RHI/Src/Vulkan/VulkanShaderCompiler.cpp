@@ -1,7 +1,5 @@
-#include "VulkanShaderCompiler.hpp"
+#include <Vulkan/VulkanShaderCompiler.hpp>
 
-#include <filesystem>
-#include <fmt/format.h>
 #pragma warning(push)
 #pragma warning(disable : 4464)
 #include <glslang/Include/glslang_c_interface.h>
@@ -11,6 +9,7 @@
 #include <spirv_cross/spirv_cross.hpp>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 #define SHADER_COMPILER_VERBOSE 1
 #define SHADER_COMPILER_PRINT_SHADER 0
@@ -138,6 +137,7 @@ glslang_stage_t RHITypeToGLSLangType(rhi::ShaderStage type)
     {
         case rhi::ShaderStage::VERTEX: return GLSLANG_STAGE_VERTEX;
         case rhi::ShaderStage::FRAGMENT: return GLSLANG_STAGE_FRAGMENT;
+        case rhi::ShaderStage::COMPUTE: return GLSLANG_STAGE_COMPUTE;
         default:
         {
             RHI_ASSERT(false);
@@ -146,380 +146,422 @@ glslang_stage_t RHITypeToGLSLangType(rhi::ShaderStage type)
     }
 }
 
-} // namespace unnamed
+} // unnamed
 
 namespace rhi::vulkan
 {
-    VulkanShaderCompiler::VulkanShaderCompiler(Options options) : ShaderCompiler(options)
+
+VulkanShaderCompiler::VulkanShaderCompiler(Options options) : ShaderCompiler(options)
+{
+    glslang::InitializeProcess();
+}
+
+VulkanShaderCompiler::~VulkanShaderCompiler()
+{
+    glslang::FinalizeProcess();
+}
+
+CompiledShaderData VulkanShaderCompiler::Compile(std::string_view path, ShaderType type)
+{
+    RHI_ASSERT(fs::path(path).is_absolute());
+    rhi::log::info("[VulkanShaderCompiler] Compiling {}", path);
+
+    Context ctx;
+    ctx.m_path = path;
+
+    ReadShader(ReadShader(path), ctx);
+
+    PreprocessShader(ctx);
+
+    ctx.m_type = type;
+
+    CompiledShaderData data;
+
+    for (const auto& [stage, code] : ctx.m_stageCodeStr)
     {
-        glslang::InitializeProcess();
+        auto blob = CompileShader(code, path, stage);
+        RHI_ASSERT(!blob.empty());
+        data.m_stageBlob[stage] = std::move(blob);
     }
 
-    VulkanShaderCompiler::~VulkanShaderCompiler()
+    data.m_valid = true;
+
+    RHI_ASSERT(!data.m_stageBlob.empty());
+
+    eastl::unordered_map<ShaderStage, ShaderReflection> reflectionMap;
+
+    for (const auto& [stage, blob] : data.m_stageBlob)
     {
-        glslang::FinalizeProcess();
+        auto reflection = ReflectShader(blob, path, stage);
+        reflectionMap[stage] = std::move(reflection);
     }
 
-    CompiledShaderData VulkanShaderCompiler::Compile(std::string_view path, ShaderType type)
+    if (data.m_stageBlob.size() > 1)
     {
-        RHI_ASSERT(fs::path(path).is_absolute());
-        rhi::log::info("[VulkanShaderCompiler] Compiling {}", path);
-
-        Context ctx;
-        ctx.m_path = path;
-
-        ReadShader(ReadShader(path), ctx);
-
-        PreprocessShader(ctx);
-
-        ctx.m_type = type;
-
-        CompiledShaderData data;
-
-        for (const auto& [stage, code] : ctx.m_stageCodeStr)
-        {
-            auto blob = CompileShader(code, path, stage);
-            RHI_ASSERT(!blob.empty());
-            data.m_stageBlob[stage] = std::move(blob);
-        }
-
-        data.m_valid = true;
-
-        RHI_ASSERT(!data.m_stageBlob.empty());
-
-        eastl::unordered_map<ShaderStage, ShaderReflection> reflectionMap;
-
-        for (const auto& [stage, blob] : data.m_stageBlob)
-        {
-            auto reflection = ReflectShader(blob, path, stage);
-            reflectionMap[stage] = std::move(reflection);
-        }
-
         data.m_reflection = MergeReflection(reflectionMap, path);
-
-        rhi::log::info("[VulkanShaderCompiler] Successfully compiled: {}", path);
-
-        return data;
+    }
+    else
+    {
+        data.m_reflection = std::move(reflectionMap.begin()->second);
     }
 
-    core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std::string_view path, ShaderStage stage)
+    rhi::log::info("[VulkanShaderCompiler] Successfully compiled: {}", path);
+
+    return data;
+}
+
+core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std::string_view path, ShaderStage stage)
+{
+    TBuiltInResource resource = InitResources();
+    glslang_input_t input{};
+    input.language = GLSLANG_SOURCE_GLSL;
+    input.stage = RHITypeToGLSLangType(stage);
+    input.client = GLSLANG_CLIENT_VULKAN;
+#ifdef R_APPLE
+    input.client_version = GLSLANG_TARGET_VULKAN_1_0;
+#else
+    input.client_version = GLSLANG_TARGET_VULKAN_1_3;
+#endif
+    input.target_language = GLSLANG_TARGET_SPV;
+#ifdef R_APPLE
+    input.target_language_version = GLSLANG_TARGET_SPV_1_0;
+#else
+    input.target_language_version = GLSLANG_TARGET_SPV_1_5;
+#endif
+    input.code = shaderStr.data();
+    input.default_version = 450;
+    input.default_profile = GLSLANG_CORE_PROFILE;
+    input.force_default_version_and_profile = false;
+    input.forward_compatible = false;
+    input.messages = GLSLANG_MSG_DEFAULT_BIT;
+    input.resource = reinterpret_cast<const glslang_resource_t*>(&resource);
+
+    glslang_shader_t* shader = glslang_shader_create(&input);
+
+    if (!glslang_shader_preprocess(shader, &input))
     {
-        TBuiltInResource resource = InitResources();
-        glslang_input_t input{};
-        input.language = GLSLANG_SOURCE_GLSL;
-        input.stage = RHITypeToGLSLangType(stage);
-        input.client = GLSLANG_CLIENT_VULKAN;
-#ifdef R_APPLE
-        input.client_version = GLSLANG_TARGET_VULKAN_1_0;
-#else
-        input.client_version = GLSLANG_TARGET_VULKAN_1_2;
-#endif
-        input.target_language = GLSLANG_TARGET_SPV;
-#ifdef R_APPLE
-        input.target_language_version = GLSLANG_TARGET_SPV_1_0;
-#else
-        input.target_language_version = GLSLANG_TARGET_SPV_1_3;
-#endif
-        input.code = shaderStr.data();
-        input.default_version = 450;
-        input.default_profile = GLSLANG_NO_PROFILE;
-        input.force_default_version_and_profile = false;
-        input.forward_compatible = false;
-        input.messages = GLSLANG_MSG_DEFAULT_BIT;
-        input.resource = reinterpret_cast<const glslang_resource_t*>(&resource);
+        rhi::log::error("[glslang] Shader {} preprocessing failed.\n{}\n{}",
+                                path,
+                                glslang_shader_get_info_log(shader),
+                                glslang_shader_get_info_debug_log(shader));
+        glslang_shader_delete(shader);
+        return {};
+    }
 
-        glslang_shader_t* shader = glslang_shader_create(&input);
+    if (!glslang_shader_parse(shader, &input))
+    {
+        rhi::log::error("[glslang] Shader {} parsing failed.\n{}\n{}",
+                                path,
+                                glslang_shader_get_info_log(shader),
+                                glslang_shader_get_info_debug_log(shader));
+        glslang_shader_delete(shader);
+        return {};
+    }
 
-        if (!glslang_shader_preprocess(shader, &input))
-        {
-            rhi::log::error("[glslang] Shader {} preprocessing failed.\n{}\n{}",
-                                    path,
-                                    glslang_shader_get_info_log(shader),
-                                    glslang_shader_get_info_debug_log(shader));
-            glslang_shader_delete(shader);
-            return {};
-        }
+    glslang_program_t* program = glslang_program_create();
+    glslang_program_add_shader(program, shader);
 
-        if (!glslang_shader_parse(shader, &input))
-        {
-            rhi::log::error("[glslang] Shader {} parsing failed.\n{}\n{}",
-                                    path,
-                                    glslang_shader_get_info_log(shader),
-                                    glslang_shader_get_info_debug_log(shader));
-            glslang_shader_delete(shader);
-            return {};
-        }
-
-        glslang_program_t* program = glslang_program_create();
-        glslang_program_add_shader(program, shader);
-
-        if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
-        {
-            rhi::log::error("[glslang] Shader {} linking failed.\n{}\n{}",
-                                    path,
-                                    glslang_program_get_info_log(program),
-                                    glslang_program_get_info_debug_log(program));
-            glslang_program_delete(program);
-            glslang_shader_delete(shader);
-            return {};
-        }
-
-        glslang_program_SPIRV_generate(program, RHITypeToGLSLangType(stage));
-
-        std::vector<uint32_t> spirvBinary(glslang_program_SPIRV_get_size(program));
-        glslang_program_SPIRV_get(program, spirvBinary.data());
-        core::Blob shaderBinary(spirvBinary.data(), static_cast<uint32_t>(spirvBinary.size() * sizeof(uint32_t)));
-
-        const char* spirv_messages = glslang_program_SPIRV_get_messages(program);
-        if (spirv_messages)
-        {
-#if SHADER_COMPILER_VERBOSE 
-            rhi::log::debug("[glslang] {} SPIRV messages: {}", path, spirv_messages);
-#endif
-        }
-
+    if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
+    {
+        rhi::log::error("[glslang] Shader {} linking failed.\n{}\n{}",
+                                path,
+                                glslang_program_get_info_log(program),
+                                glslang_program_get_info_debug_log(program));
         glslang_program_delete(program);
         glslang_shader_delete(shader);
-
-        return std::move(shaderBinary);
+        return {};
     }
 
-    ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlob, std::string_view path, ShaderStage stage)
+    glslang_program_SPIRV_generate(program, RHITypeToGLSLangType(stage));
+
+    std::vector<uint32_t> spirvBinary(glslang_program_SPIRV_get_size(program));
+    glslang_program_SPIRV_get(program, spirvBinary.data());
+    core::Blob shaderBinary(spirvBinary.data(), static_cast<uint32_t>(spirvBinary.size() * sizeof(uint32_t)));
+
+    const char* spirv_messages = glslang_program_SPIRV_get_messages(program);
+    if (spirv_messages)
     {
-        spirv_cross::Compiler spirvCompiler(static_cast<const SPIRV_PAYLOAD*>(shaderBlob.raw()), shaderBlob.size() / sizeof(SPIRV_PAYLOAD));
-        spirv_cross::ShaderResources res = spirvCompiler.get_shader_resources();
+#if SHADER_COMPILER_VERBOSE 
+        rhi::log::debug("[glslang] {} SPIRV messages: {}", path, spirv_messages);
+#endif
+    }
 
-        ShaderReflection reflectionData;
+    glslang_program_delete(program);
+    glslang_shader_delete(shader);
 
-        for (auto& uniformBuffer : res.uniform_buffers)
+    return std::move(shaderBinary);
+}
+
+ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlob, std::string_view path, ShaderStage stage)
+{
+    spirv_cross::Compiler spirvCompiler(static_cast<const SPIRV_PAYLOAD*>(shaderBlob.raw()), shaderBlob.size() / sizeof(SPIRV_PAYLOAD));
+    spirv_cross::ShaderResources res = spirvCompiler.get_shader_resources();
+
+    ShaderReflection reflectionData{};
+
+    for (auto& uniformBuffer : res.uniform_buffers)
+    {
+        auto& name = uniformBuffer.name;
+        const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(uniformBuffer.id, spv::DecorationBinding));
+
+        RHI_ASSERT(reflectionData.m_bufferMap.find(slot) == reflectionData.m_bufferMap.end());
+        reflectionData.m_bufferMap[slot] = { rhi::BufferType::UNIFORM, stage, std::move(name) };
+    }
+
+    for (auto& texture : res.sampled_images)
+    {
+        auto& name = texture.name;
+        const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(texture.id, spv::DecorationBinding));
+
+        auto texData = ShaderReflection::TextureInfo();
+        texData.m_slot = slot;
+        texData.m_name = std::move(name);
+
+        RHI_ASSERT(reflectionData.m_textures.find(texData) == reflectionData.m_textures.end());
+        reflectionData.m_textures.emplace(std::move(texData));
+    }
+
+    // TODO: Should we mark it as compute shader storage explicitly...?
+    for (auto& texture : res.storage_images)
+    {
+        auto& name = texture.name;
+        const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(texture.id, spv::DecorationBinding));
+
+        auto texData = ShaderReflection::TextureInfo();
+        texData.m_slot = slot;
+        texData.m_name = std::move(name);
+
+        RHI_ASSERT(reflectionData.m_storageImages.find(texData) == reflectionData.m_storageImages.end());
+        reflectionData.m_storageImages.emplace(std::move(texData));
+    }
+
+    if (stage == ShaderStage::VERTEX)
+    {
+        VertexBufferLayout layout;
+        for (auto& input : res.stage_inputs)
         {
-            auto& name = uniformBuffer.name;
-            const uint8_t slot = static_cast<uint8_t>(spirvCompiler.get_decoration(uniformBuffer.id, spv::DecorationBinding));
-            reflectionData.m_bufferMap[slot] = { rhi::BufferType::UNIFORM, stage, std::move(name) };
-        }
+            auto& name = input.name;
+            const auto& type = spirvCompiler.get_type(input.type_id);
 
-        for (auto& texture : res.sampled_images)
-        {
-            auto& name = texture.name;
-            const uint8_t slot = static_cast<uint8_t>(spirvCompiler.get_decoration(texture.id, spv::DecorationBinding));
-            auto texData = ShaderReflection::TextureInfo();
-            texData.m_slot = slot;
-            texData.m_name = std::move(name);
-            reflectionData.m_textures.emplace(std::move(texData));
-        }
-
-        if (stage == ShaderStage::VERTEX)
-        {
-            VertexBufferLayout layout;
-            for (auto& input : res.stage_inputs)
+            switch (type.basetype)
             {
-                auto& name = input.name;
-                const auto& type = spirvCompiler.get_type(input.type_id);
-
-                switch (type.basetype)
+                case spirv_cross::SPIRType::Float:
                 {
-                    case spirv_cross::SPIRType::Float:
+                    if (type.vecsize == 1)
                     {
-                        if (type.vecsize == 1)
-                        {
-                            layout.Push<float>(name, type.vecsize);
-                        }
-                        if (type.vecsize == 2)
-                        {
-                            layout.Push<glm::vec2>(name, 1);
-                        }
-                        if (type.vecsize == 3)
-                        {
-                            layout.Push<glm::vec3>(name, 1);
-                        }
-                        if (type.vecsize == 4)
-                        {
-                            layout.Push<glm::vec4>(name, 1);
-                        }
-                        break;
+                        layout.Push<float>(name, type.vecsize);
                     }
-                    // TODO: Implement vector mapping for uint and ubyte
-                    case spirv_cross::SPIRType::UByte:
+                    if (type.vecsize == 2)
                     {
-                        RHI_ASSERT(type.vecsize == 1);
-                        layout.Push<uint8_t>(name, type.vecsize);
-                        break;
+                        layout.Push<glm::vec2>(name, 1);
                     }
-                    case spirv_cross::SPIRType::UInt:
+                    if (type.vecsize == 3)
                     {
-                        RHI_ASSERT(type.vecsize == 1);
-                        layout.Push<uint32_t>(name, type.vecsize);
-                        break;
+                        layout.Push<glm::vec3>(name, 1);
                     }
-                    default:
-                        RHI_ASSERT(false);
+                    if (type.vecsize == 4)
+                    {
+                        layout.Push<glm::vec4>(name, 1);
+                    }
+                    break;
                 }
-
-            }
-            reflectionData.m_inputLayout = std::move(layout);
-        }
-
-        rhi::log::debug("[VulkanShaderCompiler] Successfully build reflection data for: {} {}", path, ShaderStageToString(stage));
-        return reflectionData;
-    }
-
-    void VulkanShaderCompiler::ReadShader(const std::string& text, Context& ctx) const
-    {
-        std::istringstream stream(std::string{ text });
-
-        std::string line;
-        std::stringstream ss;
-        ShaderStage stage = ShaderStage::NONE;
-
-        while (std::getline(stream, line))
-        {
-            if (line == "#pragma stage vertex")
-            {
-                stage = ShaderStage::VERTEX;
-                continue;
-            }
-
-            if (line == "#pragma stage fragment")
-            {
-                stage = ShaderStage::FRAGMENT;
-                continue;
-            }
-
-            if (line == "#pragma stage end")
-            {
-                ctx.m_stageCodeStr[stage] = ss.str();
-                ss = std::stringstream();
-                continue;
-            }
-
-            ss << line << std::endl;
-        }
-
-        RHI_ASSERT(stage != ShaderStage::NONE);
-    }
-
-    std::string VulkanShaderCompiler::ReadShader(std::string_view path)
-    {
-        std::ifstream stream(std::string{ path });
-
-        if (!stream.is_open())
-        {
-            log::error("[VulkanShaderCompiler] Could not find shader file: {}", path);
-            return "";
-        }
-
-        std::string line;
-        std::stringstream ss;
-
-        while (std::getline(stream, line))
-        {
-            ss << line << '\n';
-        }
-
-        return ss.str();
-    }
-
-    void VulkanShaderCompiler::PreprocessShader(Context& ctx)
-    {
-        ShaderMap processedShaders;
-
-        for (const auto& [stage, code] : ctx.m_stageCodeStr)
-        {
-            std::istringstream stream(code);
-            std::string line;
-            std::stringstream processedSource;
-
-            while (std::getline(stream, line))
-            {
-                if (line.find("#include") != std::string::npos)
+                // TODO: Implement vector mapping for uint and ubyte
+                case spirv_cross::SPIRType::UByte:
                 {
-                    size_t start = line.find("\"");
-                    size_t end = line.find("\"", start + 1);
-                    if (start != std::string::npos && end != std::string::npos)
-                    {
-                        const auto shaderDir = fs::path(ctx.m_path).parent_path().generic_u8string();
-                        std::string includePath = fmt::format("{}/{}", shaderDir, line.substr(start + 1, end - start - 1));
-                        std::string includedContent;
+                    RHI_ASSERT(type.vecsize == 1);
+                    layout.Push<uint8_t>(name, type.vecsize);
+                    break;
+                }
+                case spirv_cross::SPIRType::UInt:
+                {
+                    RHI_ASSERT(type.vecsize == 1);
+                    layout.Push<uint32_t>(name, type.vecsize);
+                    break;
+                }
+                default:
+                    RHI_ASSERT(false);
+            }
 
+        }
+        reflectionData.m_inputLayout = std::move(layout);
+    }
+
+    rhi::log::debug("[VulkanShaderCompiler] Successfully build reflection data for: {} {}", path, ShaderStageToString(stage));
+    return reflectionData;
+}
+
+void VulkanShaderCompiler::ReadShader(const std::string& text, Context& ctx) const
+{
+    std::istringstream stream(std::string{ text });
+
+    std::string line;
+    std::stringstream ss;
+    ShaderStage stage = ShaderStage::NONE;
+
+    uint8_t stageBegin = 0;
+    uint8_t stageEnd = 0;
+    while (std::getline(stream, line))
+    {
+        if (line == "#pragma stage vertex")
+        {
+            stage = ShaderStage::VERTEX;
+            ++stageBegin;
+            continue;
+        }
+
+        if (line == "#pragma stage compute")
+        {
+            stage = ShaderStage::COMPUTE;
+            ++stageBegin;
+            continue;
+        }
+
+        if (line == "#pragma stage fragment")
+        {
+            stage = ShaderStage::FRAGMENT;
+            ++stageBegin;
+            continue;
+        }
+
+        if (line == "#pragma stage end")
+        {
+            ctx.m_stageCodeStr[stage] = ss.str();
+            ss = std::stringstream();
+            ++stageEnd;
+            continue;
+        }
+
+        ss << line << std::endl;
+    }
+
+    RHI_ASSERT(stageBegin > 0 && stageEnd > 0);
+    RHI_ASSERT(stageBegin == stageEnd);
+    RHI_ASSERT(stage != ShaderStage::NONE);
+}
+
+std::string VulkanShaderCompiler::ReadShader(std::string_view path)
+{
+    std::ifstream stream(std::string{ path });
+
+    if (!stream.is_open())
+    {
+        log::error("[VulkanShaderCompiler] Could not find shader file: {}", path);
+        return "";
+    }
+
+    std::string line;
+    std::stringstream ss;
+
+    while (std::getline(stream, line))
+    {
+        ss << line << '\n';
+    }
+
+    return ss.str();
+}
+
+void VulkanShaderCompiler::PreprocessShader(Context& ctx)
+{
+    ShaderMap processedShaders;
+
+    for (const auto& [stage, code] : ctx.m_stageCodeStr)
+    {
+        std::istringstream stream(code);
+        std::string line;
+        std::stringstream processedSource;
+
+        while (std::getline(stream, line))
+        {
+            if (line.find("#include") != std::string::npos)
+            {
+                size_t start = line.find("\"");
+                size_t end = line.find("\"", start + 1);
+                if (start != std::string::npos && end != std::string::npos)
+                {
+                    const auto shaderDir = fs::path(ctx.m_path).parent_path().generic_u8string();
+                    std::string includePath = fmt::format("{}/{}", shaderDir, line.substr(start + 1, end - start - 1));
+                    std::string includedContent;
+
+                    {
+                        std::lock_guard l(m_includeCacheMutex);
+                        if (const auto it = m_includeCache.find(includePath); it != m_includeCache.end())
+                        {
+                            includedContent = it->second;
+                        }
+                    }
+
+                    if (includedContent.empty())
+                    {
+                        includedContent = ReadShader(includePath);
                         {
                             std::lock_guard l(m_includeCacheMutex);
-                            if (const auto it = m_includeCache.find(includePath); it != m_includeCache.end())
-                            {
-                                includedContent = it->second;
-                            }
+                            m_includeCache[includePath] = includedContent;
                         }
-
-                        if (includedContent.empty())
-                        {
-                            includedContent = ReadShader(includePath);
-                            {
-                                std::lock_guard l(m_includeCacheMutex);
-                                m_includeCache[includePath] = includedContent;
-                            }
-                        }
-
-                        processedSource << includedContent << "\n";
                     }
-                }
-                else
-                {
-                    processedSource << line << "\n";
+
+                    processedSource << includedContent << "\n";
                 }
             }
-
-            processedShaders[stage] = processedSource.str();
-            processedSource.clear();
-            line.clear();
-            stream.clear();
+            else
+            {
+                processedSource << line << "\n";
+            }
         }
-    }
 
-    ShaderReflection VulkanShaderCompiler::MergeReflection(const ReflectionMap& reflectionMap, std::string_view path)
-    {
-        ShaderReflection mergedReflection;
-        bool hasInputLayout = false;
-
-        for (const auto& [_, reflection] : reflectionMap)
-        {
-            // Merge buffers
-            auto& mergedBufferMap = mergedReflection.m_bufferMap;
-            for (const auto& [slot, buffer] : reflection.m_bufferMap)
-            {
-                if (mergedBufferMap.find(slot) == mergedBufferMap.end())
-                {
-                    mergedBufferMap[slot] = buffer;
-                }
-                else
-                {
-                    RHI_ASSERT_WITH_MESSAGE(false, fmt::format("Slot {} has assigned buffer '{}' already", slot, buffer.m_name));
-                }
-            }
-
-            // Merge textures
-            auto& mergedTextures = mergedReflection.m_textures;
-            for (const auto& texture : reflection.m_textures)
-            {
-                if (mergedTextures.find(texture) == mergedTextures.end())
-                {
-                    mergedTextures.insert(texture);
-                }
-                else
-                {
-                    RHI_ASSERT_WITH_MESSAGE(false, fmt::format("Slot {} has assigned texture '{}' already", texture.m_slot, texture.m_name));
-                }
-            }
-
-            
-            if (reflection.m_inputLayout.Empty())
-            {
-                continue;
-            }
-
-            RHI_ASSERT_WITH_MESSAGE(!hasInputLayout, fmt::format("Input layout for '{}' was already registered", path));
-
-            mergedReflection.m_inputLayout = reflection.m_inputLayout;
-            hasInputLayout = true;
-        }
-        return mergedReflection;
+        processedShaders[stage] = processedSource.str();
+        processedSource.clear();
+        line.clear();
+        stream.clear();
     }
 }
+
+ShaderReflection VulkanShaderCompiler::MergeReflection(const ReflectionMap& reflectionMap, std::string_view path)
+{
+    ShaderReflection mergedReflection;
+    bool hasInputLayout = false;
+
+    for (const auto& [_, reflection] : reflectionMap)
+    {
+        // Merge buffers
+        auto& mergedBufferMap = mergedReflection.m_bufferMap;
+        for (const auto& [slot, buffer] : reflection.m_bufferMap)
+        {
+            if (mergedBufferMap.find(slot) == mergedBufferMap.end())
+            {
+                mergedBufferMap[slot] = buffer;
+            }
+            else
+            {
+                RHI_ASSERT_WITH_MESSAGE(false, fmt::format("Slot {} has assigned buffer '{}' already", slot, buffer.m_name));
+            }
+        }
+
+        // Merge textures
+        auto& mergedTextures = mergedReflection.m_textures;
+        for (const auto& texture : reflection.m_textures)
+        {
+            if (mergedTextures.find(texture) == mergedTextures.end())
+            {
+                mergedTextures.insert(texture);
+            }
+            else
+            {
+                RHI_ASSERT_WITH_MESSAGE(false, fmt::format("Slot {} has assigned texture '{}' already", texture.m_slot, texture.m_name));
+            }
+        }
+
+        
+        if (reflection.m_inputLayout.Empty())
+        {
+            continue;
+        }
+
+        RHI_ASSERT_WITH_MESSAGE(!hasInputLayout, fmt::format("Input layout for '{}' was already registered", path));
+
+        mergedReflection.m_inputLayout = reflection.m_inputLayout;
+        hasInputLayout = true;
+    }
+    return mergedReflection;
+}
+
+} // rhi::vulkan

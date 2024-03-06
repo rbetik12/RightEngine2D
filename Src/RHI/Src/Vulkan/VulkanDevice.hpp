@@ -70,10 +70,13 @@ public:
 
     virtual void                            BeginFrame() override;
     virtual void                            EndFrame() override;
+    virtual void                            BeginComputePipeline(const std::shared_ptr<Pipeline>& pipeline) override;
+    virtual void                            EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            Present() override;
     virtual void                            BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) override;
+    virtual void                            Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
     virtual void                            OnResize(uint32_t x, uint32_t y) override;
 
@@ -103,9 +106,13 @@ private:
     std::shared_ptr<VulkanContext>  m_context;
 
     eastl::vector<VkCommandBuffer>                  m_cmdBuffers;
+    // TODO: It is quick and easy implementation in future with must integrate compute cmd buffers to general rendering pipeline
+    eastl::vector<VkCommandBuffer>                  m_computeCmdBuffers;
     eastl::vector<VkFence>                          m_fences;
+    eastl::vector<VkFence>                          m_computeFences;
     eastl::vector<VkSemaphore>                      m_presentSemaphores;
     eastl::vector<VkSemaphore>                      m_renderSemaphores;
+    eastl::vector<VkSemaphore>                      m_computeSemaphores;
     eastl::vector<std::shared_ptr<VulkanTexture>>   m_texturesToReset;
 
     // Initializer methods

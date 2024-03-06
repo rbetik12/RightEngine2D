@@ -13,12 +13,15 @@ public:
 
     virtual ~VulkanPipeline() override;
 
-    VkPipeline            GetPipeline() const { return m_pipeline; }
+    VkPipeline          GetPipeline() const { return m_pipeline; }
     VkPipelineLayout    Layout() const { return m_layout; }
 
 private:
+    void CreateFxPipeline();
+    void CreateComputePipeline();
+
     VkPipelineLayout    m_layout;
-    VkPipeline            m_pipeline;
+    VkPipeline          m_pipeline;
 };
 
 } // namespace rhi::vulkan

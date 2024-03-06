@@ -26,15 +26,15 @@ private:
     struct Context
     {
         std::string_view    m_path;
-        ShaderMap            m_stageCodeStr;
-        ShaderType            m_type;
+        ShaderMap           m_stageCodeStr;
+        ShaderType          m_type;
     };
 
     void                            ReadShader(const std::string& text, Context& ctx) const;
-    std::string                        ReadShader(std::string_view path);
+    std::string                     ReadShader(std::string_view path);
     void                            PreprocessShader(Context& ctx);
     ShaderReflection                MergeReflection(const ReflectionMap& reflectionMap, std::string_view path);
-    [[nodiscard]] ShaderReflection    ReflectShader(const core::Blob& shaderBlob, std::string_view path, ShaderStage stage);
+    [[nodiscard]] ShaderReflection  ReflectShader(const core::Blob& shaderBlob, std::string_view path, ShaderStage stage);
     [[nodiscard]] core::Blob        CompileShader(const std::string& shaderCode, std::string_view path, ShaderStage stage);
 
     eastl::unordered_map<std::string, std::string>    m_includeCache;
@@ -42,4 +42,4 @@ private:
     std::mutex                                        m_glslangMutex;
 };
 
-}
+} // rhi::vulkan

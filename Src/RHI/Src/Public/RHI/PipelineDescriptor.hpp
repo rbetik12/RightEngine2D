@@ -25,10 +25,11 @@ enum class CullMode : uint8_t
 struct PipelineDescriptor
 {
     std::shared_ptr<Shader>         m_shader;
-    std::shared_ptr<RenderPass>     m_pass;
-    CompareOp                        m_depthCompareOp = CompareOp::LESS;
-    CullMode                        m_cullMode = CullMode::BACK;
-    bool                            m_offscreen = true;
+    std::shared_ptr<RenderPass>     m_pass; // ignored in compute
+    CompareOp                       m_depthCompareOp = CompareOp::LESS; // ignored in compute
+    CullMode                        m_cullMode = CullMode::BACK; // ignored in compute
+    bool                            m_offscreen = true; // ignored in compute
+    bool                            m_compute = false;
 };
 
 }

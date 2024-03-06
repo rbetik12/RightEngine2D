@@ -15,36 +15,36 @@ public:
 
     using InputAttributeDescription = eastl::vector<VkVertexInputAttributeDescription>;
 
-    const InputAttributeDescription&            AttributeDescription() const { return m_attributesDescription; }
+    const InputAttributeDescription&           AttributeDescription() const { return m_attributesDescription; }
 
-    const VkVertexInputBindingDescription&        InputDescription() const { return m_inputDescription; }
+    const VkVertexInputBindingDescription&     InputDescription() const { return m_inputDescription; }
 
-    VkShaderModule                                Module(ShaderStage stage) const { return m_modules[stage]; }
+    VkShaderModule                             Module(ShaderStage stage) const { return m_modules[stage]; }
 
-    VkDescriptorSetLayout                        Layout() const { return m_layout; }
-    VkDescriptorSet                                DesciptorSet() const { return m_descriptorSet; }
+    VkDescriptorSetLayout                      Layout() const { return m_layout; }
+    VkDescriptorSet                            DesciptorSet() const { return m_descriptorSet; }
 
-    const eastl::vector<VkPushConstantRange>&    Constants() const { return m_constants; }
+    const eastl::vector<VkPushConstantRange>&  Constants() const { return m_constants; }
 
-    virtual void                                SetTexture(const std::shared_ptr<Texture>& texture, int slot) override;
-    virtual void                                SetBuffer(const std::shared_ptr<Buffer>& buffer,
+    virtual void                               SetTexture(const std::shared_ptr<Texture>& texture, int slot) override;
+    virtual void                               SetBuffer(const std::shared_ptr<Buffer>& buffer,
                                                             int slot,
                                                             ShaderStage
                                                             stage,
                                                             int offset = 0) override;
 
-    virtual void                                Sync() override;
+    virtual void                               Sync() override;
 
 private:
     using ModuleMap = eastl::unordered_map<ShaderStage, VkShaderModule>;
 
-    mutable ModuleMap                                    m_modules;
+    mutable ModuleMap                                   m_modules;
     eastl::vector<VkVertexInputAttributeDescription>    m_attributesDescription;
-    eastl::vector<VkPushConstantRange>                    m_constants;
-    VkVertexInputBindingDescription                        m_inputDescription;
+    eastl::vector<VkPushConstantRange>                  m_constants;
+    VkVertexInputBindingDescription                     m_inputDescription;
 
-    VkDescriptorSetLayout                                m_layout = nullptr;
-    VkDescriptorSet                                        m_descriptorSet = nullptr;
+    VkDescriptorSetLayout                               m_layout = nullptr;
+    VkDescriptorSet                                     m_descriptorSet = nullptr;
     // TODO: Use shared descriptor pool
     VkDescriptorPool                                    m_descriptorPool = nullptr;
 
@@ -63,7 +63,7 @@ private:
     };
 
     eastl::vector<BufferInfo>    m_buffersToSync;
-    eastl::vector<TextureInfo>    m_texturesToSync;
+    eastl::vector<TextureInfo>   m_texturesToSync;
 
     void FillVertexData();
     void CreateDescriptorSetLayout();

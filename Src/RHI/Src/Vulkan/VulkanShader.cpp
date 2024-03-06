@@ -34,7 +34,10 @@ VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descript
 
     log::debug("[Vulkan] Successfully created shader '{}'", descriptor.m_path);
 
-    FillVertexData();
+    if (m_descriptor.m_type == ShaderType::FX)
+    {
+        FillVertexData();
+    }
     CreateDescriptorSetLayout();
     AllocateDescriptorSet();
 }
@@ -192,7 +195,19 @@ void VulkanShader::CreateDescriptorSetLayout()
         textureLayoutBinding.binding = info.m_slot;
         textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         textureLayoutBinding.descriptorCount = 1;
-        textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        textureLayoutBinding.stageFlags = m_descriptor.m_type == ShaderType::FX ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_COMPUTE_BIT;
+        bindings.emplace_back(textureLayoutBinding);
+    }
+
+    for (const auto& info : m_descriptor.m_reflection.m_storageImages)
+    {
+        RHI_ASSERT(m_descriptor.m_type == ShaderType::COMPUTE);
+
+        VkDescriptorSetLayoutBinding textureLayoutBinding{};
+        textureLayoutBinding.binding = info.m_slot;
+        textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        textureLayoutBinding.descriptorCount = 1;
+        textureLayoutBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         bindings.emplace_back(textureLayoutBinding);
     }
 

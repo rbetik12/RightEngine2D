@@ -184,6 +184,8 @@ inline VkShaderStageFlagBits ShaderStage(ShaderStage stage)
         return VK_SHADER_STAGE_VERTEX_BIT;
     case ShaderStage::FRAGMENT:
         return VK_SHADER_STAGE_FRAGMENT_BIT;
+    case ShaderStage::COMPUTE:
+        return VK_SHADER_STAGE_COMPUTE_BIT;
     default:
         HELPER_DEFAULT_RETURN(VkShaderStageFlagBits);
     }

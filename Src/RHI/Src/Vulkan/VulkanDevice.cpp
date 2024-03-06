@@ -19,7 +19,7 @@ namespace
 const eastl::array<const char*, 2> C_DEVICE_EXTENSIONS =
 {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
 #ifdef R_APPLE
         "VK_KHR_portability_subset",
 #endif
@@ -73,7 +73,7 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surfa
     int i = 0;
     for (const auto& queueFamily : queueFamilies)
     {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
         {
             indices.graphicsFamily = i;
         }
@@ -165,9 +165,12 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
     m_context = context;
 
     m_cmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
+    m_computeCmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
     m_fences.resize(s_ctx.m_properties.m_framesInFlight);
+    m_computeFences.resize(s_ctx.m_properties.m_framesInFlight);
     m_renderSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
     m_presentSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
+    m_computeSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
 
     for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
     {
@@ -177,16 +180,19 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = 1;
         RHI_ASSERT(vkAllocateCommandBuffers(VulkanDevice::s_ctx.m_device, &allocInfo, &m_cmdBuffers[i]) == VK_SUCCESS);
+        RHI_ASSERT(vkAllocateCommandBuffers(VulkanDevice::s_ctx.m_device, &allocInfo, &m_computeCmdBuffers[i]) == VK_SUCCESS);
 
         VkFenceCreateInfo fenceInfo{};
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
         RHI_ASSERT(vkCreateFence(VulkanDevice::s_ctx.m_device, &fenceInfo, nullptr, &m_fences[i]) == VK_SUCCESS);
+        RHI_ASSERT(vkCreateFence(VulkanDevice::s_ctx.m_device, &fenceInfo, nullptr, &m_computeFences[i]) == VK_SUCCESS);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         RHI_ASSERT(vkCreateSemaphore(VulkanDevice::s_ctx.m_device, &semaphoreInfo, nullptr, &m_presentSemaphores[i]) == VK_SUCCESS);
         RHI_ASSERT(vkCreateSemaphore(VulkanDevice::s_ctx.m_device, &semaphoreInfo, nullptr, &m_renderSemaphores[i]) == VK_SUCCESS);
+        RHI_ASSERT(vkCreateSemaphore(VulkanDevice::s_ctx.m_device, &semaphoreInfo, nullptr, &m_computeSemaphores[i]) == VK_SUCCESS);
     }
 }
 
@@ -305,6 +311,51 @@ void VulkanDevice::EndFrame()
     RHI_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_fences[m_currentCmdBufferIndex]) == VK_SUCCESS);
 }
 
+void VulkanDevice::BeginComputePipeline(const std::shared_ptr<Pipeline>& pipeline)
+{
+    RHI_ASSERT(pipeline->Descriptor().m_compute);
+
+    auto& cmdBuffer = m_computeCmdBuffers[m_currentCmdBufferIndex];
+    RHI_ASSERT(vkResetCommandBuffer(cmdBuffer, 0) == VK_SUCCESS);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    RHI_ASSERT(vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS);
+
+    const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipeline->GetPipeline());
+
+    const auto shader = std::static_pointer_cast<VulkanShader>(pipeline->Descriptor().m_shader);
+    if (const auto descriptorSet = shader->DesciptorSet())
+    {
+        vkCmdBindDescriptorSets(cmdBuffer,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            vkPipeline->Layout(),
+            0, 1,
+            &descriptorSet
+            , 0, nullptr);
+    }
+}
+
+void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline)
+{
+    RHI_ASSERT(pipeline->Descriptor().m_compute);
+
+    auto& cmdBuffer = m_computeCmdBuffers[m_currentCmdBufferIndex];
+    RHI_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pSignalSemaphores = &m_computeSemaphores[m_currentCmdBufferIndex];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pCommandBuffers = &cmdBuffer;
+    submitInfo.commandBufferCount = 1;
+
+    RHI_ASSERT(vkResetFences(s_ctx.m_device, 1, &m_computeFences[m_currentCmdBufferIndex]) == VK_SUCCESS);
+    RHI_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_computeFences[m_currentCmdBufferIndex]) == VK_SUCCESS);
+    RHI_ASSERT(vkWaitForFences(s_ctx.m_device, 1, &m_computeFences[m_currentCmdBufferIndex], VK_TRUE, UINT64_MAX) == VK_SUCCESS);
+}
+
 void VulkanDevice::Present()
 {
     VkResult result;
@@ -337,6 +388,8 @@ void VulkanDevice::Present()
 
 void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
+    RHI_ASSERT(!pipeline->Descriptor().m_compute);
+
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
 
     const auto& renderpass = std::static_pointer_cast<VulkanRenderPass>(pipeline->Descriptor().m_pass);
@@ -433,6 +486,8 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 
 void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
+    RHI_ASSERT(!pipeline->Descriptor().m_compute);
+
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
     vkCmdEndRendering(cmdBuffer);
 
@@ -466,6 +521,13 @@ void VulkanDevice::Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCo
 
     vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
     vkCmdDraw(cmdBuffer, vertexCount, instanceCount, 0, 0);
+}
+
+void VulkanDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+    auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+
+    vkCmdDispatch(cmdBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)

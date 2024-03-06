@@ -11,9 +11,62 @@ namespace rhi::vulkan
 
 VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(descriptor)
 {
-    RHI_ASSERT(descriptor.m_shader && descriptor.m_pass);
+    RHI_ASSERT(descriptor.m_shader);
 
-    eastl::vector<VkDynamicState> dynamicStates =
+    const auto vkShader = std::static_pointer_cast<VulkanShader>(descriptor.m_shader);
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    VkDescriptorSetLayout layout = vkShader->Layout();
+
+    if (layout)
+    {
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &layout;
+    }
+    else
+    {
+        pipelineLayoutInfo.setLayoutCount = 0;
+        pipelineLayoutInfo.pSetLayouts = nullptr;
+    }
+
+    const auto pushConstants = vkShader->Constants();
+
+    if (pushConstants.empty())
+    {
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    }
+    else
+    {
+        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
+        pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
+    }
+
+    RHI_ASSERT(vkCreatePipelineLayout(VulkanDevice::s_ctx.m_device, &pipelineLayoutInfo, nullptr, &m_layout) == VK_SUCCESS);
+
+    if (descriptor.m_compute)
+    {
+        CreateComputePipeline();
+    }
+    else
+    {
+        CreateFxPipeline();
+    }
+}
+
+VulkanPipeline::~VulkanPipeline()
+{
+    vkDestroyPipelineLayout(VulkanDevice::s_ctx.m_device, m_layout, nullptr);
+    vkDestroyPipeline(VulkanDevice::s_ctx.m_device, m_pipeline, nullptr);
+}
+
+void VulkanPipeline::CreateFxPipeline()
+{
+    RHI_ASSERT(m_descriptor.m_pass);
+
+    const eastl::vector<VkDynamicState> dynamicStates =
     {
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_SCISSOR
@@ -24,7 +77,7 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
 
-    std::shared_ptr<VulkanShader> shader = std::static_pointer_cast<VulkanShader>(descriptor.m_shader);
+    std::shared_ptr<VulkanShader> shader = std::static_pointer_cast<VulkanShader>(m_descriptor.m_shader);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -122,48 +175,17 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
 
     RHI_ASSERT(!shaderStages.empty());
 
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
-    VkDescriptorSetLayout layout = shader->Layout();
-
-    if (layout)
-    {
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &layout;
-    }
-    else
-    {
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
-    }
-
-    const auto pushConstants = shader->Constants();
-
-    if (pushConstants.empty())
-    {
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
-    }
-    else
-    {
-        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
-        pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
-    }
-
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencil.depthTestEnable = VK_TRUE;
     depthStencil.depthWriteEnable = VK_TRUE;
-    depthStencil.depthCompareOp = helpers::CompareOp(descriptor.m_depthCompareOp);
+    depthStencil.depthCompareOp = helpers::CompareOp(m_descriptor.m_depthCompareOp);
     depthStencil.depthBoundsTestEnable = VK_FALSE;
     depthStencil.minDepthBounds = 0.0f; // Optional
     depthStencil.maxDepthBounds = 1.0f; // Optional
     depthStencil.stencilTestEnable = VK_FALSE;
     depthStencil.front = {}; // Optional
     depthStencil.back = {}; // Optional
-
-    RHI_ASSERT(vkCreatePipelineLayout(VulkanDevice::s_ctx.m_device, &pipelineLayoutInfo, nullptr, &m_layout) == VK_SUCCESS);
 
     eastl::vector<VkFormat> colorAttachmentFormats;
 
@@ -205,10 +227,20 @@ VulkanPipeline::VulkanPipeline(const PipelineDescriptor& descriptor) : Pipeline(
     RHI_ASSERT(vkCreateGraphicsPipelines(VulkanDevice::s_ctx.m_device, nullptr, 1, &pipelineInfo, nullptr, &m_pipeline) == VK_SUCCESS);
 }
 
-VulkanPipeline::~VulkanPipeline()
+void VulkanPipeline::CreateComputePipeline()
 {
-    vkDestroyPipelineLayout(VulkanDevice::s_ctx.m_device, m_layout, nullptr);
-    vkDestroyPipeline(VulkanDevice::s_ctx.m_device, m_pipeline, nullptr);
+    VkPipelineShaderStageCreateInfo shaderStageInfo{};
+    shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    shaderStageInfo.module = std::static_pointer_cast<VulkanShader>(m_descriptor.m_shader)->Module(ShaderStage::COMPUTE);
+    shaderStageInfo.pName = "main";
+
+    VkComputePipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = m_layout;
+    pipelineInfo.stage = shaderStageInfo;
+
+    RHI_ASSERT(vkCreateComputePipelines(VulkanDevice::s_ctx.m_device, nullptr, 1, &pipelineInfo, nullptr, &m_pipeline) == VK_SUCCESS);
 }
 
-}
+} // rhi::vulkan
