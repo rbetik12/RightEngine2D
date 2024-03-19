@@ -26,9 +26,9 @@ public:
 
     const eastl::vector<VkPushConstantRange>&  Constants() const { return m_constants; }
 
-    virtual void                               SetTexture(const std::shared_ptr<Texture>& texture, int slot) override;
+    virtual void                               SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot) override;
     virtual void                               SetBuffer(const std::shared_ptr<Buffer>& buffer,
-                                                            int slot,
+                                                            uint8_t slot,
                                                             ShaderStage
                                                             stage,
                                                             int offset = 0) override;
@@ -51,24 +51,25 @@ private:
     struct BufferInfo
     {
         std::weak_ptr<rhi::Buffer>  m_buffer;
-        int                         m_slot;
-        int                         m_offset;
-        rhi::ShaderStage            m_stage;
+        uint32_t                    m_offset = 0;
+        uint8_t                     m_slot = 0;
+        rhi::ShaderStage            m_stage = ShaderStage::NONE;
     };
 
     struct TextureInfo
     {
-        std::weak_ptr<rhi::Texture>        m_texture;
-        int                                m_slot;
+        std::weak_ptr<rhi::Texture> m_texture;
+        uint8_t                     m_slot = 0;
     };
 
     eastl::vector<BufferInfo>    m_buffersToSync;
     eastl::vector<TextureInfo>   m_texturesToSync;
 
-    void FillVertexData();
-    void CreateDescriptorSetLayout();
-    void FillPushContansts();
-    void AllocateDescriptorSet();
+    void                FillVertexData();
+    void                CreateDescriptorSetLayout();
+    void                FillPushContansts();
+    void                AllocateDescriptorSet();
+    VkDescriptorType    DescriptorType(uint8_t slot);
 };
 
 }

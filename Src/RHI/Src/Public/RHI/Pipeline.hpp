@@ -29,6 +29,10 @@ protected:
     Pipeline(const PipelineDescriptor& descriptor) : m_descriptor(descriptor)
     {
         RHI_ASSERT(descriptor.m_shader);
+        if (descriptor.m_compute)
+        {
+            RHI_ASSERT(descriptor.m_computePass);
+        }
     }
 };
 

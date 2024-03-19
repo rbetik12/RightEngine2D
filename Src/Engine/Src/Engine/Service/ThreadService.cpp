@@ -3,6 +3,8 @@
 #include <Engine/Registration.hpp>
 #include <algorithm>
 
+#include "Engine/Engine.hpp"
+
 #if defined(R_WIN32)
 #define NOMINMAX
 #include <Windows.h>
@@ -77,7 +79,14 @@ public:
 private:
     void scheduler_prologue(tf::Worker& worker) override
     {
-        SetThreadName(fmt::format("{} #{}", m_threadNamePrefix, worker.id()));
+        if (m_threads.size() > 1)
+        {
+            SetThreadName(fmt::format("{} #{}", m_threadNamePrefix, worker.id()));
+        }
+        else
+        {
+            SetThreadName(fmt::format("{}", m_threadNamePrefix));
+        }
 
         m_threads[worker.id()] = std::this_thread::get_id();
     }
@@ -85,7 +94,7 @@ private:
     void scheduler_epilogue(tf::Worker& worker, std::exception_ptr ptr) override {}
 
 private:
-    std::string                        m_threadNamePrefix;
+    std::string                     m_threadNamePrefix;
     eastl::vector<std::thread::id>  m_threads;
 };
 
@@ -127,6 +136,22 @@ tf::Future<void> ThreadService::AddForegroundTaskflow(tf::Taskflow& taskflow)
 std::shared_ptr<tf::Executor> ThreadService::NamedExecutor(std::string_view name, int threadAmount) const
 {
     return std::make_shared<tf::Executor>(threadAmount, std::make_shared<WorkerInterface>(name, threadAmount));
+}
+
+CustomThread::~CustomThread()
+{
+    AddBackgroundTask([]{});
+    WaitForAll();
+}
+
+void CustomThread::WaitForAll()
+{
+    m_executor->wait_for_all();
+}
+
+CustomThread::CustomThread(std::string_view name)
+{
+    m_executor = Instance().Service<ThreadService>().NamedExecutor(name, 1);
 }
 
 } // namespace engine

@@ -8,6 +8,8 @@
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 #include <Engine/Service/Project/ProjectService.hpp>
 #include <Engine/Service/WorldService.hpp>
+#include <Engine/Service/Resource/ResourceService.hpp>
+#include <Engine/Service/Resource/TextureResource.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -69,6 +71,12 @@ Engine::Engine(int argCount, char* argPtr[])
     m_serviceManager->RegisterService<ThreadService>();
     m_serviceManager->RegisterService<WindowService>();
     m_serviceManager->RegisterService<RenderService>();
+
+    m_serviceManager->RegisterService<ResourceService>();
+
+    auto& rs = m_serviceManager->Service<ResourceService>();
+    rs.RegisterLoader<TextureLoader>();
+
     m_serviceManager->RegisterService<ImguiService>();
     m_serviceManager->RegisterService<EditorService>();
     m_serviceManager->RegisterService<WorldService>();
@@ -79,6 +87,7 @@ Engine::Engine(int argCount, char* argPtr[])
 
     m_serviceManager->Service<EditorService>().Initialize();
 
+    core::log::info("Frame limiter targeted frametime is {}ms", C_TARGET_FRAME_TIME);
     core::log::info("Engine was initialized successfully for {}s", m_timer.TimeInSeconds());
 }
 

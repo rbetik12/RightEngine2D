@@ -27,13 +27,34 @@ public:
 
     tf::Future<void>                AddForegroundTaskflow(tf::Taskflow& taskflow);
 
-    std::shared_ptr<tf::Executor>    NamedExecutor(std::string_view name, int threadAmount) const;
+    std::shared_ptr<tf::Executor>   NamedExecutor(std::string_view name, int threadAmount) const;
 
 private:
     std::unique_ptr<tf::Executor>    m_bgExecutor;
     std::unique_ptr<tf::Executor>    m_fgExecutor;
-    std::list<tf::Taskflow>            m_taskflows;
-    std::mutex                        m_mutex;
+    std::list<tf::Taskflow>          m_taskflows;
+    std::mutex                       m_mutex;
+};
+
+class ENGINE_API CustomThread : core::NonCopyable
+{
+public:
+    ~CustomThread();
+
+    template <typename F>
+    auto AddBackgroundTask(F&& f)
+    {
+        return m_executor->async(std::move(f));
+    }
+
+    void WaitForAll();
+
+    friend class ThreadService;
+
+private:
+    CustomThread(std::string_view name);
+
+    std::shared_ptr<tf::Executor> m_executor;
 };
 
 } // namespace engine

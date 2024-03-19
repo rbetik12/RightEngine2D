@@ -5,6 +5,8 @@
 #include <Engine/Engine.hpp>
 #include <RHI/Pipeline.hpp>
 
+#include "Engine/Service/Imgui/ImguiService.hpp"
+
 RTTR_REGISTRATION
 {
 engine::registration::Service<engine::RenderService>("engine::RenderService")
@@ -132,6 +134,8 @@ RPtr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderC
 
 RPtr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescriptor& desc, const void* data)
 {
+    ENGINE_ASSERT(!desc.m_name.empty());
+
     return m_device->CreateBuffer(desc, data);
 }
 
@@ -146,6 +150,8 @@ RPtr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& de
 
 RPtr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
 {
+    ENGINE_ASSERT(!desc.m_name.empty());
+
     return m_device->CreateShader(desc);
 }
 
@@ -174,9 +180,24 @@ void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
     m_device->EndPipeline(pipeline);
 }
 
+void RenderService::BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    m_device->BeginComputePipeline(pipeline);
+}
+
+void RenderService::EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    m_device->BeginComputePipeline(pipeline);
+}
+
 void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
 {
     m_device->Draw(buffer, vertexCount, instanceCount);
+}
+
+void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+    m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
 void RenderService::WaitAll()
@@ -236,10 +257,14 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
 {
     PROFILER_CPU_ZONE;
 
+    if (const auto imguiService = Instance().FindService<ImguiService>(); imguiService && m_impl->m_texture)
+    {
+        imguiService->RemoveImage(m_impl->m_texture);
+    }
+
     rhi::TextureDescriptor textureDescriptor;
     textureDescriptor.m_width = static_cast<uint16_t>(width);
     textureDescriptor.m_height = static_cast<uint16_t>(height);
-    textureDescriptor.m_componentAmount = 4;
     textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
     textureDescriptor.m_layersAmount = 1;
     textureDescriptor.m_format = rhi::Format::BGRA8_UNORM;
@@ -282,7 +307,6 @@ void RenderService::CreateWindowResources(uint32_t width, uint32_t height)
     rhi::TextureDescriptor textureDescriptor;
     textureDescriptor.m_width = static_cast<uint16_t>(width);
     textureDescriptor.m_height = static_cast<uint16_t>(height);
-    textureDescriptor.m_componentAmount = 4;
     textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
     textureDescriptor.m_layersAmount = 1;
     textureDescriptor.m_format = rhi::Format::BGRA8_UNORM;

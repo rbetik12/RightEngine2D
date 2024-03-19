@@ -54,7 +54,7 @@ VulkanShader::~VulkanShader()
 }
 
 // TODO: Add validation for texture slots from reflection
-void VulkanShader::SetTexture(const std::shared_ptr<Texture>& texture, int slot)
+void VulkanShader::SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot)
 {
     m_dirty = true;
 
@@ -66,7 +66,7 @@ void VulkanShader::SetTexture(const std::shared_ptr<Texture>& texture, int slot)
 }
 
 // TODO: Add validation for buffer slots from reflection
-void VulkanShader::SetBuffer(const std::shared_ptr<Buffer>& buffer, int slot, ShaderStage stage, int offset)
+void VulkanShader::SetBuffer(const std::shared_ptr<Buffer>& buffer, uint8_t slot, ShaderStage stage, int offset)
 {
     m_dirty = true;
 
@@ -121,6 +121,8 @@ void VulkanShader::Sync()
     }
 
     eastl::vector<VkDescriptorImageInfo> textureInfos;
+    // To prevent reallocation
+    textureInfos.set_capacity(m_texturesToSync.size());
 
     for (auto& texture : m_texturesToSync)
     {
@@ -133,7 +135,9 @@ void VulkanShader::Sync()
         const auto texPtr = std::static_pointer_cast<VulkanTexture>(texture.m_texture.lock());
 
         VkDescriptorImageInfo imageInfo{};
-        if (texPtr->Descriptor().m_format == Format::D32_SFLOAT_S8_UINT)
+        if (texPtr->Descriptor().m_format == Format::D32_SFLOAT_S8_UINT ||
+            m_descriptor.m_reflection.m_storageImages.find({ texture.m_slot }) 
+                != m_descriptor.m_reflection.m_storageImages.end())
         {
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
         }
@@ -148,16 +152,16 @@ void VulkanShader::Sync()
         // TODO: We need to see whether the texture we are currently using was changed (e.g. sampler changed) and update it here
         imageInfo.sampler = std::static_pointer_cast<VulkanSampler>(texPtr->GetSampler())->Raw();
 
-        textureInfos.emplace_back(imageInfo);
+        textureInfos.push_back(imageInfo);
 
         VkWriteDescriptorSet descriptorWrite{};
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrite.dstSet = m_descriptorSet;
         descriptorWrite.dstBinding = texture.m_slot;
         descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrite.descriptorType = DescriptorType(texture.m_slot);
         descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pImageInfo = &textureInfos.back();
+        descriptorWrite.pImageInfo = &textureInfos[textureInfos.size() - 1];
 
         writeDescriptorSets.push_back(descriptorWrite);
     }
@@ -279,7 +283,18 @@ void VulkanShader::AllocateDescriptorSet()
     texturePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     texturePoolSize.descriptorCount = static_cast<uint32_t>(m_descriptor.m_reflection.m_textures.size());
 
-    if (bufferPoolSize.descriptorCount == 0 && texturePoolSize.descriptorCount == 0)
+    VkDescriptorPoolSize imageStoragePoolSize{};
+    imageStoragePoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    imageStoragePoolSize.descriptorCount = static_cast<uint32_t>(m_descriptor.m_reflection.m_storageImages.size());
+
+    VkDescriptorPoolSize storageBufferPoolSize{};
+    storageBufferPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    storageBufferPoolSize.descriptorCount = static_cast<uint32_t>(m_descriptor.m_reflection.m_storageBufferMap.size());
+
+    if (bufferPoolSize.descriptorCount == 0 
+        && texturePoolSize.descriptorCount == 0
+        && imageStoragePoolSize.descriptorCount == 0
+        && storageBufferPoolSize.descriptorCount == 0)
     {
         return;
     }
@@ -292,6 +307,14 @@ void VulkanShader::AllocateDescriptorSet()
     else if (texturePoolSize.descriptorCount > 0)
     {
         poolSizes.push_back(texturePoolSize);
+    }
+    else if (imageStoragePoolSize.descriptorCount > 0)
+    {
+        poolSizes.push_back(imageStoragePoolSize);
+    }
+    else if (storageBufferPoolSize.descriptorCount > 0)
+    {
+        poolSizes.push_back(storageBufferPoolSize);
     }
 
     RHI_ASSERT(!poolSizes.empty());
@@ -311,6 +334,25 @@ void VulkanShader::AllocateDescriptorSet()
     allocInfo.pSetLayouts = &m_layout;
 
     RHI_ASSERT(vkAllocateDescriptorSets(VulkanDevice::s_ctx.m_device, &allocInfo, &m_descriptorSet) == VK_SUCCESS);
+}
+
+VkDescriptorType VulkanShader::DescriptorType(uint8_t slot)
+{
+    const auto texIt = m_descriptor.m_reflection.m_textures.find({ slot });
+    const auto storageImgIt = m_descriptor.m_reflection.m_storageImages.find({ slot });
+
+    if (texIt != m_descriptor.m_reflection.m_textures.end())
+    {
+        return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    }
+
+    if (storageImgIt != m_descriptor.m_reflection.m_storageImages.end())
+    {
+        return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    }
+
+    RHI_ASSERT(false);
+    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
 } // namespace rhi::vulkan

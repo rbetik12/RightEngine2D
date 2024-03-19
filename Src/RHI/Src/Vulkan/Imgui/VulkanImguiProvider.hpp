@@ -15,6 +15,7 @@ public:
     virtual void Begin() override;
     virtual void End() override;
     virtual void Image(const std::shared_ptr<Texture>& texture, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1) override;
+    virtual void RemoveImage(const std::shared_ptr<Texture>& texture) override;
 
 private:
     void CreateDescriptorPool();

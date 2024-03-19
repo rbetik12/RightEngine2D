@@ -58,6 +58,10 @@ VulkanImguiProvider::~VulkanImguiProvider()
 
 void VulkanImguiProvider::Begin()
 {
+    //auto renderPass = std::static_pointer_cast<VulkanRenderPass>(m_renderPass);
+
+    //std::static_pointer_cast<VulkanTexture>(renderPass->Descriptor().m_colorAttachments[0].m_texture)->ChangeImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+
     ImGui_ImplVulkan_NewFrame();
 }
 
@@ -103,6 +107,22 @@ void VulkanImguiProvider::Image(const std::shared_ptr<Texture>& texture, const I
 {
     const auto set = GetDescriptorSet(texture);
     ImGui::Image(set, size, uv0, uv1);
+}
+
+void VulkanImguiProvider::RemoveImage(const std::shared_ptr<Texture>& texture)
+{
+    RHI_ASSERT(texture->GetSampler() && texture->Descriptor().m_width > 0 && texture->Descriptor().m_height > 0);
+
+    const auto tex = std::static_pointer_cast<VulkanTexture>(texture);
+    const auto texIt = m_imageViewToDescSet.find(tex->ImageView(0));
+
+    if (texIt == m_imageViewToDescSet.end())
+    {
+        RHI_ASSERT(false);
+        return;
+    }
+
+    m_imageViewToDescSet.erase(texIt);
 }
 
 void VulkanImguiProvider::CreateDescriptorPool()

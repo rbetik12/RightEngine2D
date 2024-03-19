@@ -52,6 +52,8 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
         });
 
     cmdBuffer.End();
+
+    VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
 }
 
 } // namespace unnamed

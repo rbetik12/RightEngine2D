@@ -34,6 +34,9 @@ public:
     template<typename T>
     T&              Service() { return m_serviceManager->Service<T>(); }
 
+    template<typename T>
+    T*              FindService() { return m_serviceManager->FindService<T>(); }
+
     const Config&   Cfg() const { return m_config; }
 
 private:

@@ -315,12 +315,14 @@ void VulkanDevice::BeginComputePipeline(const std::shared_ptr<Pipeline>& pipelin
 {
     RHI_ASSERT(pipeline->Descriptor().m_compute);
 
-    auto& cmdBuffer = m_computeCmdBuffers[m_currentCmdBufferIndex];
-    RHI_ASSERT(vkResetCommandBuffer(cmdBuffer, 0) == VK_SUCCESS);
+    auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
 
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    RHI_ASSERT(vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS);
+    for (const auto& texture : pipeline->Descriptor().m_computePass->m_storageTextures)
+    {
+        auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture);
+        vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_GENERAL);
+        m_computeTexturesToReset.emplace_back(vkTexture);
+    }
 
     const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipeline->GetPipeline());
@@ -341,19 +343,14 @@ void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
     RHI_ASSERT(pipeline->Descriptor().m_compute);
 
-    auto& cmdBuffer = m_computeCmdBuffers[m_currentCmdBufferIndex];
-    RHI_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS);
+    auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
 
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pSignalSemaphores = &m_computeSemaphores[m_currentCmdBufferIndex];
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pCommandBuffers = &cmdBuffer;
-    submitInfo.commandBufferCount = 1;
-
-    RHI_ASSERT(vkResetFences(s_ctx.m_device, 1, &m_computeFences[m_currentCmdBufferIndex]) == VK_SUCCESS);
-    RHI_ASSERT(vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_computeFences[m_currentCmdBufferIndex]) == VK_SUCCESS);
-    RHI_ASSERT(vkWaitForFences(s_ctx.m_device, 1, &m_computeFences[m_currentCmdBufferIndex], VK_TRUE, UINT64_MAX) == VK_SUCCESS);
+    for (const auto& texture : m_computeTexturesToReset)
+    {
+        auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture);
+        vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+    m_computeTexturesToReset.clear();
 }
 
 void VulkanDevice::Present()

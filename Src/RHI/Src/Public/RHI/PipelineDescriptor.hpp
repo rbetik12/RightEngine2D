@@ -22,9 +22,16 @@ enum class CullMode : uint8_t
     FRONT
 };
 
+struct ComputePass
+{
+    eastl::vector<std::shared_ptr<Texture>> m_textures;
+    eastl::vector<std::shared_ptr<Texture>> m_storageTextures;
+};
+
 struct PipelineDescriptor
 {
     std::shared_ptr<Shader>         m_shader;
+    std::shared_ptr<ComputePass>    m_computePass;
     std::shared_ptr<RenderPass>     m_pass; // ignored in compute
     CompareOp                       m_depthCompareOp = CompareOp::LESS; // ignored in compute
     CullMode                        m_cullMode = CullMode::BACK; // ignored in compute

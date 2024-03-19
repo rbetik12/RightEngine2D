@@ -102,4 +102,10 @@ void ImguiService::Image(const std::shared_ptr<rhi::Texture>& texture, const ImV
     m_imguiProvider->Image(texture, size, uv0, uv1);
 }
 
+void ImguiService::RemoveImage(const std::shared_ptr<rhi::Texture>& texture)
+{
+    ENGINE_ASSERT(texture);
+    m_imguiProvider->RemoveImage(texture);
+}
+
 } // engine

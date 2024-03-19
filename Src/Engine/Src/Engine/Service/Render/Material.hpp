@@ -66,11 +66,11 @@ private:
     };
 
     eastl::vector<BufferInfo>                        m_buffers;
-    eastl::vector<TextureInfo>                        m_textures;
-    eastl::vector<eastl::pair<int, BufferInfo>>        m_pendingBuffers;
-    eastl::vector<eastl::pair<int, TextureInfo>>    m_pendingTextures;
-    std::shared_ptr<rhi::Shader>                    m_shader;
-    bool                                            m_dirty;
+    eastl::vector<TextureInfo>                       m_textures;
+    eastl::vector<eastl::pair<uint8_t, BufferInfo>>  m_pendingBuffers;
+    eastl::vector<eastl::pair<uint8_t, TextureInfo>> m_pendingTextures;
+    std::shared_ptr<rhi::Shader>                     m_shader;
+    bool                                             m_dirty;
 };
 
 } // engine::render

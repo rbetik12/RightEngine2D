@@ -81,6 +81,23 @@ public:
         return *s;
     }
 
+    template <class T>
+    T* FindService()
+    {
+        static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
+
+        const auto type = rttr::type::get<T>();
+        const auto serviceIt = m_servicesMap.find(type);
+        if (serviceIt == m_servicesMap.end())
+        {
+            return nullptr;
+        }
+
+        const auto serviceIdx = serviceIt->second;
+        auto* s = static_cast<T*>(m_services.at(serviceIdx).get());
+        return s;
+    }
+
     void Update(float dt);
     void PostUpdate(float dt);
 

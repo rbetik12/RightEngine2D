@@ -29,7 +29,10 @@ public:
 
     void                        BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
+    void                        BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
+    void                        EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
+    void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 
     void                        WaitAll();
     void                        OnResize(uint32_t width, uint32_t height);

@@ -65,6 +65,7 @@ struct ShaderReflection
     using TextureList = eastl::vector_set<TextureInfo>;
 
     BufferMap           m_bufferMap;
+    BufferMap           m_storageBufferMap;
     TextureList         m_textures;
     TextureList         m_storageImages;
     VertexBufferLayout  m_inputLayout;

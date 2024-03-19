@@ -9,6 +9,7 @@ find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(EnTT REQUIRED)
 find_package(stduuid REQUIRED)
+find_package(stb REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.cpp"
@@ -26,6 +27,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                             RHI
                             EnTT::EnTT
                             stduuid::stduuid
+                            stb::stb
                     )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE ENGINE_EXPORT)

@@ -114,6 +114,7 @@ private:
     eastl::vector<VkSemaphore>                      m_renderSemaphores;
     eastl::vector<VkSemaphore>                      m_computeSemaphores;
     eastl::vector<std::shared_ptr<VulkanTexture>>   m_texturesToReset;
+    eastl::vector<std::shared_ptr<VulkanTexture>>   m_computeTexturesToReset;
 
     // Initializer methods
     void PickPhysicalDevice(const std::shared_ptr<VulkanContext>& context);
