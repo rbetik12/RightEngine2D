@@ -6,15 +6,10 @@ on:
   workflow_dispatch:
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: windows-2022
 
     steps:
@@ -33,10 +28,6 @@ jobs:
           ~/.conan2
           ~/.conan
         key: ${{ runner.os }}-conan-cache
-    
-    - name: Check git submodules
-      # Initialize and download (if needed) engine dependencies
-      run: git submodule update --init
 
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
@@ -56,4 +47,12 @@ jobs:
 
     - name: Build
       run: cmake --build .build/Win --config ${{env.BUILD_TYPE}} --parallel 4
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: win_x64
+        path: |
+          .build/Win/.bin/${{env.BUILD_TYPE}}
+          !.build/Win/.bin/${{env.BUILD_TYPE}}/*.pdb
       

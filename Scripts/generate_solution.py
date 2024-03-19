@@ -22,11 +22,6 @@ try:
 except Exception as e:
     pass
 
-#Install submodules if needed
-print("Downloading submodules...")
-sub.run("git submodule update --init")
-print("Finished downloading of the submodules!")
-
 #Build and install custom built packages if needed
 def check_lib_version(package_name, version):
     conan_api = ConanAPI()
@@ -35,7 +30,6 @@ def check_lib_version(package_name, version):
 
 
 print("Preparing conan packages...")
-#imguizmo
 if not check_lib_version("imguizmo", "1.83.2"):
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Debug --version 1.83.2")
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Release --version 1.83.2")
@@ -69,23 +63,31 @@ def copy_files(source_dir, destination_dir, extension=".dll"):
                     print(f"Copied '{filename}' to '{destination_dir}'.")
                 except Exception as e:
                     print(f"Error copying '{filename}': {e}")
+                    sys.exit(1)
 
+def check_process_status_code(code, proc_stderr):
+    if code != 0:
+        print("Error: Solution generation failed")
+        print("Error message: ", proc_stderr)
+        sys.exit(1)
 
 print(f"Generating solution...")
-sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/Win/.lib --build=missing --profile=win-64 -s build_type={build_type}")
-
-copy_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}", ".dll")
-copy_files("Scripts/bin", f".build/Win/.bin/{build_type}", ".exe")
 
 try:
-    completed_process = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)
+    status_code = sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/Win/.lib --build=missing --profile=win-64 -s build_type={build_type}", shell=True, check=True, text=True)
+    check_process_status_code(status_code.returncode, status_code.stderr)
+
+    copy_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}", ".dll")
+    copy_files("Scripts/bin", f".build/Win/.bin/{build_type}", ".exe")
+
+    status_code = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)
+    check_process_status_code(status_code.returncode, status_code.stderr)
     
-    if completed_process.returncode == 0:
-        print("Solution was successfully generated!")
-    else:
-        print("Error: Solution generation failed")
-        print("Error output:", completed_process.stderr)
+    print("Solution was successfully generated!")
+    
 except sub.CalledProcessError as e:
     print("Error while generating the solution:", e)
+    sys.exit(1)
 except Exception as e:
     print("An unexpected error occurred:", e)
+    sys.exit(1)
