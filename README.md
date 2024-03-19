@@ -1,21 +1,17 @@
 # RightEngine
 
-Vulkan game engine that is WIP. Currenlty it includes asset system, Vulkan renderer and scene system
+Vulkan game engine that is in WIP
 
-## Features (More is coming soon!)
+## Features
 
 - Flexible Vulkan renderer
 - Cross-platform
 - Easy to use parallel tasks API
 
-## Main scene with PBR balls
-
-![Main scene](https://i.imgur.com/nyoJtLu.png)
-
 ## Requirements
-- Python
+- Python >= 3.10
 - Conan >= 2.0
-- Vulkan SDK (>= 1.3.236)
+- Vulkan SDK (>= 1.3.268)
 
 ## How to build
 Currently works only with Windows, but build scripts are easy adoptable for other platforms

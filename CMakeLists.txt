@@ -4,14 +4,18 @@ project(RightEngine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.bin)
 
-option(R_ENABLE_TRACY "Enable tracy profiling" ON)
+option(ENABLE_TRACY "Enable tracy profiling" ON)
+option(ENABLE_ASSERTS "Enable asserts" ON)
 
-if (R_ENABLE_TRACY)
+if (ENABLE_ASSERTS)
+    add_compile_definitions(R_ENABLE_ASSERTS)
+endif()
+
+if (ENABLE_TRACY)
     add_compile_definitions(R_ENABLE_TRACY)
     add_compile_definitions(TRACY_ENABLE)
 endif()
 
-add_compile_definitions(R_ENABLE_ASSERTS)
 if (WIN32)
     add_compile_definitions(R_WIN32)
 elseif (APPLE)
@@ -62,29 +66,9 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if (WIN32)
-    set(Vulkan_LIBRARY $ENV{Vulkan_LIBRARY})
-    find_package(Vulkan REQUIRED)
-elseif (APPLE)
-    find_package(Vulkan REQUIRED)
-endif()
-
-message(STATUS "Vulkan include directory: " ${Vulkan_INCLUDE_DIR})
-message(STATUS "Vulkan library directory: " ${Vulkan_LIBRARY})
-
-include_directories(${Vulkan_INCLUDE_DIR})
-include_directories(Lib/vk-tools/)
-include_directories(Lib/VulkanMemoryAllocator/include)
-
-add_subdirectory(Lib/vk-tools/)
-add_subdirectory(Lib/VulkanMemoryAllocator)
-
 set(THIRD_PARTY_PROJECT_DIR_NAME "Lib")
 set(ENGINE_PROJECT_DIR "Engine")
 set(CUSTOM_TARGET_DIR_NAME "Custom")
-
-set_target_properties(vk-tools PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
-set_target_properties(VulkanMemoryAllocator PROPERTIES FOLDER ${THIRD_PARTY_PROJECT_DIR_NAME})
 
 add_subdirectory(Src/Core)
 add_subdirectory(Src/RHI)

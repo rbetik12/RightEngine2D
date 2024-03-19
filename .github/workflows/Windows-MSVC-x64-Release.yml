@@ -2,7 +2,7 @@ name: Windows-MSVC-x64-Release
 
 on:
   push:
-    branches: [ RNG-31-renderer-2.0, development ]
+    branches: [ '**' ]
   workflow_dispatch:
 
 env:
@@ -15,7 +15,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
       with:
-        vulkan-query-version: 1.3.236.0
+        vulkan-query-version: 1.3.268.0
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
@@ -55,5 +55,5 @@ jobs:
       run: python Scripts/generate_solution.py ${{env.BUILD_TYPE}}
 
     - name: Build
-      run: cmake --build .build/Win --config ${{env.BUILD_TYPE}} --parallel 2
+      run: cmake --build .build/Win --config ${{env.BUILD_TYPE}} --parallel 4
       

@@ -17,6 +17,7 @@ stb/cci.20220909
 stduuid/1.2.3
 taskflow/3.6.0
 tracy/0.10
+vulkan-headers/1.3.268.0
 
 [options]
 eastl*:shared=True

@@ -7,7 +7,11 @@
 #include "CommandBuffer.hpp"
 #include "Fence.hpp"
 #include "Swapchain.hpp"
+
+#pragma warning(push)
+#pragma warning(disable : 4189)
 #include <VulkanMemoryAllocator/vk_mem_alloc.h>
+#pragma warning(pop)
 
 namespace rhi::vulkan
 {
