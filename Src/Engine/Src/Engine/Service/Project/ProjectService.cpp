@@ -28,8 +28,18 @@ void ProjectService::PostUpdate(float dt)
 void ProjectService::Load(const io::fs::path& path)
 {
     ENGINE_ASSERT(!m_project);
-    m_project = std::make_unique<Project>(path);
-    core::log::info("Successfully loaded project '{}'", path.generic_u8string());
+
+    if (path.is_relative())
+    {
+        const io::fs::path absPath = io::fs::absolute(path);
+        m_project = std::make_unique<Project>(absPath);
+        core::log::info("Successfully loaded project '{}'", absPath.generic_u8string());
+    }
+    else
+    {
+        m_project = std::make_unique<Project>(path);
+        core::log::info("Successfully loaded project '{}'", path.generic_u8string());
+    }
 }
 
 } // engine

@@ -13,12 +13,17 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     - name: SSH Agent
       uses: webfactory/ssh-agent@v0.5.4
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Pull Git LFS resources
+      run: |
+        git lfs install 
+        git lfs pull
 
     - name: Check conan cache
       id: cache-conan
@@ -48,11 +53,12 @@ jobs:
     - name: Build
       run: cmake --build .build/Win --config ${{env.BUILD_TYPE}} --parallel 4
 
+    - name: Prepare distribution package
+      run: python Scripts/ci/prepare_dist_dir.py ${{env.BUILD_TYPE}}
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: win_x64
-        path: |
-          .build/Win/.bin/${{env.BUILD_TYPE}}
-          !.build/Win/.bin/${{env.BUILD_TYPE}}/*.pdb
+        name: win_x64_release
+        path: .dist
       

@@ -155,8 +155,15 @@ void Engine::ParseCfg(int argCount, char* argPtr[])
                                 .name_to_value(launchMode.data())
                                 .get_value<Domain>();
 
-    const auto projectPath = registration::CommandLineArgs::Get("--project");
-    m_config.m_projectPath = projectPath;
+    const io::fs::path projectPath = registration::CommandLineArgs::Get("--project");
+    if (projectPath.is_absolute())
+    {
+        m_config.m_projectPath = projectPath;
+    }
+    else
+    {
+        m_config.m_projectPath = io::fs::absolute(projectPath);
+    }
 }
 
 } // namespace engine

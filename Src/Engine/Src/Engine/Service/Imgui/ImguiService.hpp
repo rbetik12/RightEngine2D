@@ -21,6 +21,7 @@ public:
     void            RemoveImage(const std::shared_ptr<rhi::Texture>& texture);
 
 private:
+    std::string                                 m_configFilePath;
     std::shared_ptr<rhi::imgui::IImguiProvider> m_imguiProvider;
 };
 
