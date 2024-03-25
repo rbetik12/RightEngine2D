@@ -70,6 +70,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
         stagingBufferDesc.m_size = desc.Size();
         stagingBufferDesc.m_type = BufferType::TRANSFER_SRC;
         stagingBufferDesc.m_memoryType = MemoryType::CPU_ONLY;
+        stagingBufferDesc.m_name = "Staging buffer";
         m_stagingBuffer = VulkanDevice::s_ctx.m_instance->CreateBuffer(stagingBufferDesc, nullptr);
         auto ptr = m_stagingBuffer->Map();
         memcpy(ptr, data, stagingBufferDesc.m_size);

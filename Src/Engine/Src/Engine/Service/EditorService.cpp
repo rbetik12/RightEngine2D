@@ -7,12 +7,12 @@
 #include <Engine/Registration.hpp>
 #include <Engine/Service/Imgui/ImguiService.hpp>
 #include <Engine/Service/WorldService.hpp>
+#include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
+#include <Engine/Service/Resource/ResourceService.hpp>
+#include <Engine/Service/Resource/TextureResource.hpp>
+#include <Engine/Service/Resource/MeshResource.hpp>
 #include <Engine/System/RenderSystem.hpp>
 #include <imgui.h>
-
-#include "Filesystem/VirtualFilesystemService.hpp"
-#include "Resource/ResourceService.hpp"
-#include "Resource/TextureResource.hpp"
 
 RTTR_REGISTRATION
 {
@@ -45,6 +45,7 @@ struct EditorService::Impl
     std::shared_ptr<rhi::Texture>       m_envCubMap;
     std::shared_ptr<rhi::Pipeline>      m_computePipeline;
     std::shared_ptr<TextureResource>    m_envTex;
+    std::shared_ptr<MeshResource>       m_monkeyMesh;
     ImVec2                              m_viewportSize;
 };
 
@@ -132,7 +133,9 @@ void EditorService::Initialize()
 
     const auto buffer = rs.CreateBuffer(bufferDesc, vertexBufferRaw.data());
 
-    m_impl->m_mesh = std::make_shared<render::Mesh>(buffer);
+    auto submesh = std::make_shared<render::SubMesh>(buffer);
+    m_impl->m_mesh = std::make_shared<render::Mesh>();
+    m_impl->m_mesh->AddSubMesh(submesh);
     m_impl->m_material = std::make_shared<render::Material>(rs.DefaultShader());
 
     MeshComponent meshComponent;
@@ -192,6 +195,11 @@ void EditorService::Initialize()
     m_impl->m_equrectangleMaterial->SetTexture(m_impl->m_envCubMap, 0);
     m_impl->m_equrectangleMaterial->SetTexture(m_impl->m_envTex->Texture(), 1);
     m_impl->m_equrectangleMaterial->Sync();
+
+    auto& meshLoader = resourceService.GetLoader<MeshLoader>();
+    m_impl->m_monkeyMesh = std::static_pointer_cast<MeshResource>(meshLoader.Load("/Meshes/monkey.fbx"));
+
+    while (!m_impl->m_monkeyMesh->Ready()) {}
 }
 
 } // engine

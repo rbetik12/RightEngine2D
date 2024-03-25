@@ -228,6 +228,7 @@ std::shared_ptr<ShaderCompiler> VulkanDevice::CreateShaderCompiler(const ShaderC
 
 std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(const BufferDescriptor& desc, const void* data)
 {
+    RHI_ASSERT(!desc.m_name.empty());
     return std::make_shared<VulkanBuffer>(desc, data);
 }
 

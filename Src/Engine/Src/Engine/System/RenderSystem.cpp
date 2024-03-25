@@ -28,8 +28,10 @@ void RenderSystem::Update(float dt)
 
     for (auto [e, mesh] : W()->View<MeshComponent>().each())
     {
-        auto& vb = mesh.m_mesh->VertexBuffer();
-        rs.Draw(vb, rs.DefaultPipeline()->VertexCount(vb));
+        for (const auto& submesh : mesh.m_mesh->GetSubMeshList())
+        {
+            rs.Draw(submesh->VertexBuffer(), rs.DefaultPipeline()->VertexCount(submesh->VertexBuffer()));
+        }
     }
 
     rs.EndPass(rs.DefaultPipeline());

@@ -20,6 +20,7 @@ tracy/0.10
 vulkan-headers/1.3.268.0
 
 [options]
+assimp*:shared=True
 eastl*:shared=True
 glslang*:shared=False
 glslang*:build_executables=False

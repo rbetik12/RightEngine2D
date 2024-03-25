@@ -10,6 +10,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(EnTT REQUIRED)
 find_package(stduuid REQUIRED)
 find_package(stb REQUIRED)
+find_package(assimp REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.cpp"
@@ -20,6 +21,7 @@ file(GLOB_RECURSE SOURCE_FILES
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
+                            assimp::assimp
                             argparse::argparse
                             glfw
                             Taskflow::Taskflow

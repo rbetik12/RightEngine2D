@@ -6,6 +6,8 @@
 #include <Core/Hash.hpp>
 #include <Core/EASTLIntergration.hpp>
 
+#include <fmt/format.h>
+
 #include <string>
 #include <memory>
 #include <cstdint>
