@@ -1,6 +1,6 @@
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/ThreadService.hpp>
-#include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/Window/WindowService.hpp>
 #include <Engine/Service/Render/Material.hpp>
 #include <Engine/Service/Render/Mesh.hpp>
 #include <Engine/Engine.hpp>
@@ -13,6 +13,8 @@
 #include <Engine/Service/Resource/MeshResource.hpp>
 #include <Engine/System/RenderSystem.hpp>
 #include <imgui.h>
+
+#include "Engine/System/TransformSystem.hpp"
 
 RTTR_REGISTRATION
 {
@@ -146,9 +148,15 @@ void EditorService::Initialize()
     auto& em = ws.CurrentWorld()->GetEntityManager();
 
     const auto uuid = em->CreateEntity("Triangle");
+    const auto cameraUuid = em->CreateEntity("Editor Camera");
     em->Update();
 
     em->AddComponent<MeshComponent>(uuid, meshComponent);
+
+    CameraComponent cameraComponent{};
+    cameraComponent.m_active = true;
+    em->AddComponent<CameraComponent>(cameraUuid, cameraComponent);
+    em->AddComponent<TransformComponent>(cameraUuid);
 
     const auto computeShaderPath = "/System/Shaders/equirectangle_to_cubemap.glsl";
     const auto computeCompiledShader = rs.ShaderCompiler()->Compile(vfs.Absolute(io::fs::path(computeShaderPath)).generic_u8string(), rhi::ShaderType::COMPUTE);

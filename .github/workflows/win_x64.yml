@@ -1,4 +1,4 @@
-name: Windows-MSVC-x64-Release
+name: win_x64
 
 on:
   push:
@@ -40,9 +40,6 @@ jobs:
         vulkan-query-version: 1.3.268.0
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
-
-    - name: Install conan
-      run: pip install conan
 
     - name: Prepare conan environment
       run: python Scripts/prepare_env.py

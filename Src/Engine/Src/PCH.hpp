@@ -14,6 +14,9 @@
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 
+#include <glm/vec4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec2.hpp>
 #include <taskflow/taskflow.hpp>
 
 #include <string>

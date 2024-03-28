@@ -1,7 +1,7 @@
 #include <Engine/Service/Imgui/ImguiService.hpp>
 #include <Engine/Registration.hpp>
 #include <Engine/Engine.hpp>
-#include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/Window/WindowService.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
 #include <Core/RTTRIntegration.hpp>
