@@ -1,9 +1,10 @@
 #include <Engine/Service/WorldService.hpp>
 #include <Engine/Service/Imgui/ImguiService.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
-#include <Engine/Service/WindowService.hpp>
+#include <Engine/Service/Window/WindowService.hpp>
 #include <Engine/Registration.hpp>
 #include <Engine/System/RenderSystem.hpp>
+#include <Engine/System/TransformSystem.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -20,7 +21,9 @@ namespace engine
 WorldService::WorldService()
 {
     m_world = std::make_unique<ecs::World>("Test world");
+    m_world->GetSystemManager()->Add<TransformSystem>();
     m_world->GetSystemManager()->Add<RenderSystem>();
+    m_world->GetSystemManager()->Add<CameraSystem>();
     m_world->GetSystemManager()->UpdateDependenciesOrder();
 }
 

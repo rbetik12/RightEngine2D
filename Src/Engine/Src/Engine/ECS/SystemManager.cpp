@@ -26,7 +26,7 @@ void SystemManager::Update(float dt)
 
 void SystemManager::UpdateDependenciesOrder()
 {
-    eastl::vector_map<rttr::type, eastl::vector<rttr::type>> dependencies;
+    eastl::vector_map<rttr::type, eastl::vector_set<rttr::type>> dependencies;
 
     // Gather type deps map
     for (const auto& systemPtr : m_systems)
@@ -37,11 +37,12 @@ void SystemManager::UpdateDependenciesOrder()
 
         auto meta = sysType.get_metadata(engine::registration::C_METADATA_KEY).get_value<System::MetaInfo>();
 
-        dependencies[sysType] = meta.m_updateBefore;
+        dependencies[sysType].insert(meta.m_updateBefore.begin(), meta.m_updateBefore.end());
 
         for (const auto depType : meta.m_updateAfter)
         {
-            dependencies[depType].emplace_back(sysType);
+            ENGINE_ASSERT_WITH_MESSAGE(m_typeToSystem[depType], fmt::format("[SystemManager] '{}' is required to be present by '{}'", depType.get_name(), sysType.get_name()));
+            dependencies[depType].insert(sysType);
         }
     }
 
@@ -73,6 +74,7 @@ void SystemManager::UpdateDependenciesOrder()
     }
 
     m_taskflow = std::move(tf);
+    m_taskflow.dump(std::cout);
 }
 
 } // engine::ecs

@@ -8,7 +8,6 @@ file(GLOB_RECURSE SOURCE_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.h"
         )
 
-find_package(glm REQUIRED)
 find_package(glslang REQUIRED)
 find_package(spirv-cross REQUIRED)
 find_package(imgui REQUIRED)
@@ -27,7 +26,6 @@ target_link_libraries(RHI PUBLIC
                             spirv-cross::spirv-cross
                             glslang::glslang
                             glslang::SPIRV
-                            glm::glm
                             imgui::imgui
                             vulkan-headers::vulkan-headers
                             ${Vulkan_LIBRARY} 
