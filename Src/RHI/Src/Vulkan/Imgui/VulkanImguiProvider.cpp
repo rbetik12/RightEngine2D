@@ -58,10 +58,6 @@ VulkanImguiProvider::~VulkanImguiProvider()
 
 void VulkanImguiProvider::Begin()
 {
-    //auto renderPass = std::static_pointer_cast<VulkanRenderPass>(m_renderPass);
-
-    //std::static_pointer_cast<VulkanTexture>(renderPass->Descriptor().m_colorAttachments[0].m_texture)->ChangeImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
-
     ImGui_ImplVulkan_NewFrame();
 }
 

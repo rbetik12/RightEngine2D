@@ -18,6 +18,7 @@ class Sampler;
 class Texture;
 class RenderPass;
 class Pipeline;
+class GPUMaterial;
 
 class RHI_API Device : public core::NonCopyable
 {
@@ -31,6 +32,7 @@ public:
     virtual std::shared_ptr<Texture>            CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) = 0;
     virtual std::shared_ptr<RenderPass>         CreateRenderPass(const RenderPassDescriptor& desc) = 0;
     virtual std::shared_ptr<Pipeline>           CreatePipeline(const PipelineDescriptor& desc) = 0;
+    virtual std::shared_ptr<GPUMaterial>        CreateGPUMaterial(const std::shared_ptr<Shader>& shader) = 0;
 
     virtual void                                BeginFrame() = 0;
     virtual void                                EndFrame() = 0;
@@ -41,6 +43,7 @@ public:
     virtual void                                EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
     virtual void                                Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) = 0;
     virtual void                                Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
+    virtual void                                BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material, const std::shared_ptr<Pipeline>& pipeline) = 0;
 
     virtual void                                OnResize(uint32_t x, uint32_t y) = 0;
 

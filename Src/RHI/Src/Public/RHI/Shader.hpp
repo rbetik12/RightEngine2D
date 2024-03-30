@@ -14,17 +14,8 @@ public:
 
     const ShaderDescriptor& Descriptor() const { return m_descriptor; }
 
-    virtual void            SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot) = 0;
-    virtual void            SetBuffer(const std::shared_ptr<Buffer>& buffer,
-                                        uint8_t slot,
-                                        ShaderStage stage,
-                                        int offset = 0) = 0;
-
-    virtual void            Sync() = 0;
-
 protected:
     ShaderDescriptor    m_descriptor;
-    bool                m_dirty = false;
 
     Shader(const ShaderDescriptor& descriptor) : m_descriptor(descriptor)
     {}

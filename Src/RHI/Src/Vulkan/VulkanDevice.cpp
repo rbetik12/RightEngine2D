@@ -7,6 +7,7 @@
 #include "VulkanRenderPass.hpp"
 #include "VulkanPipeline.hpp"
 #include "VulkanHelpers.hpp"
+#include "VulkanGPUMaterial.hpp"
 #include <vk-tools/VulkanTools.h>
 #include <optional>
 
@@ -199,6 +200,7 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 VulkanDevice::~VulkanDevice()
 {
     vkDeviceWaitIdle(s_ctx.m_device);
+    VulkanGPUMaterial::Destroy();
     m_swapchain.reset();
 
     for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
@@ -255,6 +257,12 @@ std::shared_ptr<RenderPass> VulkanDevice::CreateRenderPass(const RenderPassDescr
 std::shared_ptr<Pipeline> VulkanDevice::CreatePipeline(const PipelineDescriptor& desc)
 {
     return std::make_shared<VulkanPipeline>(desc);
+}
+
+std::shared_ptr<GPUMaterial> VulkanDevice::CreateGPUMaterial(const std::shared_ptr<Shader>& shader)
+{
+    const auto vkShader = std::static_pointer_cast<VulkanShader>(shader);
+    return std::make_shared<VulkanGPUMaterial>(vkShader);
 }
 
 void VulkanDevice::BeginFrame()
@@ -327,17 +335,6 @@ void VulkanDevice::BeginComputePipeline(const std::shared_ptr<Pipeline>& pipelin
 
     const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipeline->GetPipeline());
-
-    const auto shader = std::static_pointer_cast<VulkanShader>(pipeline->Descriptor().m_shader);
-    if (const auto descriptorSet = shader->DesciptorSet())
-    {
-        vkCmdBindDescriptorSets(cmdBuffer,
-            VK_PIPELINE_BIND_POINT_COMPUTE,
-            vkPipeline->Layout(),
-            0, 1,
-            &descriptorSet
-            , 0, nullptr);
-    }
 }
 
 void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline)
@@ -455,17 +452,6 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
     const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline->GetPipeline());
 
-    const auto shader = std::static_pointer_cast<VulkanShader>(pipeline->Descriptor().m_shader);
-    if (const auto descriptorSet = shader->DesciptorSet())
-    {
-        vkCmdBindDescriptorSets(cmdBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            vkPipeline->Layout(),
-            0, 1,
-            &descriptorSet
-            , 0, nullptr);
-    }
-
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -526,6 +512,32 @@ void VulkanDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
 
     vkCmdDispatch(cmdBuffer, groupCountX, groupCountY, groupCountZ);
+}
+
+void VulkanDevice::BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material, const std::shared_ptr<Pipeline>& pipeline)
+{
+    const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
+    const auto vkMaterial = std::static_pointer_cast<VulkanGPUMaterial>(material);
+    const auto descSet = vkMaterial->DescriptorSet();
+
+    if (vkPipeline->Descriptor().m_compute)
+    {
+        vkCmdBindDescriptorSets(m_cmdBuffers[m_currentCmdBufferIndex],
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            vkPipeline->Layout(),
+            0, 1,
+            &descSet
+            , 0, nullptr);
+    }
+    else
+    {
+        vkCmdBindDescriptorSets(m_cmdBuffers[m_currentCmdBufferIndex],
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vkPipeline->Layout(),
+            0, 1,
+            &descSet
+            , 0, nullptr);
+    }
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)

@@ -262,8 +262,9 @@ ImguiService::~ImguiService()
 void ImguiService::Update(float dt)
 {
     PROFILER_CPU_ZONE;
-    auto& rs = Instance().Service<RenderService>();
 
+    auto& rs = Instance().Service<RenderService>();
+    
     ImGui_ImplGlfw_NewFrame();
     m_imguiProvider->SetRenderPass(rs.ImGuiPass());
     m_imguiProvider->Begin();
@@ -273,6 +274,7 @@ void ImguiService::Update(float dt)
 void ImguiService::PostUpdate(float dt)
 {
     PROFILER_CPU_ZONE;
+
     ImGui::Render();
     m_imguiProvider->End();
 }

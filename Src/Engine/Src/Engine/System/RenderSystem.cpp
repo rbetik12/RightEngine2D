@@ -38,18 +38,21 @@ RenderSystem::RenderSystem(ecs::World* world) : System(world)
 void RenderSystem::Update(float dt)
 {
     PROFILER_CPU_ZONE;
+
     auto& rs = Instance().Service<RenderService>();
 
     rs.BeginPass(rs.DefaultPipeline());
-
+    
     for (auto [e, mesh] : W()->View<MeshComponent>().each())
     {
         for (const auto& submesh : mesh.m_mesh->GetSubMeshList())
         {
+            ENGINE_ASSERT(mesh.m_material);
+            rs.BindMaterial(mesh.m_material, rs.DefaultPipeline());
             rs.Draw(submesh->VertexBuffer(), rs.DefaultPipeline()->VertexCount(submesh->VertexBuffer()));
         }
     }
-
+    
     rs.EndPass(rs.DefaultPipeline());
 }
 
