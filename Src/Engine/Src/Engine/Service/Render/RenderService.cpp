@@ -36,6 +36,10 @@ namespace engine
 
 struct RenderService::Impl
 {
+    std::shared_ptr<rhi::Device>            m_device;
+    std::shared_ptr<rhi::Sampler>           m_defaultSampler;
+    std::shared_ptr<rhi::IContext>          m_context;
+
     std::shared_ptr<rhi::ShaderCompiler>    m_shaderCompiler;
     std::shared_ptr<rhi::Buffer>            m_presentVB;
     std::shared_ptr<rhi::Texture>           m_texture;
@@ -44,7 +48,7 @@ struct RenderService::Impl
     std::shared_ptr<rhi::Pipeline>          m_presentPipeline;
 
     std::shared_ptr<rhi::Shader>            m_defaultShader;
-    std::unique_ptr<render::Material>       m_presentMaterial;
+    std::shared_ptr<render::Material>       m_presentMaterial;
 
     std::shared_ptr<rhi::RenderPass>        m_imguiRenderPass;
 
@@ -77,24 +81,19 @@ RenderService::RenderService()
 #endif
     initCtx.m_requiredExtensions = std::move(extensions);
 
-    m_context = rhi::vulkan::CreateContext(std::move(initCtx));
-    m_device = rhi::Device::Create(m_context);
+    m_impl->m_context = rhi::vulkan::CreateContext(std::move(initCtx));
+    m_impl->m_device = rhi::Device::Create(m_impl->m_context);
 
-    m_defaultSampler = m_device->CreateSampler({});
-    LoadSystemResources();
-
-    auto extent = Instance().Service<WindowService>().Extent();
-    OnWindowResize(extent.x, extent.y);
-    m_impl->m_newResolution = std::move(extent);
+    m_impl->m_defaultSampler = m_impl->m_device->CreateSampler({});
 }
 
 RenderService::~RenderService()
 {
-    m_device->WaitForIdle();
+    m_impl->m_device->WaitForIdle();
     m_impl.reset();
-    m_defaultSampler.reset();
-    m_device.reset();
-    m_context.reset();
+    m_impl->m_defaultSampler.reset();
+    m_impl->m_device.reset();
+    m_impl->m_context.reset();
 }
 
 void RenderService::Update(float dt)
@@ -106,12 +105,12 @@ void RenderService::Update(float dt)
         PROFILER_CPU_ZONE_NAME("Resize render resources");
 
         ENGINE_ASSERT(m_impl->m_newResolution != glm::ivec2());
-        m_device->WaitForIdle();
+        m_impl->m_device->WaitForIdle();
         CreateRenderResources(m_impl->m_newResolution.x, m_impl->m_newResolution.y);
         m_impl->m_resizeRequested = false;
     }
 
-    m_device->BeginFrame();
+    m_impl->m_device->BeginFrame();
 }
 
 void RenderService::PostUpdate(float dt)
@@ -119,90 +118,104 @@ void RenderService::PostUpdate(float dt)
     PROFILER_CPU_ZONE;
 
     BeginPass(m_impl->m_presentPipeline);
+    BindMaterial(m_impl->m_presentMaterial, m_impl->m_presentPipeline);
     Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
         m_impl->m_presentPipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
     EndPass(m_impl->m_presentPipeline);
 
-    m_device->EndFrame();
-    m_device->Present();
+    m_impl->m_device->EndFrame();
+    m_impl->m_device->Present();
 }
 
 RPtr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)
 {
-    return m_device->CreateShaderCompiler(options);
+    return m_impl->m_device->CreateShaderCompiler(options);
 }
 
 RPtr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescriptor& desc, const void* data)
 {
     ENGINE_ASSERT(!desc.m_name.empty());
 
-    return m_device->CreateBuffer(desc, data);
+    return m_impl->m_device->CreateBuffer(desc, data);
 }
 
 RPtr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler, const void* data)
 {
     if (sampler)
     {
-        return m_device->CreateTexture(desc, sampler, data);
+        return m_impl->m_device->CreateTexture(desc, sampler, data);
     }
-    return m_device->CreateTexture(desc, m_defaultSampler, data);
+    return m_impl->m_device->CreateTexture(desc, m_impl->m_defaultSampler, data);
 }
 
 RPtr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
 {
     ENGINE_ASSERT(!desc.m_name.empty());
 
-    return m_device->CreateShader(desc);
+    return m_impl->m_device->CreateShader(desc);
 }
 
 RPtr<rhi::Sampler> RenderService::CreateSampler(const rhi::SamplerDescriptor& desc)
 {
-    return m_device->CreateSampler(desc);
+    return m_impl->m_device->CreateSampler(desc);
 }
 
 RPtr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::RenderPassDescriptor& desc)
 {
-    return m_device->CreateRenderPass(desc);
+    return m_impl->m_device->CreateRenderPass(desc);
 }
 
 RPtr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
 {
-    return m_device->CreatePipeline(desc);
+    return m_impl->m_device->CreatePipeline(desc);
+}
+
+RPtr<rhi::GPUMaterial> RenderService::CreateGPUMaterial(const std::shared_ptr<rhi::Shader>& shader)
+{
+    return m_impl->m_device->CreateGPUMaterial(shader);
 }
 
 void RenderService::BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_device->BeginPipeline(pipeline);
+    m_impl->m_device->BeginPipeline(pipeline);
 }
 
 void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_device->EndPipeline(pipeline);
+    m_impl->m_device->EndPipeline(pipeline);
 }
 
 void RenderService::BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_device->BeginComputePipeline(pipeline);
+    m_impl->m_device->BeginComputePipeline(pipeline);
 }
 
 void RenderService::EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_device->BeginComputePipeline(pipeline);
+    m_impl->m_device->BeginComputePipeline(pipeline);
 }
 
 void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
 {
-    m_device->Draw(buffer, vertexCount, instanceCount);
+    m_impl->m_device->Draw(buffer, vertexCount, instanceCount);
 }
 
 void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
-    m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
+    m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+void RenderService::BindMaterial(const std::shared_ptr<render::Material>& material, const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    if (const auto gpuMaterial = material->GPUMaterial())
+    {
+        m_impl->m_device->BindGPUMaterial(material->GPUMaterial(), pipeline);
+    }
 }
 
 void RenderService::WaitAll()
 {
-    m_device->WaitForIdle();
+    m_impl->m_device->WaitForIdle();
 }
 
 void RenderService::OnResize(uint32_t width, uint32_t height)
@@ -219,7 +232,7 @@ void RenderService::OnWindowResize(uint32_t width, uint32_t height)
 {
     PROFILER_CPU_ZONE;
 
-    m_device->OnResize(width, height);
+    m_impl->m_device->OnResize(width, height);
     CreateWindowResources(width, height);
 
     if ((Instance().Cfg().m_domain & Domain::EDITOR) != Domain::EDITOR)

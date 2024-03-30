@@ -71,6 +71,7 @@ public:
     virtual std::shared_ptr<Texture>            CreateTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data = {}) override;
     virtual std::shared_ptr<RenderPass>         CreateRenderPass(const RenderPassDescriptor& desc) override;
     virtual std::shared_ptr<Pipeline>           CreatePipeline(const PipelineDescriptor& desc) override;
+    virtual std::shared_ptr<GPUMaterial>        CreateGPUMaterial(const std::shared_ptr<Shader>& shader) override;
 
     virtual void                            BeginFrame() override;
     virtual void                            EndFrame() override;
@@ -81,6 +82,7 @@ public:
     virtual void                            EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) override;
     virtual void                            Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
+    virtual void                            BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material, const std::shared_ptr<Pipeline>& pipeline) override;
 
     virtual void                            OnResize(uint32_t x, uint32_t y) override;
 

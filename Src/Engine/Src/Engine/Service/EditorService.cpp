@@ -76,43 +76,44 @@ void EditorService::Update(float dt)
 
     auto& rs = Instance().Service<RenderService>();
     auto& is = Instance().Service<ImguiService>();
-
+    
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("General"))
         {
             bool shouldShutdownEngine = false;
             ImGui::MenuItem("Exit", nullptr, &shouldShutdownEngine);
-
+    
             if (shouldShutdownEngine)
             {
                 Instance().Stop();
             }
-
+    
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
-
+    
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-
+    
     ImGui::Begin("Viewport");
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
+    
     if (!core::math::almostEqual(m_impl->m_viewportSize.x, viewportSize.x) || !core::math::almostEqual(m_impl->m_viewportSize.y, viewportSize.y))
     {
         m_impl->m_viewportSize = { viewportSize.x, viewportSize.y };
         rs.OnResize(static_cast<uint32_t>(m_impl->m_viewportSize.x), static_cast<uint32_t>(m_impl->m_viewportSize.y));
     }
-
+    
     is.Image(rs.BasicPass()->Descriptor().m_colorAttachments[0].m_texture, m_impl->m_viewportSize);
-
+    
     ImGui::End();
-
+    
     ImGui::Begin("Test", nullptr);
     ImGui::End();
 
     rs.BeginComputePass(m_impl->m_computePipeline);
+    rs.BindMaterial(m_impl->m_equrectangleMaterial, m_impl->m_computePipeline);
     rs.Dispatch(m_impl->m_envCubMap->Width() / 32, m_impl->m_envCubMap->Height() / 32, 6);
     rs.EndComputePass(m_impl->m_computePipeline);
 }

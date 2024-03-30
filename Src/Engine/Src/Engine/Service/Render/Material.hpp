@@ -19,6 +19,7 @@ public:
     Material(const std::shared_ptr<rhi::Shader>& shader);
 
     const std::shared_ptr<rhi::Shader>& Shader() { return m_shader; }
+    const std::shared_ptr<rhi::GPUMaterial>& GPUMaterial() { return m_gpuMaterial; }
 
     template<typename T>
     inline void SetBuffer(T& bufferObject, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0)
@@ -54,9 +55,9 @@ public:
 private:
     struct BufferInfo
     {
-        rttr::variant                    m_cpuBuffer;
+        rttr::variant                   m_cpuBuffer;
         std::shared_ptr<rhi::Buffer>    m_gpuBuffer;
-        int                                m_offset = 0;
+        int                             m_offset = 0;
         rhi::ShaderStage                m_stage = rhi::ShaderStage::NONE;
     };
 
@@ -70,6 +71,7 @@ private:
     eastl::vector<eastl::pair<uint8_t, BufferInfo>>  m_pendingBuffers;
     eastl::vector<eastl::pair<uint8_t, TextureInfo>> m_pendingTextures;
     std::shared_ptr<rhi::Shader>                     m_shader;
+    std::shared_ptr<rhi::GPUMaterial>                m_gpuMaterial;
     bool                                             m_dirty;
 };
 

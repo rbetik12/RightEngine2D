@@ -1,9 +1,11 @@
-#include <engine/Service/Render/Material.hpp>
+#include <Engine/Service/Render/Material.hpp>
+#include <Engine/Service/Render/RenderService.hpp>
+#include <RHI/GPUMaterial.hpp>
 
 namespace
 {
-    constexpr int C_MAX_SHADER_BUFFER_AMOUNT = 16;
-    constexpr int C_MAX_SHADER_TEXTURE_AMOUNT = 16;
+constexpr int C_MAX_SHADER_BUFFER_AMOUNT = 16;
+constexpr int C_MAX_SHADER_TEXTURE_AMOUNT = 16;
 } // unnamed
 
 namespace engine::render
@@ -33,20 +35,25 @@ void Material::Sync()
     }
     m_dirty = false;
 
+    if (!m_gpuMaterial)
+    {
+        auto& rs = Instance().Service<RenderService>();
+        m_gpuMaterial = rs.CreateGPUMaterial(m_shader);
+    }
 
     for (auto&& [slot, buffer] : m_pendingBuffers)
     {
-        m_shader->SetBuffer(buffer.m_gpuBuffer, slot, buffer.m_stage, buffer.m_offset);
+        m_gpuMaterial->SetBuffer(buffer.m_gpuBuffer, slot, buffer.m_stage, buffer.m_offset);
         m_buffers[slot] = std::move(buffer);
     }
 
     for (auto&& [slot, texture] : m_pendingTextures)
     {
-        m_shader->SetTexture(texture.m_texture, slot);
+        m_gpuMaterial->SetTexture(texture.m_texture, slot);
         m_textures[slot] = std::move(texture);
     }
 
-    m_shader->Sync();
+    m_gpuMaterial->Sync();
 
     m_pendingBuffers.clear();
     m_pendingTextures.clear();

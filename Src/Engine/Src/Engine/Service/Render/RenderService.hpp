@@ -6,6 +6,11 @@
 namespace engine
 {
 
+namespace render
+{
+class Material;
+} // render
+
 template<typename T>
 using RPtr = std::shared_ptr<T>;
 
@@ -26,6 +31,7 @@ public:
     RPtr<rhi::Sampler>          CreateSampler(const rhi::SamplerDescriptor& desc);
     RPtr<rhi::RenderPass>       CreateRenderPass(const rhi::RenderPassDescriptor& desc);
     RPtr<rhi::Pipeline>         CreatePipeline(const rhi::PipelineDescriptor& desc);
+    RPtr<rhi::GPUMaterial>      CreateGPUMaterial(const std::shared_ptr<rhi::Shader>& shader);
 
     void                        BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
@@ -33,6 +39,7 @@ public:
     void                        EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
     void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+    void                        BindMaterial(const std::shared_ptr<render::Material>& material, const std::shared_ptr<rhi::Pipeline>& pipeline);
 
     void                        WaitAll();
     void                        OnResize(uint32_t width, uint32_t height);
@@ -43,12 +50,14 @@ public:
     void                        OnWindowResize(uint32_t width, uint32_t height);
 
     // TODO: Should be removed after all material and passes systems will be done
-    const RPtr<rhi::RenderPass>& BasicPass() const;
-    const RPtr<rhi::RenderPass>& ImGuiPass() const;
+    const RPtr<rhi::RenderPass>&        BasicPass() const;
+    const RPtr<rhi::RenderPass>&        ImGuiPass() const;
 
-    const RPtr<rhi::ShaderCompiler>& ShaderCompiler() const;
-    const RPtr<rhi::Shader>&    DefaultShader() const;
-    const RPtr<rhi::Pipeline>&  DefaultPipeline() const;
+    const RPtr<rhi::ShaderCompiler>&    ShaderCompiler() const;
+    const RPtr<rhi::Shader>&            DefaultShader() const;
+    const RPtr<rhi::Pipeline>&          DefaultPipeline() const;
+
+    friend class Engine;
 
 private:
     struct Impl;
@@ -57,10 +66,7 @@ private:
     void                        CreateWindowResources(uint32_t width, uint32_t height);
     void                        LoadSystemResources();
 
-    std::shared_ptr<rhi::Device>    m_device;
-    std::shared_ptr<rhi::Sampler>   m_defaultSampler;
-    std::shared_ptr<rhi::IContext>  m_context;
-    std::unique_ptr<Impl>           m_impl;
+    std::unique_ptr<Impl> m_impl;
 };
 
 } // engine
