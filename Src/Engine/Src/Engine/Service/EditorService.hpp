@@ -20,6 +20,8 @@ public:
 
     void Initialize();
 
+    glm::ivec2 ViewportSize() const;
+
 private:
     std::unique_ptr<Impl> m_impl;
 };

@@ -30,12 +30,12 @@ public:
 
     void            Update();
 
-    uuids::uuid        CreateEntity(std::string_view name = "");
+    uuids::uuid     CreateEntity(std::string_view name = "");
     void            RemoveEntity(const uuids::uuid& uuid);
     void            RemoveEntity(entt::entity e);
 
     template<typename T, typename... Args>
-    T& AddComponent(const uuids::uuid& uuid, Args&&... args)
+    T&              AddComponent(const uuids::uuid& uuid, Args&&... args)
     {
         const auto it = m_uuidToEntity.find(uuid);
         ENGINE_ASSERT(it != m_uuidToEntity.end());
@@ -44,7 +44,7 @@ public:
     }
 
     template<typename T, typename... Args>
-    T&                AddComponent(entt::entity e, Args&&... args)
+    T&              AddComponent(entt::entity e, Args&&... args)
     {
         static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
         ENGINE_ASSERT(rttr::type::get<T>().get_constructor().is_valid());
@@ -54,7 +54,7 @@ public:
     }
 
     template<typename T>
-    T&                RemoveComponent(entt::entity e)
+    T&              RemoveComponent(entt::entity e)
     {
         static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
         ENGINE_ASSERT(m_registry.try_get<T>());
@@ -64,7 +64,7 @@ public:
     }
 
     template<typename T>
-    T& RemoveComponent(const uuids::uuid& uuid)
+    T&              RemoveComponent(const uuids::uuid& uuid)
     {
         const auto it = m_uuidToEntity.find(uuid);
         ENGINE_ASSERT(it != m_uuidToEntity.end());
@@ -78,11 +78,11 @@ private:
     entt::registry                                    m_registry;
     World*                                            m_world;
     std::mutex                                        m_mutex;
-    eastl::vector_map<entt::entity, EntityInfo>        m_entities;
-    eastl::vector_map<uuids::uuid, entt::entity>    m_uuidToEntity;
-    eastl::vector<EntityInfo>                        m_pendingCreateEntities;
-    eastl::vector<entt::entity>                        m_pendingDeleteEntities;
-    eastl::vector<entt::entity>                        m_pendingAddComponent;
+    eastl::vector_map<entt::entity, EntityInfo>       m_entities;
+    eastl::vector_map<uuids::uuid, entt::entity>      m_uuidToEntity;
+    eastl::vector<EntityInfo>                         m_pendingCreateEntities;
+    eastl::vector<entt::entity>                       m_pendingDeleteEntities;
+    eastl::vector<entt::entity>                       m_pendingAddComponent;
 };
 
 } // engine::ecs

@@ -2,10 +2,12 @@
 #include <Engine/Service/Render/Material.hpp>
 #include <Engine/Service/Window/WindowService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
+#include <Engine/Service/Imgui/ImguiService.hpp>
+#include <Engine/Service/EditorService.hpp>
+#include <Engine/System/RenderSystem.hpp>
 #include <Engine/Engine.hpp>
 #include <RHI/Pipeline.hpp>
-
-#include "Engine/Service/Imgui/ImguiService.hpp"
+#include <RHI/GPUMaterial.hpp>
 
 RTTR_REGISTRATION
 {
@@ -40,7 +42,6 @@ struct RenderService::Impl
     std::shared_ptr<rhi::Sampler>           m_defaultSampler;
     std::shared_ptr<rhi::IContext>          m_context;
 
-    std::shared_ptr<rhi::ShaderCompiler>    m_shaderCompiler;
     std::shared_ptr<rhi::Buffer>            m_presentVB;
     std::shared_ptr<rhi::Texture>           m_texture;
     std::shared_ptr<rhi::RenderPass>        m_renderPass;
@@ -48,6 +49,7 @@ struct RenderService::Impl
     std::shared_ptr<rhi::Pipeline>          m_presentPipeline;
 
     std::shared_ptr<rhi::Shader>            m_defaultShader;
+    std::shared_ptr<render::Material>       m_defaultMaterial;
     std::shared_ptr<render::Material>       m_presentMaterial;
 
     std::shared_ptr<rhi::RenderPass>        m_imguiRenderPass;
@@ -200,6 +202,11 @@ void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t ve
     m_impl->m_device->Draw(buffer, vertexCount, instanceCount);
 }
 
+void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& vb, const std::shared_ptr<rhi::Buffer>& ib, uint32_t instanceCount)
+{
+    m_impl->m_device->Draw(vb, ib, ib->Descriptor().m_size / sizeof(uint32_t), instanceCount);
+}
+
 void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
     m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
@@ -211,6 +218,11 @@ void RenderService::BindMaterial(const std::shared_ptr<render::Material>& materi
     {
         m_impl->m_device->BindGPUMaterial(material->GPUMaterial(), pipeline);
     }
+}
+
+void RenderService::PushConstant(const void* data, uint32_t size, const std::shared_ptr<rhi::Pipeline>& pipeline)
+{
+    m_impl->m_device->PushConstant(data, size, pipeline);
 }
 
 void RenderService::WaitAll()
@@ -241,6 +253,23 @@ void RenderService::OnWindowResize(uint32_t width, uint32_t height)
     }
 }
 
+// TODO: Reconsider that method, maybe we can do that in a better way
+glm::ivec2 RenderService::ViewportSize() const
+{
+    if ((Instance().Cfg().m_domain & engine::Domain::EDITOR) == engine::Domain::EDITOR)
+    {
+        return Instance().Service<EditorService>().ViewportSize();
+    }
+
+    if ((Instance().Cfg().m_domain & engine::Domain::CLIENT) == engine::Domain::CLIENT)
+    {
+        return Instance().Service<WindowService>().Extent();
+    }
+
+    ENGINE_ASSERT(false);
+    return {};
+}
+
 const RPtr<rhi::RenderPass>& RenderService::BasicPass() const
 {
     return m_impl->m_renderPass;
@@ -251,14 +280,14 @@ const RPtr<rhi::RenderPass>& RenderService::ImGuiPass() const
     return m_impl->m_imguiRenderPass;
 }
 
-const RPtr<rhi::ShaderCompiler>& RenderService::ShaderCompiler() const
-{
-    return m_impl->m_shaderCompiler;
-}
-
 const RPtr<rhi::Shader>& RenderService::DefaultShader() const
 {
     return m_impl->m_defaultShader;
+}
+
+const RPtr<render::Material>& RenderService::DefaultMaterial() const
+{
+    return m_impl->m_defaultMaterial;
 }
 
 const RPtr<rhi::Pipeline>& RenderService::DefaultPipeline() const
@@ -344,33 +373,24 @@ void RenderService::CreateWindowResources(uint32_t width, uint32_t height)
 
 void RenderService::LoadSystemResources()
 {
-    auto& vfs = Instance().Service<io::VirtualFilesystemService>();
+    auto& resourceService = Instance().Service<ResourceService>();
 
-    m_impl->m_shaderCompiler = CreateShaderCompiler();
+    const auto renderMaterialPath = "/System/Materials/basic_3d.material";
+    const auto renderMaterial = resourceService.Load<MaterialResource>(renderMaterialPath);
 
-    const auto shaderPath = "/System/Shaders/basic.glsl";
-    const auto compiledShader = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(shaderPath)).generic_u8string());
+    renderMaterial->Wait();
+    renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
+    renderMaterial->Material()->Sync();
 
-    rhi::ShaderDescriptor shaderDescriptor;
-    shaderDescriptor.m_path = shaderPath;
-    shaderDescriptor.m_name = "Basic";
-    shaderDescriptor.m_blobByStage = compiledShader.m_stageBlob;
-    shaderDescriptor.m_reflection = compiledShader.m_reflection;
-    shaderDescriptor.m_type = rhi::ShaderType::FX;
+    const auto presentMaterialPath = "/System/Materials/present.material";
+    const auto presentMaterial = resourceService.Load<MaterialResource>(presentMaterialPath);
 
-    m_impl->m_defaultShader = CreateShader(shaderDescriptor);
+    auto& materialLoader = resourceService.GetLoader<MaterialLoader>();
+    const auto& pipeline = materialLoader.Pipeline(renderMaterial);
 
-    const auto presentShaderPath = "/System/Shaders/present.glsl";
-    const auto presentShaderData = m_impl->m_shaderCompiler->Compile(vfs.Absolute(io::fs::path(presentShaderPath)).generic_u8string());
-
-    rhi::ShaderDescriptor presentShaderDesc{};
-    presentShaderDesc.m_path = presentShaderPath;
-    presentShaderDesc.m_blobByStage = presentShaderData.m_stageBlob;
-    presentShaderDesc.m_name = "Present";
-    presentShaderDesc.m_type = rhi::ShaderType::FX;
-    presentShaderDesc.m_reflection = presentShaderData.m_reflection;
-
-    const auto presentShader = CreateShader(presentShaderDesc);
+    presentMaterial->Wait();
+    presentMaterial->Material()->SetTexture(pipeline->Descriptor().m_pass->Descriptor().m_colorAttachments[0].m_texture, 0);
+    presentMaterial->Material()->Sync();
 
     rhi::BufferDescriptor presentVBDesc{};
     presentVBDesc.m_size = sizeof(presentVBRaw[0]) * static_cast<uint32_t>(presentVBRaw.size());
@@ -380,7 +400,7 @@ void RenderService::LoadSystemResources()
 
     m_impl->m_presentVB = CreateBuffer(presentVBDesc, presentVBRaw.data());
 
-    m_impl->m_presentMaterial = std::make_unique<render::Material>(presentShader);
+    __debugbreak();
 }
 
 } // engine

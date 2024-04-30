@@ -13,6 +13,7 @@
 #include <Engine/Registration.hpp>
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/Filesystem/VirtualFilesystemService.hpp>
+#include <Engine/Service/Resource/ResourceService.hpp>
 
 #include <glm/vec4.hpp>
 #include <glm/vec3.hpp>

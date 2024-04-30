@@ -240,8 +240,9 @@ core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std
 
     if (!glslang_shader_preprocess(shader, &input))
     {
-        rhi::log::error("[glslang] Shader {} preprocessing failed.\n{}\n{}",
+        rhi::log::error("[glslang] Shader '{}' preprocessing at stage '{}' failed.\n{}\n{}",
                                 path,
+                                ShaderStageToString(stage),
                                 glslang_shader_get_info_log(shader),
                                 glslang_shader_get_info_debug_log(shader));
         glslang_shader_delete(shader);
@@ -250,8 +251,9 @@ core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std
 
     if (!glslang_shader_parse(shader, &input))
     {
-        rhi::log::error("[glslang] Shader {} parsing failed.\n{}\n{}",
+        rhi::log::error("[glslang] Shader '{}' parsing at stage '{}' failed.\n{}\n{}",
                                 path,
+                                ShaderStageToString(stage),
                                 glslang_shader_get_info_log(shader),
                                 glslang_shader_get_info_debug_log(shader));
         glslang_shader_delete(shader);
@@ -263,8 +265,9 @@ core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std
 
     if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
     {
-        rhi::log::error("[glslang] Shader {} linking failed.\n{}\n{}",
+        rhi::log::error("[glslang] Shader '{}' linking at stage '{}' failed.\n{}\n{}",
                                 path,
+                                ShaderStageToString(stage),
                                 glslang_program_get_info_log(program),
                                 glslang_program_get_info_debug_log(program));
         glslang_program_delete(program);
@@ -303,9 +306,10 @@ ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlo
     {
         auto& name = uniformBuffer.name;
         const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(uniformBuffer.id, spv::DecorationBinding));
+        const auto size = static_cast<uint32_t>(spirvCompiler.get_declared_struct_size(spirvCompiler.get_type(uniformBuffer.base_type_id)));
 
         RHI_ASSERT(reflectionData.m_bufferMap.find(slot) == reflectionData.m_bufferMap.end());
-        reflectionData.m_bufferMap[slot] = { rhi::BufferType::UNIFORM, stage, std::move(name) };
+        reflectionData.m_bufferMap[slot] = { std::move(name), size, rhi::BufferType::UNIFORM, stage, };
     }
 
     for (auto& texture : res.sampled_images)
@@ -334,6 +338,19 @@ ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlo
         RHI_ASSERT(reflectionData.m_storageImages.find(texData) == reflectionData.m_storageImages.end());
         reflectionData.m_storageImages.emplace(std::move(texData));
     }
+
+    for (auto& buffer : res.push_constant_buffers)
+    {
+        ShaderReflection::BufferInfo bufferInfo;
+        bufferInfo.m_name = buffer.name;
+        bufferInfo.m_stage = stage;
+        bufferInfo.m_type = BufferType::CONSTANT;
+
+        RHI_ASSERT(reflectionData.m_pushConstant.m_name.empty());
+        reflectionData.m_pushConstant = std::move(bufferInfo);
+    }
+
+    reflectionData.m_outputAmount = static_cast<uint8_t>(res.stage_outputs.size());
 
     if (stage == ShaderStage::VERTEX)
     {
@@ -561,6 +578,17 @@ ShaderReflection VulkanShaderCompiler::MergeReflection(const ReflectionMap& refl
         mergedReflection.m_inputLayout = reflection.m_inputLayout;
         hasInputLayout = true;
     }
+
+    if (const auto it = reflectionMap.find(ShaderStage::VERTEX); it != reflectionMap.end())
+    {
+        mergedReflection.m_pushConstant = it->second.m_pushConstant;
+    }
+
+    if (const auto it = reflectionMap.find(ShaderStage::FRAGMENT); it != reflectionMap.end())
+    {
+        mergedReflection.m_outputAmount = it->second.m_outputAmount;
+    }
+
     return mergedReflection;
 }
 

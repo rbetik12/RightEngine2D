@@ -57,4 +57,14 @@ struct hash<std::filesystem::path>
     }
 };
 
+template <typename T>
+struct hash<std::shared_ptr<T>>
+{
+public:
+    inline size_t operator()(const std::shared_ptr<T>& value) const
+    {
+        return hash<size_t>()(reinterpret_cast<size_t>(value.get()));
+    }
+};
+
 } // eastl

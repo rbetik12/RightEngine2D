@@ -507,6 +507,30 @@ void VulkanDevice::Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCo
     vkCmdDraw(cmdBuffer, vertexCount, instanceCount, 0, 0);
 }
 
+void VulkanDevice::Draw(const std::shared_ptr<Buffer>& vb, const std::shared_ptr<Buffer>& ib, uint32_t indexCount,
+    uint32_t instanceCount)
+{
+    RHI_ASSERT(vb->Descriptor().m_type == BufferType::VERTEX);
+    RHI_ASSERT(ib->Descriptor().m_type == BufferType::INDEX);
+
+    const auto vkVertexBuffer = std::static_pointer_cast<VulkanBuffer>(vb);
+    const auto vkIndexBuffer = std::static_pointer_cast<VulkanBuffer>(ib);
+    VkBuffer vertexBuffers[] = { vkVertexBuffer->Raw() };
+    VkDeviceSize offsets[] = { 0 };
+
+    auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
+
+    vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(cmdBuffer, vkIndexBuffer->Raw(), 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdDrawIndexed(cmdBuffer,
+        indexCount,
+        instanceCount,
+        0,
+        0,
+        0);
+}
+
 void VulkanDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
@@ -538,6 +562,16 @@ void VulkanDevice::BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material,
             &descSet
             , 0, nullptr);
     }
+}
+
+void VulkanDevice::PushConstant(const void* data, uint32_t size, const std::shared_ptr<Pipeline>& pipeline)
+{
+    vkCmdPushConstants(m_cmdBuffers[m_currentCmdBufferIndex],
+        std::static_pointer_cast<VulkanPipeline>(pipeline)->Layout(),
+        VK_SHADER_STAGE_VERTEX_BIT,
+        0,
+        size,
+        data);
 }
 
 void VulkanDevice::FillSwapchainSupportDetails(const std::shared_ptr<VulkanContext>& context)

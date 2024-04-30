@@ -81,8 +81,10 @@ public:
     virtual void                            BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) override;
+    virtual void                            Draw(const std::shared_ptr<Buffer>& vb, const std::shared_ptr<Buffer>& ib, uint32_t indexCount, uint32_t instanceCount) override;
     virtual void                            Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
     virtual void                            BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material, const std::shared_ptr<Pipeline>& pipeline) override;
+    virtual void                            PushConstant(const void* data, uint32_t size, const std::shared_ptr<Pipeline>& pipeline) override;
 
     virtual void                            OnResize(uint32_t x, uint32_t y) override;
 
