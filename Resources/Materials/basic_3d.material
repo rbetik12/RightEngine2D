@@ -1,0 +1,19 @@
+{
+    "name": "basic_3d",
+    "version": 0,
+    "shader": "/System/Shaders/basic_3d.glsl",
+    "offscreen": false,
+    "depthCompareOp": "LESS",
+    "cullMode": "BACK",
+    "attachments": [
+        {
+            "loadOperation": "CLEAR",
+            "storeOperation": "STORE"
+        }
+    ],
+    "depthAttachment": 
+    {
+        "loadOperation": "CLEAR",
+        "storeOperation": "STORE"
+    }
+}

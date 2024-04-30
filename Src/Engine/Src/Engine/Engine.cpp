@@ -11,6 +11,7 @@
 #include <Engine/Service/Resource/ResourceService.hpp>
 #include <Engine/Service/Resource/TextureResource.hpp>
 #include <Engine/Service/Resource/MeshResource.hpp>
+#include <Engine/Service/Resource/MaterialResource.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -72,28 +73,29 @@ Engine::Engine(int argCount, char* argPtr[])
     m_serviceManager->RegisterService<ThreadService>();
     m_serviceManager->RegisterService<WindowService>();
     m_serviceManager->RegisterService<RenderService>();
+    m_serviceManager->RegisterService<ResourceService>();
+
+    auto& resourceService = m_serviceManager->Service<ResourceService>();
+    resourceService.RegisterLoader<TextureLoader>();
+    resourceService.RegisterLoader<MeshLoader>();
+    resourceService.RegisterLoader<MaterialLoader>();
+
+    m_serviceManager->RegisterService<EditorService>();
 
     // We need to move render service initialization here,
     // because we can't load materials before render service is registered
     {
         PROFILER_CPU_ZONE_NAME("Load render services resources");
-        auto& rs = m_serviceManager->Service<RenderService>();
+        auto& renderService = m_serviceManager->Service<RenderService>();
 
-        rs.LoadSystemResources();
+        renderService.LoadSystemResources();
 
         auto extent = Instance().Service<WindowService>().Extent();
-        rs.OnWindowResize(extent.x, extent.y);
-        rs.OnResize(extent.x, extent.y);
+        renderService.OnWindowResize(extent.x, extent.y);
+        renderService.OnResize(extent.x, extent.y);
     }
 
-    m_serviceManager->RegisterService<ResourceService>();
-
-    auto& rs = m_serviceManager->Service<ResourceService>();
-    rs.RegisterLoader<TextureLoader>();
-    rs.RegisterLoader<MeshLoader>();
-
     m_serviceManager->RegisterService<ImguiService>();
-    m_serviceManager->RegisterService<EditorService>();
     m_serviceManager->RegisterService<WorldService>();
 
     m_running = true;

@@ -1,0 +1,5 @@
+{
+    "name": "basic",
+    "version": 0,
+    "shader": "/System/Shaders/basic.glsl"
+}

@@ -21,8 +21,9 @@ public:
 	Resource(const io::fs::path& path);
 	virtual ~Resource() {}
 
-	const io::fs::path& SourcePath() const { return m_srcPath; }
-	bool				Ready() const { return m_status == Status::READY; }
+	const io::fs::path&		SourcePath() const { return m_srcPath; }
+	bool					Ready() const { return m_status == Status::READY; }
+	void					Wait() const { while(!Ready()); }
 
 protected:
 	io::fs::path	m_srcPath;

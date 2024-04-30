@@ -45,9 +45,10 @@ struct ShaderReflection
 {
     struct BufferInfo
     {
+        std::string     m_name;
+        uint32_t        m_size = 0;
         BufferType      m_type;
         ShaderStage     m_stage = ShaderStage::NONE;
-        std::string     m_name;
     };
 
     struct TextureInfo
@@ -66,9 +67,13 @@ struct ShaderReflection
 
     BufferMap           m_bufferMap;
     BufferMap           m_storageBufferMap;
+    // Only in vertex shader now
+    BufferInfo          m_pushConstant;
     TextureList         m_textures;
     TextureList         m_storageImages;
     VertexBufferLayout  m_inputLayout;
+    // Only in fragment shader now
+    uint8_t             m_outputAmount;
 };
 
 struct ShaderDescriptor

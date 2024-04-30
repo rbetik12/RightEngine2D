@@ -5,6 +5,15 @@
 #include <RHI/Pipeline.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+namespace
+{
+
+constexpr float         C_MOUSE_SENSITIVITY = 0.25f;
+constexpr float         C_EDITOR_CAMERA_SPEED = 40.0f;
+constexpr glm::vec3     C_WORLD_UP = glm::vec3(0, 1, 0);
+
+} // unnamed
+
 RTTR_REGISTRATION
 {
     using namespace engine::ecs;
@@ -17,16 +26,9 @@ RTTR_REGISTRATION
 
     engine::registration::Component<engine::MeshComponent>(Component::Type::ENGINE, "engine::MeshComponent");
     engine::registration::Component<engine::CameraComponent>(Component::Type::ENGINE, "engine::CameraComponent");
+
+    engine::registration::Class<engine::CameraUB>("engine::CameraUB");
 }
-
-namespace
-{
-
-constexpr float         C_MOUSE_SENSITIVITY = 0.25f;
-constexpr float         C_EDITOR_CAMERA_SPEED = 40.0f;
-constexpr glm::vec3     C_WORLD_UP = glm::vec3(0, 1, 0);
-
-} // unnamed
 
 namespace engine
 {
@@ -39,13 +41,26 @@ void RenderSystem::Update(float dt)
 {
     PROFILER_CPU_ZONE;
 
+    CameraUB cameraUB{};
+
+    for (const auto [e, c, t] : W()->View<CameraComponent, TransformComponent>())
+    {
+        if (!c.m_active)
+        {
+            continue;
+        }
+
+        cameraUB.m_position = glm::vec4(t.m_position, 1.0f);
+        cameraUB.m_projView = c.m_projView;
+    }
+
     auto& rs = Instance().Service<RenderService>();
 
     rs.BeginPass(rs.DefaultPipeline());
     
-    for (auto [e, mesh] : W()->View<MeshComponent>().each())
+    for (const auto [e, mesh, t] : W()->View<MeshComponent, TransformComponent>())
     {
-        for (const auto& submesh : mesh.m_mesh->GetSubMeshList())
+        for (const auto& submesh : mesh.m_mesh->Mesh()->GetSubMeshList())
         {
             ENGINE_ASSERT(mesh.m_material);
             rs.BindMaterial(mesh.m_material, rs.DefaultPipeline());
@@ -66,7 +81,7 @@ void CameraSystem::Update(float dt)
 
     auto& windowService = Instance().Service<WindowService>();
 
-    for (auto [e, c, t] : W()->View<CameraComponent, TransformComponent>().each())
+    for (auto [e, c, t] : W()->View<CameraComponent, TransformComponent>())
     {
         if (!c.m_active)
         {

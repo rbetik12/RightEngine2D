@@ -16,7 +16,7 @@ using RPtr = std::shared_ptr<T>;
 
 class ENGINE_API RenderService final : public IService
 {
-    RTTR_ENABLE(IService);
+    RTTR_ENABLE(IService)
 public:
     RenderService();
     virtual ~RenderService() override;
@@ -38,8 +38,10 @@ public:
     void                        BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
+    void                        Draw(const std::shared_ptr<rhi::Buffer>& vb, const std::shared_ptr<rhi::Buffer>& ib, uint32_t instanceCount = 1);
     void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
     void                        BindMaterial(const std::shared_ptr<render::Material>& material, const std::shared_ptr<rhi::Pipeline>& pipeline);
+    void                        PushConstant(const void* data, uint32_t size, const std::shared_ptr<rhi::Pipeline>& pipeline);
 
     void                        WaitAll();
     void                        OnResize(uint32_t width, uint32_t height);
@@ -49,12 +51,14 @@ public:
     // Don't call it manually unless you really know what are you doing!!!
     void                        OnWindowResize(uint32_t width, uint32_t height);
 
+    glm::ivec2                  ViewportSize() const;
+
     // TODO: Should be removed after all material and passes systems will be done
     const RPtr<rhi::RenderPass>&        BasicPass() const;
     const RPtr<rhi::RenderPass>&        ImGuiPass() const;
 
-    const RPtr<rhi::ShaderCompiler>&    ShaderCompiler() const;
     const RPtr<rhi::Shader>&            DefaultShader() const;
+    const RPtr<render::Material>&       DefaultMaterial() const;
     const RPtr<rhi::Pipeline>&          DefaultPipeline() const;
 
     friend class Engine;

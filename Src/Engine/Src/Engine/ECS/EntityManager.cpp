@@ -1,4 +1,5 @@
 #include <Engine/ECS/EntityManager.hpp>
+#include <Engine/System/TransformSystem.hpp>
 #include <Core/Profiling.hpp>
 
 namespace engine::ecs
@@ -54,6 +55,8 @@ uuids::uuid EntityManager::CreateEntity(std::string_view name)
     {
         info.m_name = name;
     }
+
+    AddComponent<TransformComponent>(info.m_uuid);
 
     return info.m_uuid;
 }

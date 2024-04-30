@@ -22,31 +22,25 @@ public:
     const std::shared_ptr<rhi::GPUMaterial>& GPUMaterial() { return m_gpuMaterial; }
 
     template<typename T>
-    inline void SetBuffer(T& bufferObject, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0)
+    inline void SetBuffer(int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0)
     {
         ENGINE_ASSERT(registration::helpers::typeRegistered<T>());
-        ENGINE_ASSERT(slot < m_buffers.size());
-        ENGINE_ASSERT(stage != rhi::ShaderStage::NONE);
 
-        auto& rs = Instance().Service<RenderService>();
-
-        BufferInfo buffer{};
-        buffer.m_cpuBuffer = bufferObject;
-        buffer.m_offset = offset;
-        buffer.m_stage = stage;
-
-        rhi::BufferDescriptor descriptor{};
-        descriptor.m_size = sizeof(T);
-        descriptor.m_memoryType = rhi::MemoryType::CPU_GPU;
-        descriptor.m_type = rhi::BufferType::UNIFORM;
-        descriptor.m_name = name;
-
-        buffer.m_gpuBuffer = rs.CreateBuffer(descriptor);
-        buffer.m_gpuBuffer->CopyToBuffer(&bufferObject, sizeof(T));
-
-        m_pendingBuffers.emplace_back(slot, std::move(buffer));
-        m_dirty = true;
+        SetBuffer(rttr::type::get<T>(), slot, stage, name, offset);
     }
+
+    template <typename T>
+    inline void UpdateBuffer(int slot, const T& bufferObject)
+    {
+        ENGINE_ASSERT(registration::helpers::typeRegistered<T>());
+
+        auto& info = m_buffers[slot];
+
+        info.m_cpuBuffer = bufferObject;
+        info.m_gpuBuffer->CopyToBuffer(&bufferObject, sizeof(T));
+    }
+
+    void SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0);
 
     void SetTexture(const std::shared_ptr<rhi::Texture>& texture, int slot);
 

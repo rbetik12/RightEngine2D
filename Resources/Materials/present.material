@@ -1,0 +1,14 @@
+{
+    "name": "present",
+    "version": 0,
+    "shader": "/System/Shaders/present.glsl",
+    "offscreen": false,
+    "depthCompareOp": "LESS",
+    "cullMode": "BACK",
+    "attachments": [
+        {
+            "loadOperation": "CLEAR",
+            "storeOperation": "STORE"
+        }
+    ]
+}

@@ -17,6 +17,31 @@ Material::Material(const std::shared_ptr<rhi::Shader>& shader) : m_shader(shader
     m_textures.resize(C_MAX_SHADER_TEXTURE_AMOUNT);
 }
 
+void Material::SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std::string_view name, int offset)
+{
+    ENGINE_ASSERT(type.is_valid());
+    ENGINE_ASSERT(slot < m_buffers.size());
+    ENGINE_ASSERT(stage != rhi::ShaderStage::NONE);
+
+    auto& rs = Instance().Service<RenderService>();
+
+    BufferInfo buffer{};
+    buffer.m_cpuBuffer = type.create();
+    buffer.m_offset = offset;
+    buffer.m_stage = stage;
+
+    rhi::BufferDescriptor descriptor{};
+    descriptor.m_size = static_cast<uint32_t>(type.get_sizeof());
+    descriptor.m_memoryType = rhi::MemoryType::CPU_GPU;
+    descriptor.m_type = rhi::BufferType::UNIFORM;
+    descriptor.m_name = name;
+
+    buffer.m_gpuBuffer = rs.CreateBuffer(descriptor);
+
+    m_pendingBuffers.emplace_back(slot, std::move(buffer));
+    m_dirty = true;
+}
+
 void Material::SetTexture(const std::shared_ptr<rhi::Texture>& texture, int slot)
 {
     m_dirty = true;

@@ -38,6 +38,7 @@ VulkanShader::VulkanShader(const ShaderDescriptor& descriptor) : Shader(descript
     }
 
     CreateDescriptorSetLayout();
+    FillPushContansts();
 }
 
 VulkanShader::~VulkanShader()
@@ -104,17 +105,16 @@ void VulkanShader::CreateDescriptorSetLayout()
 
 void VulkanShader::FillPushContansts()
 {
-    for (const auto& [slot, buffer] : Descriptor().m_reflection.m_bufferMap)
+    auto& pushConstant = m_descriptor.m_reflection.m_pushConstant;
+
+    if (!pushConstant.m_name.empty())
     {
-        if (buffer.m_type == BufferType::CONSTANT)
-        {
-            RHI_ASSERT(m_constants.empty());
-            VkPushConstantRange range;
-            range.offset = 0;
-            range.size = MAX_PUSH_CONSTANT_SIZE;
-            range.stageFlags = helpers::ShaderStage(buffer.m_stage);
-            m_constants.emplace_back(range);
-        }
+        RHI_ASSERT(m_constants.empty());
+        VkPushConstantRange range;
+        range.offset = 0;
+        range.size = MAX_PUSH_CONSTANT_SIZE;
+        range.stageFlags = helpers::ShaderStage(pushConstant.m_stage);
+        m_constants.emplace_back(range);
     }
 }
 

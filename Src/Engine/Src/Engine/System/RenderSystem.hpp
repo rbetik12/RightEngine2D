@@ -6,14 +6,21 @@
 #include <Engine/ECS/Component.hpp>
 #include <Engine/Service/Render/Material.hpp>
 #include <Engine/Service/Render/Mesh.hpp>
+#include <Engine/Service/Resource/MeshResource.hpp>
 
 namespace engine
 {
 
+struct CameraUB
+{
+    glm::mat4 m_projView;
+    glm::vec4 m_position;
+};
+
 struct ENGINE_API MeshComponent : public ecs::Component
 {
     std::shared_ptr<render::Material>    m_material;
-    std::shared_ptr<render::Mesh>        m_mesh;
+    std::shared_ptr<MeshResource>        m_mesh;
 };
 
 class ENGINE_API RenderSystem : public ecs::System
