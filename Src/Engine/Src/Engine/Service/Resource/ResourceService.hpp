@@ -24,6 +24,8 @@ public:
 	virtual void Update(float dt) override;
 	virtual void PostUpdate(float dt) override;
 
+	void InitializeLoaders();
+
 #pragma warning(push)
 #pragma warning(disable : 4702)
 	template<typename T>

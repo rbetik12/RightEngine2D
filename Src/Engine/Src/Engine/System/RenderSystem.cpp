@@ -56,19 +56,37 @@ void RenderSystem::Update(float dt)
 
     auto& rs = Instance().Service<RenderService>();
 
-    rs.BeginPass(rs.DefaultPipeline());
-    
+    // Sort all meshes by pipelines
+    eastl::vector_map<std::shared_ptr<rhi::Pipeline>, eastl::vector<eastl::reference_wrapper<MeshComponent>>> meshesMap;
+    eastl::vector<eastl::reference_wrapper<TransformComponent>> transforms;
+
     for (const auto [e, mesh, t] : W()->View<MeshComponent, TransformComponent>())
     {
-        for (const auto& submesh : mesh.m_mesh->Mesh()->GetSubMeshList())
-        {
-            ENGINE_ASSERT(mesh.m_material);
-            rs.BindMaterial(mesh.m_material, rs.DefaultPipeline());
-            rs.Draw(submesh->VertexBuffer(), rs.DefaultPipeline()->VertexCount(submesh->VertexBuffer()));
-        }
+        ENGINE_ASSERT(mesh.m_material);
+
+        auto& pipeline = rs.Pipeline(mesh.m_material);
+
+        meshesMap[pipeline].emplace_back(mesh);
+        transforms.emplace_back(t);
     }
-    
-    rs.EndPass(rs.DefaultPipeline());
+
+    ENGINE_ASSERT(meshesMap.size() == transforms.size());
+
+    for (const auto& [pipeline, meshes] : meshesMap)
+    {
+        rs.BeginPass(pipeline);
+
+        for (const auto& mesh : meshes)
+        {
+            for (const auto& submesh : mesh.get().m_mesh->Mesh()->GetSubMeshList())
+            {
+                rs.BindMaterial(mesh.get().m_material);
+                rs.Draw(submesh->VertexBuffer(), pipeline->VertexCount(submesh->VertexBuffer()));
+            }
+        }
+
+        rs.EndPass(pipeline);
+    }
 }
 
 CameraSystem::CameraSystem(ecs::World* world) : System(world)

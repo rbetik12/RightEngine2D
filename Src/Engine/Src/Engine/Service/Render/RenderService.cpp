@@ -31,6 +31,11 @@ const eastl::vector<float> presentVBRaw =
 
 constexpr uint32_t C_MAX_RESOLUTION = 65536;
 
+inline engine::MaterialLoader& GetMaterialLoader()
+{
+    return engine::Instance().Service<engine::ResourceService>().GetLoader<engine::MaterialLoader>();
+}
+
 } // unnamed
 
 namespace engine
@@ -44,13 +49,9 @@ struct RenderService::Impl
 
     std::shared_ptr<rhi::Buffer>            m_presentVB;
     std::shared_ptr<rhi::Texture>           m_texture;
-    std::shared_ptr<rhi::RenderPass>        m_renderPass;
-    std::shared_ptr<rhi::Pipeline>          m_pipeline;
-    std::shared_ptr<rhi::Pipeline>          m_presentPipeline;
 
-    std::shared_ptr<rhi::Shader>            m_defaultShader;
-    std::shared_ptr<render::Material>       m_defaultMaterial;
-    std::shared_ptr<render::Material>       m_presentMaterial;
+    std::shared_ptr<MaterialResource>       m_renderMaterial;
+    std::shared_ptr<MaterialResource>       m_presentMaterial;
 
     std::shared_ptr<rhi::RenderPass>        m_imguiRenderPass;
 
@@ -108,7 +109,7 @@ void RenderService::Update(float dt)
 
         ENGINE_ASSERT(m_impl->m_newResolution != glm::ivec2());
         m_impl->m_device->WaitForIdle();
-        CreateRenderResources(m_impl->m_newResolution.x, m_impl->m_newResolution.y);
+        CreateRenderResources(m_impl->m_newResolution);
         m_impl->m_resizeRequested = false;
     }
 
@@ -119,11 +120,13 @@ void RenderService::PostUpdate(float dt)
 {
     PROFILER_CPU_ZONE;
 
-    BeginPass(m_impl->m_presentPipeline);
-    BindMaterial(m_impl->m_presentMaterial, m_impl->m_presentPipeline);
+    BeginPass(m_impl->m_presentMaterial);
+    BindMaterial(m_impl->m_presentMaterial);
+
     Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
-        m_impl->m_presentPipeline->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
-    EndPass(m_impl->m_presentPipeline);
+        Pipeline(m_impl->m_presentMaterial)->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
+
+    EndPass(m_impl->m_presentMaterial);
 
     m_impl->m_device->EndFrame();
     m_impl->m_device->Present();
@@ -177,9 +180,19 @@ RPtr<rhi::GPUMaterial> RenderService::CreateGPUMaterial(const std::shared_ptr<rh
     return m_impl->m_device->CreateGPUMaterial(shader);
 }
 
+void RenderService::BeginPass(const ResPtr<MaterialResource>& material)
+{
+    m_impl->m_device->BeginPipeline(Pipeline(material));
+}
+
 void RenderService::BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
     m_impl->m_device->BeginPipeline(pipeline);
+}
+
+void RenderService::EndPass(const ResPtr<MaterialResource>& material)
+{
+    m_impl->m_device->EndPipeline(Pipeline(material));
 }
 
 void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
@@ -212,11 +225,13 @@ void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_
     m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
-void RenderService::BindMaterial(const std::shared_ptr<render::Material>& material, const std::shared_ptr<rhi::Pipeline>& pipeline)
+void RenderService::BindMaterial(const ResPtr<MaterialResource>& material)
 {
-    if (const auto gpuMaterial = material->GPUMaterial())
+    auto& pipeline = Pipeline(material);
+
+    if (const auto gpuMaterial = material->Material()->GPUMaterial())
     {
-        m_impl->m_device->BindGPUMaterial(material->GPUMaterial(), pipeline);
+        m_impl->m_device->BindGPUMaterial(material->Material()->GPUMaterial(), pipeline);
     }
 }
 
@@ -230,26 +245,27 @@ void RenderService::WaitAll()
     m_impl->m_device->WaitForIdle();
 }
 
-void RenderService::OnResize(uint32_t width, uint32_t height)
+void RenderService::OnResize(glm::ivec2 extent)
 {
-    if (width == 0 || height == 0)
+    if (extent.x == 0 || extent.y == 0)
     {
-        core::log::warning("[RenderService] Resize with zeroed dimension was requested, clamping it to 1: {}x{}", width, height);
+        core::log::warning("[RenderService] Resize with zeroed dimension was requested, clamping it to 1: {}x{}", extent.x, extent.y);
     }
     m_impl->m_resizeRequested = true;
-    m_impl->m_newResolution = { glm::clamp(width, 1u, C_MAX_RESOLUTION), glm::clamp(height, 1u, C_MAX_RESOLUTION) };
+    m_impl->m_newResolution = { glm::clamp<int>(extent.x, 1u, C_MAX_RESOLUTION), glm::clamp<int>(extent.y, 1u, C_MAX_RESOLUTION) };
 }
 
-void RenderService::OnWindowResize(uint32_t width, uint32_t height)
+void RenderService::OnWindowResize(glm::ivec2 extent)
 {
     PROFILER_CPU_ZONE;
 
-    m_impl->m_device->OnResize(width, height);
-    CreateWindowResources(width, height);
+    WaitAll();
+    m_impl->m_device->OnResize(extent.x, extent.y);
+    CreateWindowResources(extent);
 
     if ((Instance().Cfg().m_domain & Domain::EDITOR) != Domain::EDITOR)
     {
-        OnResize(width, height);
+        OnResize(extent);
     }
 }
 
@@ -270,32 +286,24 @@ glm::ivec2 RenderService::ViewportSize() const
     return {};
 }
 
-const RPtr<rhi::RenderPass>& RenderService::BasicPass() const
-{
-    return m_impl->m_renderPass;
-}
-
 const RPtr<rhi::RenderPass>& RenderService::ImGuiPass() const
 {
     return m_impl->m_imguiRenderPass;
 }
 
-const RPtr<rhi::Shader>& RenderService::DefaultShader() const
+const RPtr<MaterialResource>& RenderService::DefaultMaterial() const
 {
-    return m_impl->m_defaultShader;
+    return m_impl->m_renderMaterial;
 }
 
-const RPtr<render::Material>& RenderService::DefaultMaterial() const
+const ResPtr<rhi::Pipeline>& RenderService::Pipeline(const ResPtr<MaterialResource>& res) const
 {
-    return m_impl->m_defaultMaterial;
+    auto& materialLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
+
+    return materialLoader.Pipeline(res);
 }
 
-const RPtr<rhi::Pipeline>& RenderService::DefaultPipeline() const
-{
-    return m_impl->m_pipeline;
-}
-
-void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
+void RenderService::CreateRenderResources(glm::ivec2 extent)
 {
     PROFILER_CPU_ZONE;
 
@@ -304,63 +312,28 @@ void RenderService::CreateRenderResources(uint32_t width, uint32_t height)
         imguiService->RemoveImage(m_impl->m_texture);
     }
 
-    rhi::TextureDescriptor textureDescriptor;
-    textureDescriptor.m_width = static_cast<uint16_t>(width);
-    textureDescriptor.m_height = static_cast<uint16_t>(height);
-    textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
-    textureDescriptor.m_layersAmount = 1;
-    textureDescriptor.m_format = rhi::Format::BGRA8_UNORM;
-
-    m_impl->m_texture = CreateTexture(textureDescriptor);
-
-    rhi::RenderPassDescriptor renderPassDescriptor;
-    renderPassDescriptor.m_extent = { width, height };
-    renderPassDescriptor.m_name = "Triangle";
-    renderPassDescriptor.m_colorAttachments = { {m_impl->m_texture} };
-
-    m_impl->m_renderPass = CreateRenderPass(renderPassDescriptor);
-
-    rhi::PipelineDescriptor pipelineDescriptor{};
-    pipelineDescriptor.m_pass = m_impl->m_renderPass;
-    pipelineDescriptor.m_shader = m_impl->m_defaultShader;
-    pipelineDescriptor.m_cullMode = rhi::CullMode::NONE;
-
-    m_impl->m_pipeline = CreatePipeline(pipelineDescriptor);
+    GetMaterialLoader().ResizePipelines(extent);
 }
 
-void RenderService::CreateWindowResources(uint32_t width, uint32_t height)
+void RenderService::CreateWindowResources(glm::ivec2 extent)
 {
     PROFILER_CPU_ZONE;
 
-    rhi::RenderPassDescriptor presentRenderpassDescriptor{};
-    presentRenderpassDescriptor.m_extent = { width, height };
-    presentRenderpassDescriptor.m_name = "Present";
+    auto& matLoader = GetMaterialLoader();
 
-    const auto presentRenderpass = CreateRenderPass(presentRenderpassDescriptor);
-
-    rhi::PipelineDescriptor presentPipelineDescritor{};
-    presentPipelineDescritor.m_cullMode = rhi::CullMode::NONE;
-    presentPipelineDescritor.m_offscreen = false;
-    presentPipelineDescritor.m_pass = presentRenderpass;
-    presentPipelineDescritor.m_shader = m_impl->m_presentMaterial->Shader();
-
-    m_impl->m_presentPipeline = CreatePipeline(presentPipelineDescritor);
+    matLoader.ResizePipelines(extent, true);
 
     rhi::TextureDescriptor textureDescriptor;
-    textureDescriptor.m_width = static_cast<uint16_t>(width);
-    textureDescriptor.m_height = static_cast<uint16_t>(height);
+    textureDescriptor.m_width = static_cast<uint16_t>(extent.x);
+    textureDescriptor.m_height = static_cast<uint16_t>(extent.y);
     textureDescriptor.m_type = rhi::TextureType::TEXTURE_2D;
     textureDescriptor.m_layersAmount = 1;
     textureDescriptor.m_format = rhi::Format::BGRA8_UNORM;
 
     const auto imguiTex = CreateTexture(textureDescriptor);
 
-    // TODO: Add here rendering from PBR pass to swapchain in non-editor mode
-    m_impl->m_presentMaterial->SetTexture(imguiTex, 0);
-    m_impl->m_presentMaterial->Sync();
-
     rhi::RenderPassDescriptor imguiPassDesc{};
-    imguiPassDesc.m_extent = { width, height };
+    imguiPassDesc.m_extent = extent;
     imguiPassDesc.m_name = "ImGui";
 
     rhi::AttachmentDescriptor desc{};
@@ -369,28 +342,16 @@ void RenderService::CreateWindowResources(uint32_t width, uint32_t height)
     imguiPassDesc.m_colorAttachments.emplace_back(desc);
 
     m_impl->m_imguiRenderPass = CreateRenderPass(imguiPassDesc);
+
+    // TODO: Add here rendering from PBR pass to swapchain in non-editor mode
+    m_impl->m_presentMaterial->Material()->SetTexture(imguiTex, 0);
+    m_impl->m_presentMaterial->Material()->Sync();
 }
 
 void RenderService::LoadSystemResources()
 {
-    auto& resourceService = Instance().Service<ResourceService>();
-
-    const auto renderMaterialPath = "/System/Materials/basic_3d.material";
-    const auto renderMaterial = resourceService.Load<MaterialResource>(renderMaterialPath);
-
-    renderMaterial->Wait();
-    renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
-    renderMaterial->Material()->Sync();
-
-    const auto presentMaterialPath = "/System/Materials/present.material";
-    const auto presentMaterial = resourceService.Load<MaterialResource>(presentMaterialPath);
-
-    auto& materialLoader = resourceService.GetLoader<MaterialLoader>();
-    const auto& pipeline = materialLoader.Pipeline(renderMaterial);
-
-    presentMaterial->Wait();
-    presentMaterial->Material()->SetTexture(pipeline->Descriptor().m_pass->Descriptor().m_colorAttachments[0].m_texture, 0);
-    presentMaterial->Material()->Sync();
+    m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
+    m_impl->m_renderMaterial->Material()->Sync();
 
     rhi::BufferDescriptor presentVBDesc{};
     presentVBDesc.m_size = sizeof(presentVBRaw[0]) * static_cast<uint32_t>(presentVBRaw.size());
@@ -399,8 +360,6 @@ void RenderService::LoadSystemResources()
     presentVBDesc.m_type = rhi::BufferType::VERTEX;
 
     m_impl->m_presentVB = CreateBuffer(presentVBDesc, presentVBRaw.data());
-
-    __debugbreak();
 }
 
 } // engine

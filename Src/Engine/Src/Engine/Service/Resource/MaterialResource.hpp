@@ -21,7 +21,14 @@ public:
 
 	virtual ResPtr<Resource>		Load(const fs::path& path) override;
 
+	virtual ResPtr<Resource>		Get(const fs::path& path) const override;
+
+	virtual void					LoadSystemResources() override;
+
 	const ResPtr<rhi::Pipeline>&	Pipeline(const ResPtr<MaterialResource>& res) const;
+
+	// Called automatically, don't call it unless you know what are you doing!!!
+	void							ResizePipelines(glm::ivec2 extent, bool onScreen = false);
 
 private:
 	struct ParsedPipelineInfo
@@ -53,6 +60,7 @@ private:
 	std::shared_ptr<rhi::ShaderCompiler>												m_shaderCompiler;
 	eastl::unordered_map<io::fs::path, std::shared_ptr<rhi::Shader>>					m_shaderCache;
 	eastl::unordered_map<std::shared_ptr<rhi::Shader>, std::shared_ptr<rhi::Pipeline>>	m_shaderToPipeline;
+	eastl::unordered_map<fs::path, ResPtr<MaterialResource>>							m_cache;
 };
 
 class ENGINE_API MaterialResource final : public Resource

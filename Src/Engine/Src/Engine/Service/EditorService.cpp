@@ -46,7 +46,6 @@ struct EditorService::Impl
 {
     std::shared_ptr<render::Mesh>           m_mesh;
     std::shared_ptr<render::Material>       m_material;
-    std::shared_ptr<render::Material>       m_equrectangleMaterial;
     std::shared_ptr<rhi::Texture>           m_envCubMap;
     std::shared_ptr<rhi::Pipeline>          m_computePipeline;
     std::shared_ptr<TextureResource>        m_envTex;
@@ -80,8 +79,6 @@ EditorService::~EditorService()
 void EditorService::Update(float dt)
 {
     PROFILER_CPU_ZONE;
-
-    auto& rs = Instance().Service<RenderService>();
     
     if (ImGui::BeginMainMenuBar())
     {
@@ -106,11 +103,6 @@ void EditorService::Update(float dt)
     {
         panel->Draw();
     }
-
-    rs.BeginComputePass(m_impl->m_computePipeline);
-    rs.BindMaterial(m_impl->m_equrectangleMaterial, m_impl->m_computePipeline);
-    rs.Dispatch(m_impl->m_envCubMap->Width() / 32, m_impl->m_envCubMap->Height() / 32, 6);
-    rs.EndComputePass(m_impl->m_computePipeline);
 }
 
 void EditorService::PostUpdate(float dt)
@@ -121,18 +113,16 @@ void EditorService::PostUpdate(float dt)
 void EditorService::Initialize()
 {
     auto& rs = Instance().Service<RenderService>();
-    // auto& vfs = Instance().Service<io::VirtualFilesystemService>();
     auto& resourceService = Instance().Service<ResourceService>();
 
     auto& meshLoader = resourceService.GetLoader<MeshLoader>();
     m_impl->m_monkeyMesh = std::static_pointer_cast<MeshResource>(meshLoader.Load("/Meshes/monkey.fbx"));
 
     while (!m_impl->m_monkeyMesh->Ready()) {}
-    m_impl->m_material = std::make_shared<render::Material>(rs.DefaultShader());
 
     MeshComponent meshComponent;
     meshComponent.m_mesh = m_impl->m_monkeyMesh;
-    meshComponent.m_material = m_impl->m_material;
+    meshComponent.m_material = rs.DefaultMaterial();
 
     auto& ws = Instance().Service<WorldService>();
     auto& em = ws.CurrentWorld()->GetEntityManager();

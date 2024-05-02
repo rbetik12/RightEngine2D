@@ -44,7 +44,7 @@ WindowService::WindowService()
     glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
         {
             auto& rs = Instance().Service<RenderService>();
-            rs.OnWindowResize(width, height);
+            rs.OnWindowResize({ width, height });
         });
 
     glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods)

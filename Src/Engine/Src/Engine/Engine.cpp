@@ -85,14 +85,17 @@ Engine::Engine(int argCount, char* argPtr[])
     // We need to move render service initialization here,
     // because we can't load materials before render service is registered
     {
-        PROFILER_CPU_ZONE_NAME("Load render services resources");
+        PROFILER_CPU_ZONE_NAME("Load system resources");
+
+        resourceService.InitializeLoaders();
+
         auto& renderService = m_serviceManager->Service<RenderService>();
 
         renderService.LoadSystemResources();
 
         auto extent = Instance().Service<WindowService>().Extent();
-        renderService.OnWindowResize(extent.x, extent.y);
-        renderService.OnResize(extent.x, extent.y);
+        renderService.OnWindowResize(extent);
+        renderService.OnResize(extent);
     }
 
     m_serviceManager->RegisterService<ImguiService>();

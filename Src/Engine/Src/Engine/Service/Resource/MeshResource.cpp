@@ -73,7 +73,7 @@ ResPtr<Resource> MeshLoader::Load(const fs::path& path)
 {
 	std::lock_guard l(m_mutex);
 
-	if (auto res = Exists(path))
+	if (auto res = Get(path))
 	{
 		return res;
 	}
@@ -92,6 +92,15 @@ ResPtr<Resource> MeshLoader::Load(const fs::path& path)
 		});
 
 	return resource;
+}
+
+ResPtr<Resource> MeshLoader::Get(const fs::path& path) const
+{
+	if (const auto it = m_cache.find(path); it != m_cache.end())
+	{
+		return it->second;
+	}
+	return {};
 }
 
 bool MeshLoader::Load(const ResPtr<MeshResource>& resource)

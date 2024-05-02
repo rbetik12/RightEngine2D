@@ -19,7 +19,7 @@ struct CameraUB
 
 struct ENGINE_API MeshComponent : public ecs::Component
 {
-    std::shared_ptr<render::Material>    m_material;
+    std::shared_ptr<MaterialResource>    m_material;
     std::shared_ptr<MeshResource>        m_mesh;
 };
 
