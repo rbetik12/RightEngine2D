@@ -7,6 +7,9 @@
 #include <RHI/Helpers.hpp>
 #include <nlohmann/json.hpp>
 
+#include "RHI/Pipeline.hpp"
+#include "RHI/RenderPass.hpp"
+
 RTTR_REGISTRATION
 {
 	engine::registration::Class<engine::MaterialLoader>("engine::MaterialLoader");
@@ -86,7 +89,7 @@ ResPtr<Resource> MaterialLoader::Load(const fs::path& path)
 {
 	std::lock_guard l(m_mutex);
 
-	if (auto res = Exists(path))
+	if (auto res = Get(path))
 	{
 		return res;
 	}
@@ -107,8 +110,28 @@ ResPtr<Resource> MaterialLoader::Load(const fs::path& path)
 	return resource;
 }
 
+ResPtr<Resource> MaterialLoader::Get(const fs::path& path) const
+{
+	if (const auto it = m_cache.find(path); it != m_cache.end())
+	{
+		return it->second;
+	}
+	return {};
+}
+
+void MaterialLoader::LoadSystemResources()
+{
+	auto renderMat = Load("/System/Materials/basic_3d.material");
+	auto presentMat = Load("/System/Materials/present.material");
+
+	renderMat->Wait();
+	presentMat->Wait();
+}
+
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
 {
+	ENGINE_ASSERT(res);
+
 	const auto it = m_shaderToPipeline.find(res->Material()->Shader());
 
 	if (it == m_shaderToPipeline.end())
@@ -119,6 +142,31 @@ const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResou
 	}
 
 	return it->second;
+}
+
+void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool onScreen)
+{
+	ENGINE_ASSERT(extent != glm::ivec2(0));
+
+	for (auto& it : m_shaderToPipeline)
+	{
+		auto& oldPipelineDesc = it.second->Descriptor();
+
+	    if (oldPipelineDesc.m_offscreen == onScreen)
+	    {
+			ParsedPipelineInfo pipelineInfo{};
+			pipelineInfo.m_viewportSize = extent;
+			pipelineInfo.m_shader = it.first;
+			pipelineInfo.m_offscreen = onScreen;
+			pipelineInfo.m_attachments = oldPipelineDesc.m_pass->Descriptor().m_colorAttachments;
+			pipelineInfo.m_depthAttachment = oldPipelineDesc.m_pass->Descriptor().m_depthStencilAttachment;
+			pipelineInfo.m_compute = oldPipelineDesc.m_compute;
+			pipelineInfo.m_cullMode = oldPipelineDesc.m_cullMode;
+			pipelineInfo.m_depthCompareOp = oldPipelineDesc.m_depthCompareOp;
+
+			it.second = AllocatePipeline(pipelineInfo);
+	    }
+	}
 }
 
 bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource)

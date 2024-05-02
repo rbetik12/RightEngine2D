@@ -42,4 +42,12 @@ void ResourceService::PostUpdate(float dt)
 {
 }
 
+void ResourceService::InitializeLoaders()
+{
+    for (auto& [_, loader] : m_loadersMap)
+    {
+        loader->LoadSystemResources();
+    }
+}
+
 } // engine

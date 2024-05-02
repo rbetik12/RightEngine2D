@@ -1,6 +1,7 @@
 #include <Engine/Editor/ViewportPanel.hpp>
 #include <Engine/Service/Imgui/ImguiService.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
+#include <RHI/Pipeline.hpp>
 
 namespace engine::editor
 {
@@ -15,10 +16,10 @@ void ViewportPanel::DrawPanel()
     if (!core::math::almostEqual(m_viewportSize.x, viewportSize.x) || !core::math::almostEqual(m_viewportSize.y, viewportSize.y))
     {
         m_viewportSize = { viewportSize.x, viewportSize.y };
-        rs.OnResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+        rs.OnResize({ static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y) });
     }
 
-    is.Image(rs.BasicPass()->Descriptor().m_colorAttachments[0].m_texture, m_viewportSize);
+    is.Image(rs.Pipeline(rs.DefaultMaterial())->Descriptor().m_pass->Descriptor().m_colorAttachments[0].m_texture, m_viewportSize);
 }
 
 } // engine::editor

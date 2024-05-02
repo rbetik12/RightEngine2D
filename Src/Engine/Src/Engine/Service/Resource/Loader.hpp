@@ -23,17 +23,17 @@ class ENGINE_API Loader : public core::NonCopyable
 {
 	RTTR_ENABLE()
 public:
-	virtual ~Loader();
+	virtual ~Loader() {}
 
 	virtual void Update() = 0;
 
 	// Async load of a resource
 	virtual ResPtr<Resource> Load(const fs::path& path) = 0;
 
-	virtual ResPtr<Resource> Exists(const fs::path& path);
+	virtual void LoadSystemResources() = 0;
 
-protected:
-	eastl::unordered_map<fs::path, ResPtr<Resource>> m_cache;
+	// Return resource pointer if it was already loaded, if not returns nullptr
+	virtual ResPtr<Resource> Get(const fs::path& path) const = 0;
 };
 
 } // engine
