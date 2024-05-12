@@ -8,6 +8,7 @@
 #include "VulkanPipeline.hpp"
 #include "VulkanHelpers.hpp"
 #include "VulkanGPUMaterial.hpp"
+#include <Core/Profiling.hpp>
 #include <vk-tools/VulkanTools.h>
 #include <optional>
 
@@ -267,6 +268,8 @@ std::shared_ptr<GPUMaterial> VulkanDevice::CreateGPUMaterial(const std::shared_p
 
 void VulkanDevice::BeginFrame()
 {
+    PROFILER_CPU_ZONE;
+
     if (m_isSwapchainDirty)
     {
         vkDeviceWaitIdle(s_ctx.m_device);
@@ -301,6 +304,8 @@ void VulkanDevice::BeginFrame()
 
 void VulkanDevice::EndFrame()
 {
+    PROFILER_CPU_ZONE;
+
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
     RHI_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS);
 
@@ -383,6 +388,8 @@ void VulkanDevice::Present()
 
 void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
+    PROFILER_CPU_ZONE;
+
     RHI_ASSERT(!pipeline->Descriptor().m_compute);
 
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];
@@ -470,6 +477,8 @@ void VulkanDevice::BeginPipeline(const std::shared_ptr<Pipeline>& pipeline)
 
 void VulkanDevice::EndPipeline(const std::shared_ptr<Pipeline>& pipeline)
 {
+    PROFILER_CPU_ZONE;
+
     RHI_ASSERT(!pipeline->Descriptor().m_compute);
 
     auto& cmdBuffer = m_cmdBuffers[m_currentCmdBufferIndex];

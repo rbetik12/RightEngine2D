@@ -34,6 +34,8 @@ void EntityManager::Update()
         const auto e = m_registry.create();
         m_uuidToEntity[info.m_uuid] = e;
         m_entities[e] = std::move(info);
+
+        AddComponent<TransformComponent>(info.m_uuid);
     }
 
     m_pendingCreateEntities.clear();
@@ -55,8 +57,6 @@ uuids::uuid EntityManager::CreateEntity(std::string_view name)
     {
         info.m_name = name;
     }
-
-    AddComponent<TransformComponent>(info.m_uuid);
 
     return info.m_uuid;
 }

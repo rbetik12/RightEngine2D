@@ -263,32 +263,43 @@ void ImguiService::Update(float dt)
 {
     PROFILER_CPU_ZONE;
 
-    auto& rs = Instance().Service<RenderService>();
-    
-    ImGui_ImplGlfw_NewFrame();
-    m_imguiProvider->SetRenderPass(rs.ImGuiPass());
-    m_imguiProvider->Begin();
-    ImGui::NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+
+	auto& rs = Instance().Service<RenderService>();
+
+	rs.RunOnRenderThreadWait([=, &rs]
+		{
+			m_imguiProvider->SetRenderPass(rs.ImGuiPass());
+			m_imguiProvider->Begin();
+		});
+
+	ImGui::NewFrame();
 }
 
 void ImguiService::PostUpdate(float dt)
 {
     PROFILER_CPU_ZONE;
 
-    ImGui::Render();
-    m_imguiProvider->End();
+	auto& rs = Instance().Service<RenderService>();
+
+	ImGui::Render();
+
+	rs.RunOnRenderThreadWait([=]
+		{
+			m_imguiProvider->End();
+		});
 }
 
 void ImguiService::Image(const std::shared_ptr<rhi::Texture>& texture, const ImVec2& size, const ImVec2& uv0,
     const ImVec2& uv1)
 {
-    m_imguiProvider->Image(texture, size, uv0, uv1);
+	m_imguiProvider->Image(texture, size, uv0, uv1);
 }
 
 void ImguiService::RemoveImage(const std::shared_ptr<rhi::Texture>& texture)
 {
     ENGINE_ASSERT(texture);
-    m_imguiProvider->RemoveImage(texture);
+	m_imguiProvider->RemoveImage(texture);
 }
 
 } // engine

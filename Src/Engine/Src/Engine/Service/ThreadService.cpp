@@ -133,6 +133,11 @@ tf::Future<void> ThreadService::AddForegroundTaskflow(tf::Taskflow& taskflow)
     return m_fgExecutor->run(taskflow);
 }
 
+std::unique_ptr<CustomThread> ThreadService::SpawnThread(std::string_view name)
+{
+    return std::make_unique<CustomThread>(name);
+}
+
 std::shared_ptr<tf::Executor> ThreadService::NamedExecutor(std::string_view name, int threadAmount) const
 {
     return std::make_shared<tf::Executor>(threadAmount, std::make_shared<WorkerInterface>(name, threadAmount));
@@ -140,7 +145,7 @@ std::shared_ptr<tf::Executor> ThreadService::NamedExecutor(std::string_view name
 
 CustomThread::~CustomThread()
 {
-    AddBackgroundTask([]{});
+    AddTask([]{});
     WaitForAll();
 }
 
