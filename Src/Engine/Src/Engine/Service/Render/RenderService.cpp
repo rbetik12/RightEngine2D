@@ -88,6 +88,8 @@ RenderService::RenderService()
     m_impl->m_device = rhi::Device::Create(m_impl->m_context);
 
     m_impl->m_defaultSampler = m_impl->m_device->CreateSampler({});
+
+    m_renderThread = Instance().Service<ThreadService>().SpawnThread("Render Thread");
 }
 
 RenderService::~RenderService()
@@ -128,116 +130,184 @@ void RenderService::PostUpdate(float dt)
 
     EndPass(m_impl->m_presentMaterial);
 
-    m_impl->m_device->EndFrame();
-    m_impl->m_device->Present();
+    RunOnRenderThread([=]
+        {
+            m_impl->m_device->EndFrame();
+            m_impl->m_device->Present();
+        });
+
+    {
+        PROFILER_CPU_ZONE_NAME("Wait for render thread");
+        m_renderThread->WaitForAll();
+    }
 }
 
 RPtr<rhi::ShaderCompiler> RenderService::CreateShaderCompiler(const rhi::ShaderCompiler::Options& options)
 {
-    return m_impl->m_device->CreateShaderCompiler(options);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateShaderCompiler(options);
+        });
 }
 
 RPtr<rhi::Buffer> RenderService::CreateBuffer(const rhi::BufferDescriptor& desc, const void* data)
 {
     ENGINE_ASSERT(!desc.m_name.empty());
 
-    return m_impl->m_device->CreateBuffer(desc, data);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateBuffer(desc, data);
+        });
 }
 
 RPtr<rhi::Texture> RenderService::CreateTexture(const rhi::TextureDescriptor& desc, const std::shared_ptr<rhi::Sampler>& sampler, const void* data)
 {
     if (sampler)
     {
-        return m_impl->m_device->CreateTexture(desc, sampler, data);
+        return RunOnRenderThreadWait([&]()
+            {
+                return m_impl->m_device->CreateTexture(desc, sampler, data);
+            });
     }
-    return m_impl->m_device->CreateTexture(desc, m_impl->m_defaultSampler, data);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateTexture(desc, m_impl->m_defaultSampler, data);
+        });
 }
 
 RPtr<rhi::Shader> RenderService::CreateShader(const rhi::ShaderDescriptor& desc)
 {
     ENGINE_ASSERT(!desc.m_name.empty());
 
-    return m_impl->m_device->CreateShader(desc);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateShader(desc);
+        });
 }
 
 RPtr<rhi::Sampler> RenderService::CreateSampler(const rhi::SamplerDescriptor& desc)
 {
-    return m_impl->m_device->CreateSampler(desc);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateSampler(desc);
+        });
 }
 
 RPtr<rhi::RenderPass> RenderService::CreateRenderPass(const rhi::RenderPassDescriptor& desc)
 {
-    return m_impl->m_device->CreateRenderPass(desc);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateRenderPass(desc);
+        });
 }
 
 RPtr<rhi::Pipeline> RenderService::CreatePipeline(const rhi::PipelineDescriptor& desc)
 {
-    return m_impl->m_device->CreatePipeline(desc);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreatePipeline(desc);
+        });
 }
 
 RPtr<rhi::GPUMaterial> RenderService::CreateGPUMaterial(const std::shared_ptr<rhi::Shader>& shader)
 {
-    return m_impl->m_device->CreateGPUMaterial(shader);
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->CreateGPUMaterial(shader);
+        });
 }
 
 void RenderService::BeginPass(const ResPtr<MaterialResource>& material)
 {
-    m_impl->m_device->BeginPipeline(Pipeline(material));
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->BeginPipeline(Pipeline(material));
+        });
 }
 
 void RenderService::BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_impl->m_device->BeginPipeline(pipeline);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->BeginPipeline(pipeline);
+        });
 }
 
 void RenderService::EndPass(const ResPtr<MaterialResource>& material)
 {
-    m_impl->m_device->EndPipeline(Pipeline(material));
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->EndPipeline(Pipeline(material));
+        });
 }
 
 void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_impl->m_device->EndPipeline(pipeline);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->EndPipeline(pipeline);
+        });
 }
 
 void RenderService::BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_impl->m_device->BeginComputePipeline(pipeline);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->BeginComputePipeline(pipeline);
+        });
 }
 
 void RenderService::EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_impl->m_device->BeginComputePipeline(pipeline);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->BeginComputePipeline(pipeline);
+        });
 }
 
 void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
 {
-    m_impl->m_device->Draw(buffer, vertexCount, instanceCount);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->Draw(buffer, vertexCount, instanceCount);
+        });
 }
 
 void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& vb, const std::shared_ptr<rhi::Buffer>& ib, uint32_t instanceCount)
 {
-    m_impl->m_device->Draw(vb, ib, ib->Descriptor().m_size / sizeof(uint32_t), instanceCount);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->Draw(vb, ib, ib->Descriptor().m_size / sizeof(uint32_t), instanceCount);
+        });
 }
 
 void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
-    m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ);
+        });
 }
 
 void RenderService::BindMaterial(const ResPtr<MaterialResource>& material)
 {
     auto& pipeline = Pipeline(material);
 
-    if (const auto gpuMaterial = material->Material()->GPUMaterial())
-    {
-        m_impl->m_device->BindGPUMaterial(material->Material()->GPUMaterial(), pipeline);
-    }
+    RunOnRenderThread([=]()
+        {
+            if (const auto gpuMaterial = material->Material()->GPUMaterial())
+            {
+                m_impl->m_device->BindGPUMaterial(material->Material()->GPUMaterial(), pipeline);
+            }
+        });
 }
 
 void RenderService::PushConstant(const void* data, uint32_t size, const std::shared_ptr<rhi::Pipeline>& pipeline)
 {
-    m_impl->m_device->PushConstant(data, size, pipeline);
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->PushConstant(data, size, pipeline);
+        });
 }
 
 void RenderService::WaitAll()
@@ -350,6 +420,14 @@ void RenderService::CreateWindowResources(glm::ivec2 extent)
 
 void RenderService::LoadSystemResources()
 {
+    auto& matLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
+
+    m_impl->m_renderMaterial = matLoader.RenderMaterial();
+    m_impl->m_presentMaterial = matLoader.PresentMaterial();
+
+    ENGINE_ASSERT(m_impl->m_renderMaterial->Ready());
+    ENGINE_ASSERT(m_impl->m_presentMaterial->Ready());
+
     m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
     m_impl->m_renderMaterial->Material()->Sync();
 

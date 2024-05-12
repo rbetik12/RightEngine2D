@@ -121,11 +121,11 @@ ResPtr<Resource> MaterialLoader::Get(const fs::path& path) const
 
 void MaterialLoader::LoadSystemResources()
 {
-	auto renderMat = Load("/System/Materials/basic_3d.material");
-	auto presentMat = Load("/System/Materials/present.material");
+	m_renderMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/basic_3d.material"));
+	m_presentMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/present.material"));
 
-	renderMat->Wait();
-	presentMat->Wait();
+	m_renderMaterial->Wait();
+	m_presentMaterial->Wait();
 }
 
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
@@ -305,7 +305,7 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 
 	rhi::TextureDescriptor colorAttachmentDesc;
 	colorAttachmentDesc.m_type = rhi::TextureType::TEXTURE_2D;
-	colorAttachmentDesc.m_format = rhi::Format::RGBA16_SFLOAT;
+	colorAttachmentDesc.m_format = rhi::Format::BGRA8_UNORM;
 	colorAttachmentDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
 	colorAttachmentDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
 	colorAttachmentDesc.m_layersAmount = 1;

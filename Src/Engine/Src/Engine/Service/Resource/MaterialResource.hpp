@@ -30,6 +30,9 @@ public:
 	// Called automatically, don't call it unless you know what are you doing!!!
 	void							ResizePipelines(glm::ivec2 extent, bool onScreen = false);
 
+	const ResPtr<MaterialResource>& RenderMaterial() const { return m_renderMaterial; }
+	const ResPtr<MaterialResource>& PresentMaterial() const { return m_presentMaterial; }
+
 private:
 	struct ParsedPipelineInfo
 	{
@@ -61,6 +64,8 @@ private:
 	eastl::unordered_map<io::fs::path, std::shared_ptr<rhi::Shader>>					m_shaderCache;
 	eastl::unordered_map<std::shared_ptr<rhi::Shader>, std::shared_ptr<rhi::Pipeline>>	m_shaderToPipeline;
 	eastl::unordered_map<fs::path, ResPtr<MaterialResource>>							m_cache;
+	ResPtr<MaterialResource>															m_renderMaterial;
+	ResPtr<MaterialResource>															m_presentMaterial;
 };
 
 class ENGINE_API MaterialResource final : public Resource

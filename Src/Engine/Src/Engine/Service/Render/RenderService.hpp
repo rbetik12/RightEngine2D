@@ -63,6 +63,18 @@ public:
 
     const ResPtr<rhi::Pipeline>&        Pipeline(const ResPtr<MaterialResource>& res) const;
 
+    template <typename F>
+    auto RunOnRenderThread(F&& f)
+    {
+        return m_renderThread->AddTask(f);
+    }
+
+    template <typename F>
+    auto RunOnRenderThreadWait(F&& f)
+    {
+        return m_renderThread->AddTask(f).get();
+    }
+
     friend class Engine;
 
 private:
@@ -72,7 +84,8 @@ private:
     void                        CreateWindowResources(glm::ivec2 extent);
     void                        LoadSystemResources();
 
-    std::unique_ptr<Impl> m_impl;
+    std::unique_ptr<Impl>           m_impl;
+    std::unique_ptr<CustomThread>   m_renderThread;
 };
 
 } // engine

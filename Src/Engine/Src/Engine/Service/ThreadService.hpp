@@ -6,6 +6,8 @@
 namespace engine
 {
 
+class CustomThread;
+
 class ENGINE_API ThreadService final : public IService
 {
     RTTR_ENABLE(IService);
@@ -27,6 +29,9 @@ public:
 
     tf::Future<void>                AddForegroundTaskflow(tf::Taskflow& taskflow);
 
+    std::unique_ptr<CustomThread>   SpawnThread(std::string_view name);
+
+    // Consider using SpawnThread at first time
     std::shared_ptr<tf::Executor>   NamedExecutor(std::string_view name, int threadAmount) const;
 
 private:
@@ -39,10 +44,11 @@ private:
 class ENGINE_API CustomThread : core::NonCopyable
 {
 public:
+    CustomThread(std::string_view name);
     ~CustomThread();
 
     template <typename F>
-    auto AddBackgroundTask(F&& f)
+    auto AddTask(F&& f)
     {
         return m_executor->async(std::move(f));
     }
@@ -52,8 +58,6 @@ public:
     friend class ThreadService;
 
 private:
-    CustomThread(std::string_view name);
-
     std::shared_ptr<tf::Executor> m_executor;
 };
 

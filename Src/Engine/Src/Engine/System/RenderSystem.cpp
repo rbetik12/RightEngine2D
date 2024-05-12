@@ -72,6 +72,7 @@ void RenderSystem::Update(float dt)
 
     ENGINE_ASSERT(meshesMap.size() == transforms.size());
 
+    int i = 0;
     for (const auto& [pipeline, meshes] : meshesMap)
     {
         rs.BeginPass(pipeline);
@@ -81,8 +82,10 @@ void RenderSystem::Update(float dt)
             for (const auto& submesh : mesh.get().m_mesh->Mesh()->GetSubMeshList())
             {
                 rs.BindMaterial(mesh.get().m_material);
+                rs.PushConstant(&transforms[i].get().m_worldTransform, sizeof(glm::mat4), pipeline);
                 rs.Draw(submesh->VertexBuffer(), pipeline->VertexCount(submesh->VertexBuffer()));
             }
+            i++;
         }
 
         rs.EndPass(pipeline);
