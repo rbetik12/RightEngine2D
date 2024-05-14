@@ -14,11 +14,11 @@ RTTR_REGISTRATION
     engine::registration::Service<engine::io::VirtualFilesystemService>("engine::io::VirtualFilesystemService");
 
     engine::registration::Class<engine::io::VFSSettings::Setting>("engine::io::VFSSettings::Setting")
-        .property("alias", &engine::io::VFSSettings::Setting::m_alias)
-        .property("path", &engine::io::VFSSettings::Setting::m_path);
+        .Property("alias", &engine::io::VFSSettings::Setting::m_alias)
+        .Property("path", &engine::io::VFSSettings::Setting::m_path);
 
     engine::registration::ProjectSettings<engine::io::VFSSettings>("engine::io::VFSSettings")
-        .property("settings", &engine::io::VFSSettings::m_settings);
+        .Property("settings", &engine::io::VFSSettings::m_settings);
 }
 
 namespace engine::io

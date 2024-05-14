@@ -9,8 +9,9 @@
 
 RTTR_REGISTRATION
 {
-	// TODO: Add separate registration class for loaders with domain support
-	engine::registration::Class<engine::TextureLoader>("engine::TextureLoader");
+	using namespace engine::registration;
+
+	ResourceLoader<engine::TextureLoader>("engine::TextureLoader");
 }
 
 namespace

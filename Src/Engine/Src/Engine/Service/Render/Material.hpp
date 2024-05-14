@@ -36,6 +36,11 @@ public:
 
         auto& info = m_buffers[slot];
 
+        ENGINE_ASSERT(info.m_cpuBuffer.is_valid());
+        const auto name = info.m_cpuBuffer.get_type().get_name();
+        const auto name2 = rttr::type::get<T>().get_name();
+        ENGINE_ASSERT(name == name2);
+
         info.m_cpuBuffer = bufferObject;
         info.m_gpuBuffer->CopyToBuffer(&bufferObject, sizeof(T));
     }
