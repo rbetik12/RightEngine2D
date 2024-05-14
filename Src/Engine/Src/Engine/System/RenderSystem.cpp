@@ -41,6 +41,7 @@ void RenderSystem::Update(float dt)
 {
     PROFILER_CPU_ZONE;
 
+    // Currently we support only one active camera at a time
     CameraUB cameraUB{};
 
     for (const auto [e, c, t] : W()->View<CameraComponent, TransformComponent>())
@@ -52,6 +53,7 @@ void RenderSystem::Update(float dt)
 
         cameraUB.m_position = glm::vec4(t.m_position, 1.0f);
         cameraUB.m_projView = c.m_projView;
+        break;
     }
 
     auto& rs = Instance().Service<RenderService>();
@@ -71,6 +73,20 @@ void RenderSystem::Update(float dt)
     }
 
     ENGINE_ASSERT(meshesMap.size() == transforms.size());
+
+    eastl::unordered_set<ResPtr<MaterialResource>> materials;
+    for (const auto& [pipeline, meshes] : meshesMap)
+    {
+        for (const auto& mesh : meshes)
+        {
+            if (materials.find(mesh.get().m_material) != materials.end())
+            {
+                continue;
+            }
+
+            mesh.get().m_material->Material()->UpdateBuffer(0, cameraUB);
+        }
+    }
 
     int i = 0;
     for (const auto& [pipeline, meshes] : meshesMap)

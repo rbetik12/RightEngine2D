@@ -1,17 +1,35 @@
 #pragma once
 
 #include <Engine/Service/IService.hpp>
+#include <Engine/Service/Resource/Loader.hpp>
 #include <Engine/ECS/Component.hpp>
 #include <Engine/ECS/System.hpp>
 #include <Core/Hash.hpp>
 #include <Core/RTTRIntegration.hpp>
 #include <argparse/argparse.hpp>
+#include <rttr/policy.h>
 
 namespace engine::registration
 {
 
 constexpr uint64_t C_METADATA_KEY = core::hash::HashString("Metadata");
 constexpr uint64_t C_PROJECT_SETTINGS_METADATA_KEY = core::hash::HashString("Project Settings Metadata");
+
+namespace helpers
+{
+
+    template<typename T>
+    inline bool typeRegistered()
+    {
+        return rttr::type::get<T>().get_constructor().is_valid();
+    }
+
+    inline bool typeRegistered(rttr::type type)
+    {
+        return type.get_constructor().is_valid();
+    }
+
+} // helpers
 
 template<typename T>
 class ENGINE_API Service
@@ -131,17 +149,47 @@ private:
     rttr::registration::class_<T>    m_class;
 };
 
-template<typename T>
+enum class CtorType : uint8_t
+{
+    AsObject,
+    AsSharedPtr,
+    AsRawPtr
+};
+
+template<typename T, CtorType type = CtorType::AsObject>
 class ENGINE_API Class
 {
 public:
-    Class(rttr::string_view name) : m_class(name)
+    explicit Class(rttr::string_view name) : m_class(name)
     {
-        m_class.constructor();
+        ENGINE_ASSERT_WITH_MESSAGE(!helpers::typeRegistered<T>(), fmt::format("Type '{}' was already registered!", rttr::type::get<T>().get_name()));
+
+        if constexpr (type == CtorType::AsObject)
+        {
+            static_assert(std::is_copy_constructible_v<T>, "If you want to register non-copyable type, you can use pointer type");
+            m_class.constructor()
+            (
+                rttr::policy::ctor::as_object
+            );
+        }
+        else if constexpr (type == CtorType::AsRawPtr)
+        {
+            m_class.constructor()
+            (
+                rttr::policy::ctor::as_raw_ptr
+            );
+        }
+        else if constexpr (type == CtorType::AsSharedPtr)
+        {
+            m_class.constructor()
+            (
+                rttr::policy::ctor::as_std_shared_ptr
+            );
+        }
     }
 
     template <typename PropType, typename ClassType>
-    Class& property(rttr::string_view name, PropType ClassType::* field)
+    Class& Property(rttr::string_view name, PropType ClassType::* field)
     {
         static_assert(std::is_base_of_v<ClassType, T>);
 
@@ -151,6 +199,18 @@ public:
 
 protected:
     rttr::registration::class_<T> m_class;
+};
+
+
+// TODO: Add domain support
+template<typename T>
+class ENGINE_API ResourceLoader : public Class<T, CtorType::AsRawPtr>
+{
+public:
+    ResourceLoader(rttr::string_view name) : Class<T, CtorType::AsRawPtr>(name)
+    {
+        static_assert(std::is_base_of_v<Loader, T>, "Resource loader must be derived of Loader class");
+    }
 };
 
 template<typename T>
@@ -285,21 +345,5 @@ public:
 private:
     inline static argparse::ArgumentParser* m_parser = nullptr;
 };
-
-namespace helpers
-{
-
-template<typename T>
-inline bool typeRegistered()
-{
-    return rttr::type::get<T>().get_constructor().is_valid();
-}
-
-inline bool typeRegistered(rttr::type type)
-{
-    return type.get_constructor().is_valid();
-}
-
-} // helpers
 
 } // engine::registration

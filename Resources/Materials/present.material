@@ -4,7 +4,7 @@
     "shader": "/System/Shaders/present.glsl",
     "offscreen": false,
     "depthCompareOp": "LESS",
-    "cullMode": "BACK",
+    "cullMode": "NONE",
     "attachments": [
         {
             "loadOperation": "CLEAR",

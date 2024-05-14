@@ -95,10 +95,10 @@ RenderService::RenderService()
 RenderService::~RenderService()
 {
     m_impl->m_device->WaitForIdle();
-    m_impl.reset();
     m_impl->m_defaultSampler.reset();
     m_impl->m_device.reset();
     m_impl->m_context.reset();
+    m_impl.reset();
 }
 
 void RenderService::Update(float dt)
