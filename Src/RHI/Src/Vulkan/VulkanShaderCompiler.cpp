@@ -7,6 +7,7 @@
 #include <glslang/Public/ShaderLang.h>
 #pragma warning(pop)
 #include <spirv_cross/spirv_cross.hpp>
+#include <EASTL/sort.h>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -354,8 +355,18 @@ ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlo
 
     if (stage == ShaderStage::VERTEX)
     {
-        VertexBufferLayout layout;
+        eastl::map<uint8_t, spirv_cross::Resource> inputStages;
+
         for (auto& input : res.stage_inputs)
+        {
+            const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(input.id, spv::DecorationLocation));
+
+            inputStages[slot] = input;
+        }
+
+        VertexBufferLayout layout;
+
+        for (auto& [slot, input] : inputStages)
         {
             auto& name = input.name;
             const auto& type = spirvCompiler.get_type(input.type_id);

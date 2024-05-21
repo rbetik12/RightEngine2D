@@ -293,7 +293,16 @@ void ImguiService::PostUpdate(float dt)
 void ImguiService::Image(const std::shared_ptr<rhi::Texture>& texture, const ImVec2& size, const ImVec2& uv0,
     const ImVec2& uv1)
 {
-	m_imguiProvider->Image(texture, size, uv0, uv1);
+	ENGINE_ASSERT(core::IsMainThread());
+
+	auto& rs = Instance().Service<RenderService>();
+
+	const auto texId = rs.RunOnRenderThreadWait([=]
+		{
+			return m_imguiProvider->Image(texture, size, uv0, uv1);
+		});
+
+	ImGui::Image(texId, size, uv0, uv1);
 }
 
 void ImguiService::RemoveImage(const std::shared_ptr<rhi::Texture>& texture)

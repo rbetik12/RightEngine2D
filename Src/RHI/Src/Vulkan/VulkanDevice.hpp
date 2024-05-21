@@ -42,7 +42,7 @@ public:
     // Device properties cache
     struct Properties
     {
-        uint32_t    m_framesInFlight = 2;
+        uint32_t    m_framesInFlight = 1;
         size_t      m_minUniformBufferOffsetAlignment = 0;
         float       m_maxSamplerAnisotropy = 0;
     };

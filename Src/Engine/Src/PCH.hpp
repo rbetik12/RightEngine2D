@@ -7,6 +7,7 @@
 #include <Core/Hash.hpp>
 #include <Core/Log.hpp>
 #include <Core/Profiling.hpp>
+#include <Core/Thread.hpp>
 
 #include <Engine/Assert.hpp>
 #include <Engine/Engine.hpp>

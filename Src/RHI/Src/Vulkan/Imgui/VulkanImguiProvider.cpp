@@ -4,6 +4,7 @@
 #include <Vulkan/VulkanHelpers.hpp>
 #include <Vulkan/VulkanTexture.hpp>
 #include <Vulkan/VulkanSampler.hpp>
+#include <Core/Thread.hpp>
 #include <imgui.h>
 #include "imgui_impl_vulkan.h"
 
@@ -58,11 +59,13 @@ VulkanImguiProvider::~VulkanImguiProvider()
 
 void VulkanImguiProvider::Begin()
 {
+    RHI_ASSERT(core::IsRenderThread());
     ImGui_ImplVulkan_NewFrame();
 }
 
 void VulkanImguiProvider::End()
 {
+    RHI_ASSERT(core::IsRenderThread());
     auto renderPass = std::static_pointer_cast<VulkanRenderPass>(m_renderPass);
 
     VkRenderingInfoKHR renderingInfo{};
@@ -98,15 +101,20 @@ void VulkanImguiProvider::End()
         vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 }
-void VulkanImguiProvider::Image(const std::shared_ptr<Texture>& texture, const ImVec2& size, 
+
+ImTextureID VulkanImguiProvider::Image(const std::shared_ptr<Texture>& texture, const ImVec2& size,
         const ImVec2& uv0, const ImVec2& uv1)
 {
-    const auto set = GetDescriptorSet(texture);
-    ImGui::Image(set, size, uv0, uv1);
+    RHI_ASSERT(core::IsRenderThread());
+
+    std::shared_lock l(m_imageMapMutex);
+    return GetDescriptorSet(texture);
 }
 
 void VulkanImguiProvider::RemoveImage(const std::shared_ptr<Texture>& texture)
 {
+    std::lock_guard l(m_imageMapMutex);
+
     RHI_ASSERT(texture->GetSampler() && texture->Descriptor().m_width > 0 && texture->Descriptor().m_height > 0);
 
     const auto tex = std::static_pointer_cast<VulkanTexture>(texture);
