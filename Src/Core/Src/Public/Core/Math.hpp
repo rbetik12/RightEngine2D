@@ -6,6 +6,8 @@
 namespace core::math
 {
 
+constexpr float PI = 3.14159f;
+
 inline uint32_t roundUpToNextHighestPowerOfTwo(uint32_t value)
 {
     value--;

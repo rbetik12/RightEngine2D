@@ -101,7 +101,6 @@ WindowService::WindowService()
 
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos)
         {
-            prevMousePos = mousePos;
             mousePos.x = static_cast<float>(xPos);
             mousePos.y = static_cast<float>(yPos);
         });
@@ -122,6 +121,8 @@ void WindowService::Update(float dt)
 void WindowService::PostUpdate(float dt)
 {
     PROFILER_CPU_ZONE;
+
+    prevMousePos = mousePos;
 
     glfwSwapBuffers(m_window);
 }

@@ -85,4 +85,17 @@ void EntityManager::RemoveEntity(entt::entity e)
     ENGINE_ASSERT(false);
 }
 
+const EntityManager::EntityInfo& EntityManager::GetEntityInfo(entt::entity e)
+{
+    if (const auto it = m_entities.find(e); it != m_entities.end())
+    {
+        return it->second;
+    }
+
+    ENGINE_ASSERT(false);
+
+    static EntityInfo info{};
+    return info;
+}
+
 } // engine::ecs

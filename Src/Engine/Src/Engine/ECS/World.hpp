@@ -15,6 +15,11 @@ public:
 
     void    Update(float dt);
 
+    auto    View()
+    {
+        return m_entityManager->m_registry.view<entt::entity>();
+    }
+
     template<typename T, typename... Types>
     auto    View()
     {

@@ -1,6 +1,7 @@
 #include <Engine/System/RenderSystem.hpp>
 #include <Engine/System/TransformSystem.hpp>
 #include <Engine/Service/Window/WindowService.hpp>
+#include <Engine/Service/EditorService.hpp>
 #include <Engine/Registration.hpp>
 #include <RHI/Pipeline.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -8,7 +9,7 @@
 namespace
 {
 
-constexpr float         C_MOUSE_SENSITIVITY = 0.25f;
+constexpr float         C_MOUSE_SENSITIVITY = 0.002f;
 constexpr float         C_EDITOR_CAMERA_SPEED = 40.0f;
 constexpr glm::vec3     C_WORLD_UP = glm::vec3(0, 1, 0);
 
@@ -125,6 +126,7 @@ void CameraSystem::Update(float dt)
     PROFILER_CPU_ZONE;
 
     auto& windowService = Instance().Service<WindowService>();
+    auto& editorService = Instance().Service<EditorService>();
 
     for (auto [e, c, t] : W()->View<CameraComponent, TransformComponent>())
     {
@@ -161,7 +163,8 @@ void CameraSystem::Update(float dt)
         const auto prevMousePos = windowService.PrevMousePos();
         const auto mousePos = windowService.MousePos();
 
-        if (c.IsRecentlyCreated() || prevMousePos != mousePos)
+        // TODO: Recalculate on transform change also
+        if (c.IsRecentlyCreated() || (prevMousePos != mousePos && editorService.IsViewportHovered() && windowService.MouseButtonPressed(MouseButton::BUTTON_RIGHT)))
         {
             float xOffset = mousePos.x - prevMousePos.x;
             float yOffset = prevMousePos.y - mousePos.y;
@@ -187,6 +190,8 @@ void CameraSystem::Update(float dt)
 
             rotation[1] = glm::radians(rotation[1]);
 
+            t.m_rotation = glm::quat(rotation);
+
             const float yaw = rotation[0];
             const float pitch = rotation[1];
 
@@ -210,6 +215,7 @@ void CameraSystem::Update(float dt)
 
         c.m_view = glm::lookAt(t.m_position, t.m_position + c.m_front, c.m_up);
         c.m_proj = glm::perspective(glm::radians(c.m_fov), c.m_aspectRatio, c.m_near, c.m_far);
+        c.m_proj[1][1] *= -1;
         c.m_projView = c.m_proj * c.m_view;
     }
 }

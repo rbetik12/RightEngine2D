@@ -258,6 +258,17 @@ bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource, bool forcePi
 			Instance().Service<RenderService>().ViewportSize() :
 			Instance().Service<WindowService>().Extent();
 
+		if (parsedMat.m_parsedPipeline.m_viewportSize.x < 1 ||
+			parsedMat.m_parsedPipeline.m_viewportSize.y < 1 ||
+			parsedMat.m_parsedPipeline.m_viewportSize.x > 65536 ||
+			parsedMat.m_parsedPipeline.m_viewportSize.x > 65536)
+		{
+			core::log::warning("[MaterialLoader] Viewport size is out of bounds: {}x{}", parsedMat.m_parsedPipeline.m_viewportSize.x,
+				parsedMat.m_parsedPipeline.m_viewportSize.y);
+		}
+
+		glm::clamp(parsedMat.m_parsedPipeline.m_viewportSize, glm::ivec2(1, 1), glm::ivec2(65536, 65536));
+
 		m_shaderToPipeline[shader] = AllocatePipeline(parsedMat.m_parsedPipeline);
 	}
 

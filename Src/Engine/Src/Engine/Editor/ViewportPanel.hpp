@@ -20,7 +20,7 @@ public:
 private:
 	virtual void DrawPanel() override;
 
-	ImVec2 m_viewportSize = ImVec2(1, 1);
+	ImVec2	m_viewportSize = ImVec2(1, 1);
 };
 
 } // engine::editor

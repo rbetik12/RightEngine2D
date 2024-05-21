@@ -15,6 +15,8 @@
 #include <Engine/System/TransformSystem.hpp>
 #include <Engine/Editor/Panel.hpp>
 #include <Engine/Editor/ViewportPanel.hpp>
+#include <Engine/Editor/EntityTreePanel.hpp>
+#include <Engine/Editor/ComponentPanel.hpp>
 #include <RHI/Pipeline.hpp>
 #include <imgui.h>
 
@@ -54,7 +56,8 @@ struct EditorService::Impl
     eastl::vector<std::shared_ptr<Panel>>   m_panels;
     std::shared_ptr<ViewportPanel>          m_viewportPanel;
 
-    ImVec2 m_viewportSize = ImVec2(1, 1);
+    ImVec2                                  m_viewportSize = ImVec2(1, 1);
+    entt::entity                            m_selectedEntity = C_INVALID_ENTITY;
 };
 
 EditorService::EditorService()
@@ -68,7 +71,10 @@ EditorService::EditorService()
     m_impl = std::make_unique<Impl>();
 
     m_impl->m_panels.emplace_back(std::make_shared<ViewportPanel>());
-    m_impl->m_viewportPanel = std::static_pointer_cast<ViewportPanel>(m_impl->m_panels.back());
+    m_impl->m_panels.emplace_back(std::make_shared<EntityTreePanel>());
+    m_impl->m_panels.emplace_back(std::make_shared<ComponentPanel>());
+
+    m_impl->m_viewportPanel = std::static_pointer_cast<ViewportPanel>(m_impl->m_panels[0]);
 }
 
 EditorService::~EditorService()
@@ -113,6 +119,16 @@ void EditorService::PostUpdate(float dt)
     PROFILER_CPU_ZONE;
 }
 
+void EditorService::SelectedEntity(entt::entity e)
+{
+    m_impl->m_selectedEntity = e;
+}
+
+entt::entity EditorService::SelectedEntity()
+{
+    return m_impl->m_selectedEntity;
+}
+
 void EditorService::Initialize()
 {
     auto& rs = Instance().Service<RenderService>();
@@ -141,12 +157,17 @@ void EditorService::Initialize()
     em->AddComponent<CameraComponent>(cameraUuid, cameraComponent);
 
     auto& cameraTransform = em->GetComponent<TransformComponent>(cameraUuid);
-    cameraTransform.m_position = glm::vec3(0, 0, -10);
+    cameraTransform.m_position = glm::vec3(0, 0, -90);
 }
 
 glm::ivec2 EditorService::ViewportSize() const
 {
     return m_impl->m_viewportPanel->Size();
+}
+
+bool EditorService::IsViewportHovered() const
+{
+    return m_impl->m_viewportPanel->IsHovered();
 }
 
 } // engine
