@@ -2,9 +2,9 @@
     "name": "basic_3d",
     "version": 0,
     "shader": "/System/Shaders/basic_3d.glsl",
-    "offscreen": false,
+    "offscreen": true,
     "depthCompareOp": "LESS",
-    "cullMode": "BACK",
+    "cullMode": "NONE",
     "attachments": [
         {
             "loadOperation": "CLEAR",

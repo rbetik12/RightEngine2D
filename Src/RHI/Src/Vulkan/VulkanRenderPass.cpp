@@ -39,7 +39,8 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassDescriptor& descriptor) : Ren
     clearValue.depthStencil.depth = descriptor.m_depthStencilAttachment.m_clearValue.m_depth;
     clearValue.depthStencil.stencil = descriptor.m_depthStencilAttachment.m_clearValue.m_stencil;
 
-    m_depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+    std::memset(&m_depthAttachmentInfo, 0, sizeof(m_depthAttachmentInfo));
+    m_depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
     m_depthAttachmentInfo.clearValue = clearValue;
     m_depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     m_depthAttachmentInfo.imageView = std::static_pointer_cast<VulkanTexture>(descriptor.m_depthStencilAttachment.m_texture)->ImageView(0);

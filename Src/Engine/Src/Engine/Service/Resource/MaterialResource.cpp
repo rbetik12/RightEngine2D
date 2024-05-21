@@ -4,6 +4,7 @@
 #include <Engine/Service/ThreadService.hpp>
 #include <Engine/Service/Filesystem/File.hpp>
 #include <Engine/Service/Render/RenderService.hpp>
+#include <Engine/Service/Window/WindowService.hpp>
 #include <RHI/Helpers.hpp>
 #include <nlohmann/json.hpp>
 
@@ -132,6 +133,8 @@ void MaterialLoader::LoadSystemResources()
 
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
 {
+	std::lock_guard l(m_mutex);
+
 	ENGINE_ASSERT(res);
 
 	const auto it = m_shaderToPipeline.find(res->Material()->Shader());
@@ -143,35 +146,43 @@ const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResou
 		return empty;
 	}
 
-	return it->second;
+	const auto& p = it->second;
+
+	return p;
 }
 
-void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool onScreen)
+void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool offscreen)
 {
 	ENGINE_ASSERT(extent != glm::ivec2(0));
 
-	for (auto& it : m_shaderToPipeline)
+	eastl::vector<std::future<void>> tasks;
+
+	for (auto& [_, resource] : m_cache)
 	{
-		auto& oldPipelineDesc = it.second->Descriptor();
+		const auto& pipeline = Pipeline(resource);
 
-	    if (oldPipelineDesc.m_offscreen == onScreen)
-	    {
-			ParsedPipelineInfo pipelineInfo{};
-			pipelineInfo.m_viewportSize = extent;
-			pipelineInfo.m_shader = it.first;
-			pipelineInfo.m_offscreen = onScreen;
-			pipelineInfo.m_attachments = oldPipelineDesc.m_pass->Descriptor().m_colorAttachments;
-			pipelineInfo.m_depthAttachment = oldPipelineDesc.m_pass->Descriptor().m_depthStencilAttachment;
-			pipelineInfo.m_compute = oldPipelineDesc.m_compute;
-			pipelineInfo.m_cullMode = oldPipelineDesc.m_cullMode;
-			pipelineInfo.m_depthCompareOp = oldPipelineDesc.m_depthCompareOp;
+		if (pipeline->Descriptor().m_offscreen == offscreen)
+		{
+			auto& ts = Instance().Service<ThreadService>();
 
-			it.second = AllocatePipeline(pipelineInfo);
-	    }
+			resource->m_status = Resource::Status::LOADING;
+
+			tasks.push_back(ts.AddBackgroundTask([this, resource]()
+				{
+					PROFILER_CPU_ZONE_NAME("Load texture");
+					const auto result = Load(resource, true);
+					resource->m_status = result ? Resource::Status::READY : Resource::Status::FAILED;
+				}));
+		}
+	}
+
+	for (auto& task : tasks)
+	{
+		task.wait();
 	}
 }
 
-bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource)
+bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource, bool forcePipelineRecreation)
 {
 	auto& vfs = Instance().Service<io::VirtualFilesystemService>();
 
@@ -241,9 +252,11 @@ bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource)
 		}
 	}
 
-	if (!hasPipeline)
+	if (!hasPipeline || forcePipelineRecreation)
 	{
-		parsedMat.m_parsedPipeline.m_viewportSize = Instance().Service<RenderService>().ViewportSize();
+		parsedMat.m_parsedPipeline.m_viewportSize = parsedMat.m_parsedPipeline.m_offscreen ? 
+			Instance().Service<RenderService>().ViewportSize() :
+			Instance().Service<WindowService>().Extent();
 
 		m_shaderToPipeline[shader] = AllocatePipeline(parsedMat.m_parsedPipeline);
 	}
@@ -287,10 +300,11 @@ MaterialLoader::ParsedMaterial MaterialLoader::ParseJson(std::ifstream& stream)
 	const auto& parsedDepthAttachment = j[C_DEPTH_ATTACHMENT_KEY];
 	if (!parsedDepthAttachment.is_null() && parsedDepthAttachment.is_object())
 	{
-		auto& depthAttachment = mat.m_parsedPipeline.m_depthAttachment;
+		rhi::AttachmentDescriptor depthAttachment;
 		depthAttachment.m_clearValue = {};
 		depthAttachment.m_loadOperation = StringToEnum<rhi::AttachmentLoadOperation>(parsedDepthAttachment[C_LOAD_OPERATION_KEY]);
 		depthAttachment.m_storeOperation = StringToEnum<rhi::AttachmentStoreOperation>(parsedDepthAttachment[C_STORE_OPERATION_KEY]);
+		mat.m_parsedPipeline.m_depthAttachment = depthAttachment;
 	}
 
 	ENGINE_ASSERT(mat.m_version != std::numeric_limits<uint8_t>::max());
@@ -320,11 +334,24 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 		attachment.m_texture = rs.CreateTexture(colorAttachmentDesc);
 	}
 
+	if (info.m_depthAttachment)
+	{
+		rhi::TextureDescriptor depthDesc;
+		depthDesc.m_type = rhi::TextureType::TEXTURE_2D;
+		depthDesc.m_format = rhi::Format::D32_SFLOAT_S8_UINT;
+		depthDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
+		depthDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
+		depthDesc.m_layersAmount = 1;
+		depthDesc.m_mipLevels = 1;
+
+		info.m_depthAttachment->m_texture = rs.CreateTexture(depthDesc);
+	}
+
 	rhi::RenderPassDescriptor renderPassDesc{};
 	renderPassDesc.m_name = fmt::format("{}-Pass", info.m_shader->Descriptor().m_name);
 	renderPassDesc.m_extent = info.m_viewportSize;
 	renderPassDesc.m_colorAttachments = std::move(info.m_attachments);
-	renderPassDesc.m_depthStencilAttachment = {};
+	renderPassDesc.m_depthStencilAttachment = info.m_depthAttachment.has_value() ? *info.m_depthAttachment : rhi::AttachmentDescriptor{};
 
 	const auto renderpass = rs.CreateRenderPass(renderPassDesc);
 

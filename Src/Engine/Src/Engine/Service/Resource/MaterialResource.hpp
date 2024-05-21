@@ -28,7 +28,7 @@ public:
 	const ResPtr<rhi::Pipeline>&	Pipeline(const ResPtr<MaterialResource>& res) const;
 
 	// Called automatically, don't call it unless you know what are you doing!!!
-	void							ResizePipelines(glm::ivec2 extent, bool onScreen = false);
+	void							ResizePipelines(glm::ivec2 extent, bool offscreen = true);
 
 	const ResPtr<MaterialResource>& RenderMaterial() const { return m_renderMaterial; }
 	const ResPtr<MaterialResource>& PresentMaterial() const { return m_presentMaterial; }
@@ -37,7 +37,7 @@ private:
 	struct ParsedPipelineInfo
 	{
 		eastl::vector<rhi::AttachmentDescriptor>	m_attachments;
-		rhi::AttachmentDescriptor					m_depthAttachment;
+		std::optional<rhi::AttachmentDescriptor>	m_depthAttachment;
 		std::shared_ptr<rhi::Shader>				m_shader;
 		glm::ivec2									m_viewportSize = { 0, 0 };
 		bool										m_compute = false;
@@ -54,11 +54,11 @@ private:
 		ParsedPipelineInfo	m_parsedPipeline;
 	};
 
-	bool							Load(const ResPtr<MaterialResource>& resource);
+	bool							Load(const ResPtr<MaterialResource>& resource, bool forcePipelineRecreation = false);
 	ParsedMaterial					ParseJson(std::ifstream& stream);
 	std::shared_ptr<rhi::Pipeline>	AllocatePipeline(ParsedPipelineInfo& info);
 
-	std::mutex																			m_mutex;
+	mutable std::mutex																	m_mutex;
 	eastl::vector<tf::Future<void>>														m_loadingTasks;
 	std::shared_ptr<rhi::ShaderCompiler>												m_shaderCompiler;
 	eastl::unordered_map<io::fs::path, std::shared_ptr<rhi::Shader>>					m_shaderCache;

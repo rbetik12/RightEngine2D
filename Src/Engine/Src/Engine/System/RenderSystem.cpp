@@ -99,7 +99,15 @@ void RenderSystem::Update(float dt)
             {
                 rs.BindMaterial(mesh.get().m_material);
                 rs.PushConstant(&transforms[i].get().m_worldTransform, sizeof(glm::mat4), pipeline);
-                rs.Draw(submesh->VertexBuffer(), pipeline->VertexCount(submesh->VertexBuffer()));
+
+                if (submesh->IndexBuffer())
+                {
+                    rs.Draw(submesh->VertexBuffer(), submesh->IndexBuffer());
+                }
+                else
+                {
+                    rs.Draw(submesh->VertexBuffer(), pipeline->VertexCount(submesh->VertexBuffer()));
+                }
             }
             i++;
         }

@@ -34,6 +34,18 @@ public:
     void            RemoveEntity(const uuids::uuid& uuid);
     void            RemoveEntity(entt::entity e);
 
+    template<typename T>
+    T& GetComponent(const uuids::uuid& uuid)
+    {
+        const auto it = m_uuidToEntity.find(uuid);
+        ENGINE_ASSERT(it != m_uuidToEntity.end());
+
+        auto ptr = m_registry.try_get<T>(it->second);
+        ENGINE_ASSERT(ptr);
+
+        return *ptr;
+    }
+
     template<typename T, typename... Args>
     T&              AddComponent(const uuids::uuid& uuid, Args&&... args)
     {

@@ -63,7 +63,7 @@ layout(location = 0) in VertexOutput Output;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = vec4(Output.WorldPos, 1.0);
+    outColor = vec4(1.0);
 }
 
 #pragma stage end

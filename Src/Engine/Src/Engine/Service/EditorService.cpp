@@ -15,6 +15,7 @@
 #include <Engine/System/TransformSystem.hpp>
 #include <Engine/Editor/Panel.hpp>
 #include <Engine/Editor/ViewportPanel.hpp>
+#include <RHI/Pipeline.hpp>
 #include <imgui.h>
 
 RTTR_REGISTRATION
@@ -52,6 +53,8 @@ struct EditorService::Impl
     std::shared_ptr<MeshResource>           m_monkeyMesh;
     eastl::vector<std::shared_ptr<Panel>>   m_panels;
     std::shared_ptr<ViewportPanel>          m_viewportPanel;
+
+    ImVec2 m_viewportSize = ImVec2(1, 1);
 };
 
 EditorService::EditorService()
@@ -137,50 +140,8 @@ void EditorService::Initialize()
     cameraComponent.m_active = true;
     em->AddComponent<CameraComponent>(cameraUuid, cameraComponent);
 
-    // const auto computeShaderPath = "/System/Shaders/equirectangle_to_cubemap.glsl";
-    // const auto computeCompiledShader = rs.ShaderCompiler()->Compile(vfs.Absolute(io::fs::path(computeShaderPath)).generic_u8string(), rhi::ShaderType::COMPUTE);
-    //
-    // rhi::ShaderDescriptor computeShaderDesc{};
-    // computeShaderDesc.m_path = computeShaderPath;
-    // computeShaderDesc.m_blobByStage = computeCompiledShader.m_stageBlob;
-    // computeShaderDesc.m_name = "Compute";
-    // computeShaderDesc.m_type = rhi::ShaderType::COMPUTE;
-    // computeShaderDesc.m_reflection = computeCompiledShader.m_reflection;
-    //
-    // const auto computeShader = rs.CreateShader(computeShaderDesc);
-    //
-    // auto& texLoader = resourceService.GetLoader<TextureLoader>();
-    //
-    // m_impl->m_envTex = std::static_pointer_cast<TextureResource>(texLoader.Load("/System/Textures/spree_bank_env.hdr"));
-    //
-    // rhi::TextureDescriptor envCubemapDesc{};
-    // envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
-    // envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
-    // envCubemapDesc.m_layersAmount = 6;
-    // envCubemapDesc.m_mipLevels = 1;
-    // envCubemapDesc.m_width = 1024;
-    // envCubemapDesc.m_height = 1024;
-    //
-    // m_impl->m_envCubMap = rs.CreateTexture(envCubemapDesc);
-    // m_impl->m_equrectangleMaterial = std::make_shared<render::Material>(computeShader);
-    //
-    // while (!m_impl->m_envTex->Ready())
-    // {}
-    //
-    // const auto computePass = std::make_shared<rhi::ComputePass>();
-    // computePass->m_textures.emplace_back(m_impl->m_envTex->Texture());
-    // computePass->m_storageTextures.emplace_back(m_impl->m_envCubMap);
-    //
-    // rhi::PipelineDescriptor computePipelineDesc{};
-    // computePipelineDesc.m_compute = true;
-    // computePipelineDesc.m_computePass = computePass;
-    // computePipelineDesc.m_shader = computeShader;
-    //
-    // m_impl->m_computePipeline = rs.CreatePipeline(computePipelineDesc);
-    //
-    // m_impl->m_equrectangleMaterial->SetTexture(m_impl->m_envCubMap, 0);
-    // m_impl->m_equrectangleMaterial->SetTexture(m_impl->m_envTex->Texture(), 1);
-    // m_impl->m_equrectangleMaterial->Sync();
+    auto& cameraTransform = em->GetComponent<TransformComponent>(cameraUuid);
+    cameraTransform.m_position = glm::vec3(0, 0, -10);
 }
 
 glm::ivec2 EditorService::ViewportSize() const

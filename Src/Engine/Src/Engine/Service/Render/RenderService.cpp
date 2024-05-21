@@ -55,6 +55,8 @@ struct RenderService::Impl
 
     std::shared_ptr<rhi::RenderPass>        m_imguiRenderPass;
 
+    std::mutex                              m_pipelineGetterMutex;
+
     glm::ivec2                              m_newResolution;
     bool                                    m_resizeRequested = true;
 };
@@ -62,6 +64,13 @@ struct RenderService::Impl
 RenderService::RenderService()
 {
     m_impl = std::make_unique<Impl>();
+
+    m_renderThread = Instance().Service<ThreadService>().SpawnThread("Render Thread");
+
+    RunOnRenderThreadWait([]()
+        {
+            core::ThreadIdStorage::SetRenderThreadId(core::CurrentThreadID());
+        });
 
     rhi::vulkan::VulkanInitContext initCtx;
     initCtx.m_surfaceConstructor = [&](VkInstance instance)
@@ -88,8 +97,6 @@ RenderService::RenderService()
     m_impl->m_device = rhi::Device::Create(m_impl->m_context);
 
     m_impl->m_defaultSampler = m_impl->m_device->CreateSampler({});
-
-    m_renderThread = Instance().Service<ThreadService>().SpawnThread("Render Thread");
 }
 
 RenderService::~RenderService()
@@ -124,10 +131,10 @@ void RenderService::PostUpdate(float dt)
 
     BeginPass(m_impl->m_presentMaterial);
     BindMaterial(m_impl->m_presentMaterial);
-
+    
     Draw(m_impl->m_presentVB, m_impl->m_presentVB->Descriptor().m_size /
         Pipeline(m_impl->m_presentMaterial)->Descriptor().m_shader->Descriptor().m_reflection.m_inputLayout.Stride());
-
+    
     EndPass(m_impl->m_presentMaterial);
 
     RunOnRenderThread([=]
@@ -368,6 +375,8 @@ const RPtr<MaterialResource>& RenderService::DefaultMaterial() const
 
 const ResPtr<rhi::Pipeline>& RenderService::Pipeline(const ResPtr<MaterialResource>& res) const
 {
+    std::lock_guard l(m_impl->m_pipelineGetterMutex);
+
     auto& materialLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
 
     return materialLoader.Pipeline(res);
@@ -415,6 +424,7 @@ void RenderService::CreateWindowResources(glm::ivec2 extent)
 
     // TODO: Add here rendering from PBR pass to swapchain in non-editor mode
     m_impl->m_presentMaterial->Material()->SetTexture(imguiTex, 0);
+    //m_impl->m_presentMaterial->Material()->SetTexture(Pipeline(DefaultMaterial())->Descriptor().m_pass->Descriptor().m_colorAttachments[0].m_texture, 0);
     m_impl->m_presentMaterial->Material()->Sync();
 }
 

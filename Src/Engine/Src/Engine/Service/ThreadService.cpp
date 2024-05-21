@@ -103,6 +103,8 @@ ThreadService::ThreadService()
     const auto workersAmount = std::thread::hardware_concurrency() / 2;
     m_bgExecutor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Background Thread", workersAmount));
     m_fgExecutor = std::make_unique<tf::Executor>(workersAmount, std::make_shared<WorkerInterface>("Foreground Thread", workersAmount));
+
+    core::ThreadIdStorage::SetMainThreadId(core::CurrentThreadID());
 }
 
 ThreadService::~ThreadService()
