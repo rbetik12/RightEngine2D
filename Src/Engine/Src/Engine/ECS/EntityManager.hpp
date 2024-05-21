@@ -28,11 +28,22 @@ public:
     EntityManager(World* world);
     ~EntityManager();
 
-    void            Update();
+    void                Update();
 
-    uuids::uuid     CreateEntity(std::string_view name = "");
-    void            RemoveEntity(const uuids::uuid& uuid);
-    void            RemoveEntity(entt::entity e);
+    uuids::uuid         CreateEntity(std::string_view name = "");
+    void                RemoveEntity(const uuids::uuid& uuid);
+    void                RemoveEntity(entt::entity e);
+
+    const EntityInfo&   GetEntityInfo(entt::entity e);
+
+    template<typename T>
+    T& GetComponent(entt::entity e)
+    {
+        auto ptr = m_registry.try_get<T>(e);
+        ENGINE_ASSERT(ptr);
+
+        return *ptr;
+    }
 
     template<typename T>
     T& GetComponent(const uuids::uuid& uuid)

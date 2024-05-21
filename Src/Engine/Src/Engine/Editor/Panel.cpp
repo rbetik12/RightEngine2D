@@ -7,7 +7,11 @@ namespace engine::editor
 void Panel::Draw()
 {
 	ImGui::Begin(m_name.c_str());
+
+	m_isHovered = ImGui::IsWindowHovered();
+
 	DrawPanel();
+
 	ImGui::End();
 }
 

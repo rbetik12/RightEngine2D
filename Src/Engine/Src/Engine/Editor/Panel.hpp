@@ -15,11 +15,16 @@ public:
 
 	virtual void Draw();
 
-protected:
+	bool IsHovered() const
+	{
+		return m_isHovered;
+	}
 
+protected:
 	virtual void DrawPanel() = 0;
 
 	std::string m_name;
+	bool		m_isHovered = false;
 };
 
 } // engine::editor

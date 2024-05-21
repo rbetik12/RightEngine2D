@@ -4,7 +4,7 @@
     "shader": "/System/Shaders/basic_3d.glsl",
     "offscreen": true,
     "depthCompareOp": "LESS",
-    "cullMode": "NONE",
+    "cullMode": "BACK",
     "attachments": [
         {
             "loadOperation": "CLEAR",
