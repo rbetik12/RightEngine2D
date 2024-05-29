@@ -100,6 +100,8 @@ inline VkFormat Format(Format format)
         return VK_FORMAT_R8G8B8_SRGB;
     case Format::D32_SFLOAT:
         return VK_FORMAT_D32_SFLOAT;
+    case Format::RGBA8_UNORM:
+        return VK_FORMAT_R8G8B8A8_UNORM;
     default:
         HELPER_DEFAULT_RETURN(VkFormat);
     }

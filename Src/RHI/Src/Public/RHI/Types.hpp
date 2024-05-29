@@ -26,6 +26,7 @@ enum class Format : uint8_t
     RG16_SFLOAT,
     RGB8_UINT,
     RGBA8_UINT,
+    RGBA8_UNORM,
     RGB16_SFLOAT,
     RG32_SFLOAT,
     RGB32_SFLOAT,

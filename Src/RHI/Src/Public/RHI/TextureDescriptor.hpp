@@ -43,6 +43,7 @@ struct RHI_API TextureDescriptor
         case Format::R8_UINT:
         case Format::RGB8_UINT:
         case Format::RGBA8_UINT:
+        case Format::RGBA8_UNORM:
             return sizeof(uint8_t) * components;
         case Format::RGB16_SFLOAT:
         case Format::RGBA16_SFLOAT:
