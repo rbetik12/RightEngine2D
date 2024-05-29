@@ -21,7 +21,42 @@ inline bool IsDepthTexture(Format format)
     return false;
 }
 
-void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void CopyBufferToImage(VkBuffer buffer, VkImage image, TextureDescriptor descriptor)
+{
+    CommandBuffer cmdBuffer;
+    cmdBuffer.Begin();
+
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+
+    region.imageOffset = { 0, 0, 0 };
+    region.imageExtent = { descriptor.m_width, descriptor.m_height, 1 };
+
+    cmdBuffer.Push([&](VkCommandBuffer cmdBufferPtr)
+        {
+            vkCmdCopyBufferToImage(
+                cmdBufferPtr,
+                buffer,
+                image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &region
+            );
+        });
+
+    cmdBuffer.End();
+
+    VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
+}
+
+[[maybe_unused]] void CopyImageToBuffer(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
     CommandBuffer cmdBuffer;
     cmdBuffer.Begin();
@@ -41,11 +76,11 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
 
     cmdBuffer.Push([&](VkCommandBuffer cmdBufferPtr)
         {
-            vkCmdCopyBufferToImage(
+            vkCmdCopyImageToBuffer(
                 cmdBufferPtr,
-                buffer,
                 image,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                buffer,
                 1,
                 &region
             );
@@ -56,7 +91,7 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t 
     VulkanDevice::s_ctx.m_instance->Execute(cmdBuffer)->Wait();
 }
 
-} // namespace unnamed
+} // unnamed
 
 VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data) : Texture(desc, sampler), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
 {
@@ -152,10 +187,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             m_descriptor.m_mipLevels);
         if (data)
         {
-            CopyBufferToImage(std::static_pointer_cast<VulkanBuffer>(m_stagingBuffer)->Raw(),
-                m_image,
-                m_descriptor.m_width,
-                m_descriptor.m_height);
+            CopyBufferToImage(std::static_pointer_cast<VulkanBuffer>(m_stagingBuffer)->Raw(), m_image, m_descriptor);
 
             m_stagingBuffer.reset();
         }

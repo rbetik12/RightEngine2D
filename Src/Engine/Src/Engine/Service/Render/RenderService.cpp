@@ -438,7 +438,11 @@ void RenderService::LoadSystemResources()
     ENGINE_ASSERT(m_impl->m_renderMaterial->Ready());
     ENGINE_ASSERT(m_impl->m_presentMaterial->Ready());
 
+    auto albedoTex = Instance().Service<ResourceService>().Load<TextureResource>("/Textures/brick.png");
+    albedoTex->Wait();
+
     m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
+    m_impl->m_renderMaterial->Material()->SetTexture(albedoTex->Texture(), 1);
     m_impl->m_renderMaterial->Material()->Sync();
 
     rhi::BufferDescriptor presentVBDesc{};

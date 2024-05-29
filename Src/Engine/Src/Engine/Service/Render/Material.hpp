@@ -13,6 +13,46 @@
 namespace engine::render
 {
 
+class ENGINE_API MaterialDataStorage
+{
+public:
+    struct TextureData
+    {
+        std::weak_ptr<rhi::Texture> m_texture;
+        int                         m_slot;
+
+        bool operator<(const TextureData& other) const
+        {
+            return m_slot < other.m_slot;
+        }
+    };
+
+    using TexDataSet = eastl::set<TextureData>;
+
+    TexDataSet TexData(const std::shared_ptr<rhi::Shader>& shader) const
+    {
+        if (const auto it = m_texData.find(shader->Descriptor().m_path); it != m_texData.end())
+        {
+            return it->second;
+        }
+
+        return {};
+    }
+
+    void AddTexData(const std::shared_ptr<rhi::Shader>& shader, const std::shared_ptr<rhi::Texture>& texture, int slot)
+    {
+        m_texData[shader->Descriptor().m_path].insert({ texture, slot });
+    }
+
+    void ClearTexData(const std::shared_ptr<rhi::Shader>& shader)
+    {
+        m_texData.erase(shader->Descriptor().m_path);
+    }
+
+private:
+    eastl::unordered_map<io::fs::path, TexDataSet> m_texData;
+};
+
 class ENGINE_API Material
 {
 public:
@@ -72,6 +112,8 @@ private:
     std::shared_ptr<rhi::Shader>                     m_shader;
     std::shared_ptr<rhi::GPUMaterial>                m_gpuMaterial;
     bool                                             m_dirty;
+
+    inline static MaterialDataStorage                s_storage;
 };
 
 } // engine::render

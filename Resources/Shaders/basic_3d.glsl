@@ -61,9 +61,10 @@ struct VertexOutput
 layout(location = 0) in VertexOutput Output;
 
 layout(location = 0) out vec4 outColor;
+layout(binding = 1) uniform sampler2D u_Albedo;
 
 void main() {
-    outColor = vec4(1.0);
+    outColor = texture(u_Albedo, Output.UV);
 }
 
 #pragma stage end

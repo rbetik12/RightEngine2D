@@ -40,7 +40,7 @@ rhi::Format ChooseTextureFormat(int componentsAmount, bool hdr)
 	case 3:
 		return rhi::Format::RGB8_UINT;
 	case 4:
-		return rhi::Format::RGBA8_UINT;
+		return rhi::Format::RGBA8_UNORM;
 	default:
 		ENGINE_ASSERT(false);
 		return rhi::Format::NONE;

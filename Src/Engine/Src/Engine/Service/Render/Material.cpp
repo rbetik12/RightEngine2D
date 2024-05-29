@@ -15,6 +15,25 @@ Material::Material(const std::shared_ptr<rhi::Shader>& shader) : m_shader(shader
 {
     m_buffers.resize(C_MAX_SHADER_BUFFER_AMOUNT);
     m_textures.resize(C_MAX_SHADER_TEXTURE_AMOUNT);
+
+    const auto data = s_storage.TexData(m_shader);
+
+    if (!data.empty())
+    {
+        for (const auto& tex : data)
+        {
+            if (!tex.m_texture.expired())
+            {
+                SetTexture(tex.m_texture.lock(), tex.m_slot);
+            }
+            else
+            {
+                ENGINE_ASSERT(false);
+            }
+        }
+
+        Sync();
+    }
 }
 
 void Material::SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std::string_view name, int offset)
@@ -50,6 +69,7 @@ void Material::SetTexture(const std::shared_ptr<rhi::Texture>& texture, int slot
     info.m_texture = texture;
 
     m_pendingTextures.emplace_back(slot, info);
+    s_storage.AddTexData(m_shader, texture, slot);
 }
 
 void Material::Sync()

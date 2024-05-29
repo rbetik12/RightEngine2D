@@ -17,6 +17,7 @@ inline uint8_t FormatComponents(Format format)
     case Format::RG16_SFLOAT: return 2;
     case Format::RGB8_UINT: return 3;
     case Format::RGBA8_UINT: return 4;
+    case Format::RGBA8_UNORM: return 4;
     case Format::RGB16_SFLOAT: return 3;
     case Format::RG32_SFLOAT: return 2;
     case Format::RGB32_SFLOAT: return 3;
@@ -44,6 +45,7 @@ inline std::string_view FormatToString(Format format)
     {
     case Format::R8_UINT: return "R8_UINT";
     case Format::RGBA8_UINT: return "RGBA8_UINT";
+    case Format::RGBA8_UNORM: return "RGBA8_UNORM";
     case Format::RGBA32_SFLOAT: return "RGBA32_SFLOAT";
     }
 
