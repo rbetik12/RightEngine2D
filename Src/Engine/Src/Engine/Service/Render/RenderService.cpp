@@ -256,19 +256,35 @@ void RenderService::EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline)
         });
 }
 
-void RenderService::BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+void RenderService::BeginComputePass(const ResPtr<MaterialResource>& material)
 {
     RunOnRenderThread([=]()
         {
-            m_impl->m_device->BeginComputePipeline(pipeline);
+            m_impl->m_device->BeginComputePipeline(Pipeline(material));
         });
 }
 
-void RenderService::EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline)
+RPtr<rhi::ComputeState> RenderService::BeginComputePassImmediate(const ResPtr<MaterialResource>& material)
+{
+    return RunOnRenderThreadWait([&]()
+        {
+            return m_impl->m_device->BeginComputePipelineImmediate(Pipeline(material));
+        });
+}
+
+void RenderService::EndComputePass(const ResPtr<MaterialResource>& material)
 {
     RunOnRenderThread([=]()
         {
-            m_impl->m_device->BeginComputePipeline(pipeline);
+            m_impl->m_device->EndComputePipeline(Pipeline(material));
+        });
+}
+
+void RenderService::EndComputePass(const ResPtr<MaterialResource>& material, const RPtr<rhi::ComputeState>& state)
+{
+    RunOnRenderThreadWait([&]()
+        {
+            m_impl->m_device->EndComputePipeline(Pipeline(material), state);
         });
 }
 
@@ -296,6 +312,15 @@ void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_
         });
 }
 
+void RenderService::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ,
+    const RPtr<rhi::ComputeState>& state)
+{
+    RunOnRenderThread([=]()
+        {
+            m_impl->m_device->Dispatch(groupCountX, groupCountY, groupCountZ, state);
+        });
+}
+
 void RenderService::BindMaterial(const ResPtr<MaterialResource>& material)
 {
     auto& pipeline = Pipeline(material);
@@ -305,6 +330,17 @@ void RenderService::BindMaterial(const ResPtr<MaterialResource>& material)
             if (const auto gpuMaterial = material->Material()->GPUMaterial())
             {
                 m_impl->m_device->BindGPUMaterial(material->Material()->GPUMaterial(), pipeline);
+            }
+        });
+}
+
+void RenderService::BindMaterial(const ResPtr<MaterialResource>& material, const RPtr<rhi::ComputeState>& state)
+{
+    RunOnRenderThread([=]()
+        {
+            if (const auto gpuMaterial = material->Material()->GPUMaterial())
+            {
+                m_impl->m_device->BindGPUMaterial(material->Material()->GPUMaterial(), Pipeline(material), state);
             }
         });
 }

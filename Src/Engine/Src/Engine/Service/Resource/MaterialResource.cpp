@@ -54,6 +54,7 @@ constexpr std::string_view C_VERSION_KEY = "version";
 constexpr std::string_view C_OFFSCREEN_KEY = "offscreen";
 constexpr std::string_view C_DEPTH_COMPARE_KEY = "depthCompareOp";
 constexpr std::string_view C_CULL_MODE_KEY = "cullMode";
+constexpr std::string_view C_COMPUTE_KEY = "compute";
 constexpr std::string_view C_ATTACHMENTS_KEY = "attachments";
 constexpr std::string_view C_DEPTH_ATTACHMENT_KEY = "depthAttachment";
 constexpr std::string_view C_LOAD_OPERATION_KEY = "loadOperation";
@@ -159,9 +160,15 @@ void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool offscreen)
 
 	for (auto& [_, resource] : m_cache)
 	{
+		// TODO: Probably we need to resize it later
+		if (!resource->Ready())
+		{
+			continue;
+		}
+
 		const auto& pipeline = Pipeline(resource);
 
-		if (pipeline->Descriptor().m_offscreen == offscreen)
+		if (pipeline->Descriptor().m_offscreen == offscreen && !pipeline->Descriptor().m_compute)
 		{
 			auto& ts = Instance().Service<ThreadService>();
 
@@ -293,6 +300,11 @@ MaterialLoader::ParsedMaterial MaterialLoader::ParseJson(std::ifstream& stream)
 	mat.m_name = j[C_NAME_KEY];
 	mat.m_shaderPath = io::fs::path(std::string_view(j[C_SHADER_KEY]));
 	mat.m_version = j[C_VERSION_KEY];
+	if (!j[C_COMPUTE_KEY].is_null())
+	{
+		mat.m_parsedPipeline.m_compute = true;
+		return mat;
+	}
 	mat.m_parsedPipeline.m_offscreen = j[C_OFFSCREEN_KEY];
 	mat.m_parsedPipeline.m_depthCompareOp = StringToEnum<rhi::CompareOp>(j[C_DEPTH_COMPARE_KEY]);
 	mat.m_parsedPipeline.m_cullMode = StringToEnum<rhi::CullMode>(j[C_CULL_MODE_KEY]);
@@ -326,6 +338,20 @@ MaterialLoader::ParsedMaterial MaterialLoader::ParseJson(std::ifstream& stream)
 
 std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineInfo& info)
 {
+	auto& rs = Instance().Service<RenderService>();
+
+	if (info.m_compute)
+	{
+		const auto computePass = std::make_shared<rhi::ComputePass>();
+
+		rhi::PipelineDescriptor computePipelineDesc{};
+		computePipelineDesc.m_compute = true;
+		computePipelineDesc.m_computePass = computePass;
+		computePipelineDesc.m_shader = info.m_shader;
+
+		return rs.CreatePipeline(computePipelineDesc);
+	}
+
 	ENGINE_ASSERT(info.m_viewportSize != glm::ivec2(0));
 
 	eastl::vector<rhi::AttachmentDescriptor> colorAttachments;
@@ -337,8 +363,6 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 	colorAttachmentDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
 	colorAttachmentDesc.m_layersAmount = 1;
 	colorAttachmentDesc.m_mipLevels = 1;
-
-	auto& rs = Instance().Service<RenderService>();
 
 	for (auto& attachment : info.m_attachments)
 	{
