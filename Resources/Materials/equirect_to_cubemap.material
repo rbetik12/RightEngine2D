@@ -1,0 +1,6 @@
+{
+    "name": "equirectangle_to_skybox",
+    "version": 0,
+    "shader": "/System/Shaders/equirectangle_to_cubemap.glslc",
+    "compute": true
+}

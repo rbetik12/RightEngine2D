@@ -39,12 +39,16 @@ public:
     void                        BeginPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
     void                        EndPass(const ResPtr<MaterialResource>& material);
     void                        EndPass(const std::shared_ptr<rhi::Pipeline>& pipeline);
-    void                        BeginComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
-    void                        EndComputePass(const std::shared_ptr<rhi::Pipeline>& pipeline);
+    void                        BeginComputePass(const ResPtr<MaterialResource>& material);
+    RPtr<rhi::ComputeState>     BeginComputePassImmediate(const ResPtr<MaterialResource>& material);
+    void                        EndComputePass(const ResPtr<MaterialResource>& material);
+    void                        EndComputePass(const ResPtr<MaterialResource>& material, const RPtr<rhi::ComputeState>& state);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& vb, const std::shared_ptr<rhi::Buffer>& ib, uint32_t instanceCount = 1);
     void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+    void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ, const RPtr<rhi::ComputeState>& state);
     void                        BindMaterial(const ResPtr<MaterialResource>& material);
+    void                        BindMaterial(const ResPtr<MaterialResource>& material, const RPtr<rhi::ComputeState>& state);
     void                        PushConstant(const void* data, uint32_t size, const std::shared_ptr<rhi::Pipeline>& pipeline);
 
     void                        WaitAll();

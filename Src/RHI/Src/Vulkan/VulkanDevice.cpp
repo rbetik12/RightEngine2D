@@ -8,6 +8,7 @@
 #include "VulkanPipeline.hpp"
 #include "VulkanHelpers.hpp"
 #include "VulkanGPUMaterial.hpp"
+#include "VulkanComputeState.hpp"
 #include <Core/Profiling.hpp>
 #include <vk-tools/VulkanTools.h>
 #include <optional>
@@ -356,6 +357,47 @@ void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline)
     m_computeTexturesToReset.clear();
 }
 
+std::shared_ptr<ComputeState> VulkanDevice::BeginComputePipelineImmediate(const std::shared_ptr<Pipeline>& pipeline)
+{
+    const auto state = std::make_shared<VulkanComputeState>();
+
+    RHI_ASSERT(pipeline->Descriptor().m_compute);
+
+    const auto cmdBuffer = state->m_cmdBuffer.Raw();
+
+    for (const auto& texture : pipeline->Descriptor().m_computePass->m_storageTextures)
+    {
+        auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture);
+        vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_GENERAL);
+        m_computeTexturesToReset.emplace_back(vkTexture);
+    }
+
+    const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipeline->GetPipeline());
+
+    return state;
+}
+
+void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline,
+    const std::shared_ptr<ComputeState>& state)
+{
+    RHI_ASSERT(pipeline->Descriptor().m_compute);
+    RHI_ASSERT(state);
+
+    const auto vkState = std::static_pointer_cast<VulkanComputeState>(state);
+    const auto cmdBuffer = vkState->m_cmdBuffer.Raw();
+
+    for (const auto& texture : m_computeTexturesToReset)
+    {
+        auto vkTexture = std::static_pointer_cast<VulkanTexture>(texture);
+        vkTexture->ChangeImageLayout(cmdBuffer, vkTexture->Layout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
+    m_computeTexturesToReset.clear();
+
+    vkState->m_cmdBuffer.End();
+    Execute(vkState->m_cmdBuffer)->Wait();
+}
+
 void VulkanDevice::Present()
 {
     VkResult result;
@@ -547,6 +589,15 @@ void VulkanDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t
     vkCmdDispatch(cmdBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
+void VulkanDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ,
+    const std::shared_ptr<ComputeState>& state)
+{
+    RHI_ASSERT(state);
+
+    const auto vkState = std::static_pointer_cast<VulkanComputeState>(state);
+    vkCmdDispatch(vkState->m_cmdBuffer.Raw(), groupCountX, groupCountY, groupCountZ);
+}
+
 void VulkanDevice::BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material, const std::shared_ptr<Pipeline>& pipeline)
 {
     const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
@@ -570,6 +621,31 @@ void VulkanDevice::BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material,
             0, 1,
             &descSet
             , 0, nullptr);
+    }
+}
+
+void VulkanDevice::BindGPUMaterial(const std::shared_ptr<GPUMaterial>& material,
+    const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state)
+{
+    RHI_ASSERT(state);
+
+    const auto vkPipeline = std::static_pointer_cast<VulkanPipeline>(pipeline);
+    const auto vkMaterial = std::static_pointer_cast<VulkanGPUMaterial>(material);
+    const auto descSet = vkMaterial->DescriptorSet();
+    const auto vkState = std::static_pointer_cast<VulkanComputeState>(state);
+
+    if (vkPipeline->Descriptor().m_compute)
+    {
+        vkCmdBindDescriptorSets(vkState->m_cmdBuffer.Raw(),
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            vkPipeline->Layout(),
+            0, 1,
+            &descSet
+            , 0, nullptr);
+    }
+    else
+    {
+        RHI_ASSERT(false);
     }
 }
 
