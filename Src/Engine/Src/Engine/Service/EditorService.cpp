@@ -13,6 +13,7 @@
 #include <Engine/Service/Resource/MeshResource.hpp>
 #include <Engine/System/RenderSystem.hpp>
 #include <Engine/System/TransformSystem.hpp>
+#include <Engine/System/SkyboxSystem.hpp>
 #include <Engine/Editor/Panel.hpp>
 #include <Engine/Editor/ViewportPanel.hpp>
 #include <Engine/Editor/EntityTreePanel.hpp>
@@ -157,7 +158,7 @@ void EditorService::Initialize()
     em->AddComponent<CameraComponent>(cameraUuid, cameraComponent);
 
     auto& cameraTransform = em->GetComponent<TransformComponent>(cameraUuid);
-    cameraTransform.m_position = glm::vec3(0, 0, -90);
+    cameraTransform.m_position = glm::vec3(0, 0, -10);
 
     m_impl->m_envTex = resourceService.Load<TextureResource>("/System/Textures/spree_bank_env.hdr");
     m_impl->m_equirectToCubemapMaterial = resourceService.Load<MaterialResource>("/System/Materials/equirect_to_cubemap.material");
@@ -187,6 +188,18 @@ void EditorService::Initialize()
     rs.BindMaterial(m_impl->m_equirectToCubemapMaterial, state);
     rs.Dispatch(m_impl->m_envCubMap->Width() / 32, m_impl->m_envCubMap->Height() / 32, 6, state);
     rs.EndComputePass(m_impl->m_equirectToCubemapMaterial, state);
+
+    auto skyboxMaterial = resourceService.Load<MaterialResource>("/System/Materials/skybox.material");
+    skyboxMaterial->Material()->SetTexture(m_impl->m_envCubMap, 3);
+    skyboxMaterial->Material()->Sync();
+
+    const auto skyboxUuid = em->CreateEntity("Skybox");
+    em->Update();
+
+    auto& skyboxMesh = em->AddComponent<MeshComponent>(skyboxUuid);
+    skyboxMesh.m_material = skyboxMaterial;
+
+    em->AddComponent<SkyboxComponent>(skyboxUuid);
 }
 
 glm::ivec2 EditorService::ViewportSize() const

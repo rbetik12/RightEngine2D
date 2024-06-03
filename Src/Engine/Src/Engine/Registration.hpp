@@ -137,7 +137,7 @@ public:
     template<typename TOther>
     System& UpdateBefore()
     {
-        static_assert(std::is_base_of_v<System, TOther>, "TOther must be derived of engine::ecs::System");
+        static_assert(std::is_base_of_v<engine::ecs::System, TOther>, "TOther must be derived of engine::ecs::System");
         static_assert(!std::is_same_v<T, TOther>, "Cycle in system update order");
 
         m_meta.m_updateBefore.emplace_back(rttr::type::get<TOther>());

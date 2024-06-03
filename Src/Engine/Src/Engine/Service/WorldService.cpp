@@ -5,6 +5,7 @@
 #include <Engine/Registration.hpp>
 #include <Engine/System/RenderSystem.hpp>
 #include <Engine/System/TransformSystem.hpp>
+#include <Engine/System/SkyboxSystem.hpp>
 #include <Core/Profiling.hpp>
 
 RTTR_REGISTRATION
@@ -21,9 +22,12 @@ namespace engine
 WorldService::WorldService()
 {
     m_world = std::make_unique<ecs::World>("Test world");
+
     m_world->GetSystemManager()->Add<TransformSystem>();
     m_world->GetSystemManager()->Add<RenderSystem>();
     m_world->GetSystemManager()->Add<CameraSystem>();
+    m_world->GetSystemManager()->Add<SkyboxSystem>();
+
     m_world->GetSystemManager()->UpdateDependenciesOrder();
 }
 

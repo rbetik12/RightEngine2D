@@ -59,6 +59,9 @@ constexpr std::string_view C_ATTACHMENTS_KEY = "attachments";
 constexpr std::string_view C_DEPTH_ATTACHMENT_KEY = "depthAttachment";
 constexpr std::string_view C_LOAD_OPERATION_KEY = "loadOperation";
 constexpr std::string_view C_STORE_OPERATION_KEY = "storeOperation";
+constexpr std::string_view C_DEPENDENCY_KEY = "dependency";
+constexpr std::string_view C_PATH_KEY = "path";
+constexpr std::string_view C_INDEX_KEY = "index";
 
 template<typename T>
 T StringToEnum(std::string_view str)
@@ -68,6 +71,7 @@ T StringToEnum(std::string_view str)
 
 	const auto enumValue = type.get_enumeration();
 	ENGINE_ASSERT(enumValue.is_valid());
+	ENGINE_ASSERT(!enumValue.get_type().get_name().empty());
 
 	return enumValue.name_to_value(rttr::string_view(str.data())).template get_value<T>();
 }
@@ -126,10 +130,12 @@ ResPtr<Resource> MaterialLoader::Get(const fs::path& path) const
 void MaterialLoader::LoadSystemResources()
 {
 	m_renderMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/basic_3d.material"));
+	m_skyboxMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/skybox.material"));
 	m_presentMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/present.material"));
 
 	m_renderMaterial->Wait();
 	m_presentMaterial->Wait();
+	m_skyboxMaterial->Wait();
 }
 
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
@@ -315,18 +321,33 @@ MaterialLoader::ParsedMaterial MaterialLoader::ParseJson(std::ifstream& stream)
 	for (auto& attachmentJson : attachments)
 	{
 		auto& attachment = mat.m_parsedPipeline.m_attachments.emplace_back();
-		attachment.m_clearValue = {};
-		attachment.m_loadOperation = StringToEnum<rhi::AttachmentLoadOperation>(attachmentJson[C_LOAD_OPERATION_KEY]);
-		attachment.m_storeOperation = StringToEnum<rhi::AttachmentStoreOperation>(attachmentJson[C_STORE_OPERATION_KEY]);
+		attachment.m_descriptor.m_clearValue = {};
+		attachment.m_descriptor.m_loadOperation = StringToEnum<rhi::AttachmentLoadOperation>(attachmentJson[C_LOAD_OPERATION_KEY]);
+		attachment.m_descriptor.m_storeOperation = StringToEnum<rhi::AttachmentStoreOperation>(attachmentJson[C_STORE_OPERATION_KEY]);
+
+		if (attachmentJson.contains(C_DEPENDENCY_KEY))
+		{
+			auto& dep = attachmentJson[C_DEPENDENCY_KEY];
+			attachment.m_dependency = io::fs::path(std::string_view(dep[C_PATH_KEY]));
+			attachment.m_depAttachmentIndex = dep[C_INDEX_KEY];
+		}
 	}
 
 	const auto& parsedDepthAttachment = j[C_DEPTH_ATTACHMENT_KEY];
 	if (!parsedDepthAttachment.is_null() && parsedDepthAttachment.is_object())
 	{
-		rhi::AttachmentDescriptor depthAttachment;
-		depthAttachment.m_clearValue = {};
-		depthAttachment.m_loadOperation = StringToEnum<rhi::AttachmentLoadOperation>(parsedDepthAttachment[C_LOAD_OPERATION_KEY]);
-		depthAttachment.m_storeOperation = StringToEnum<rhi::AttachmentStoreOperation>(parsedDepthAttachment[C_STORE_OPERATION_KEY]);
+		LoadAttachmentDescriptor depthAttachment;
+		depthAttachment.m_descriptor.m_clearValue = {};
+		depthAttachment.m_descriptor.m_loadOperation = StringToEnum<rhi::AttachmentLoadOperation>(parsedDepthAttachment[C_LOAD_OPERATION_KEY]);
+		depthAttachment.m_descriptor.m_storeOperation = StringToEnum<rhi::AttachmentStoreOperation>(parsedDepthAttachment[C_STORE_OPERATION_KEY]);
+
+		if (parsedDepthAttachment.contains(C_DEPENDENCY_KEY))
+		{
+			auto& dep = parsedDepthAttachment[C_DEPENDENCY_KEY];
+			depthAttachment.m_dependency = io::fs::path(std::string_view(dep[C_PATH_KEY]));
+			depthAttachment.m_depAttachmentIndex = dep[C_INDEX_KEY];
+		}
+
 		mat.m_parsedPipeline.m_depthAttachment = depthAttachment;
 	}
 
@@ -356,37 +377,73 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 
 	eastl::vector<rhi::AttachmentDescriptor> colorAttachments;
 
-	rhi::TextureDescriptor colorAttachmentDesc;
-	colorAttachmentDesc.m_type = rhi::TextureType::TEXTURE_2D;
-	colorAttachmentDesc.m_format = rhi::Format::BGRA8_UNORM;
-	colorAttachmentDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
-	colorAttachmentDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
-	colorAttachmentDesc.m_layersAmount = 1;
-	colorAttachmentDesc.m_mipLevels = 1;
-
 	for (auto& attachment : info.m_attachments)
 	{
-		attachment.m_texture = rs.CreateTexture(colorAttachmentDesc);
+		if (attachment.m_dependency.empty())
+		{
+			rhi::TextureDescriptor colorAttachmentDesc;
+			colorAttachmentDesc.m_type = rhi::TextureType::TEXTURE_2D;
+			colorAttachmentDesc.m_format = rhi::Format::BGRA8_UNORM;
+			colorAttachmentDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
+			colorAttachmentDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
+			colorAttachmentDesc.m_layersAmount = 1;
+			colorAttachmentDesc.m_mipLevels = 1;
+
+			attachment.m_descriptor.m_texture = rs.CreateTexture(colorAttachmentDesc);
+		}
+		else
+		{
+			// TODO: Improve logging by adding info for the waiting object
+			core::log::debug("[MaterialLoader] Waiting for dependency: '{}'", attachment.m_dependency.generic_u8string());
+			auto dependency = std::static_pointer_cast<MaterialResource>(Load(attachment.m_dependency));
+
+			dependency->Wait();
+
+			auto depPipeline = rs.Pipeline(dependency);
+
+			attachment.m_descriptor.m_texture = depPipeline->Descriptor().m_pass->Descriptor().m_colorAttachments[attachment.m_depAttachmentIndex].m_texture;
+		}
 	}
 
 	if (info.m_depthAttachment)
 	{
-		rhi::TextureDescriptor depthDesc;
-		depthDesc.m_type = rhi::TextureType::TEXTURE_2D;
-		depthDesc.m_format = rhi::Format::D32_SFLOAT_S8_UINT;
-		depthDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
-		depthDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
-		depthDesc.m_layersAmount = 1;
-		depthDesc.m_mipLevels = 1;
+		auto& depth = *info.m_depthAttachment;
+		if (depth.m_dependency.empty())
+		{
+			rhi::TextureDescriptor depthDesc;
+			depthDesc.m_type = rhi::TextureType::TEXTURE_2D;
+			depthDesc.m_format = rhi::Format::D32_SFLOAT_S8_UINT;
+			depthDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
+			depthDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
+			depthDesc.m_layersAmount = 1;
+			depthDesc.m_mipLevels = 1;
 
-		info.m_depthAttachment->m_texture = rs.CreateTexture(depthDesc);
+			depth.m_descriptor.m_texture = rs.CreateTexture(depthDesc);
+		}
+		else
+		{
+			// TODO: Improve logging by adding info for the waiting object
+			core::log::debug("[MaterialLoader] Waiting for dependency: '{}'", depth.m_dependency.generic_u8string());
+			auto dependency = std::static_pointer_cast<MaterialResource>(Load(depth.m_dependency));
+
+			dependency->Wait();
+
+			auto depPipeline = rs.Pipeline(dependency);
+
+			depth.m_descriptor.m_texture = depPipeline->Descriptor().m_pass->Descriptor().m_depthStencilAttachment.m_texture;
+		}
 	}
 
 	rhi::RenderPassDescriptor renderPassDesc{};
 	renderPassDesc.m_name = fmt::format("{}-Pass", info.m_shader->Descriptor().m_name);
 	renderPassDesc.m_extent = info.m_viewportSize;
-	renderPassDesc.m_colorAttachments = std::move(info.m_attachments);
-	renderPassDesc.m_depthStencilAttachment = info.m_depthAttachment.has_value() ? *info.m_depthAttachment : rhi::AttachmentDescriptor{};
+
+	for (auto& attachment : info.m_attachments)
+	{
+		renderPassDesc.m_colorAttachments.emplace_back(std::move(attachment.m_descriptor));
+	}
+
+	renderPassDesc.m_depthStencilAttachment = info.m_depthAttachment.has_value() ? info.m_depthAttachment->m_descriptor : rhi::AttachmentDescriptor{};
 
 	const auto renderpass = rs.CreateRenderPass(renderPassDesc);
 

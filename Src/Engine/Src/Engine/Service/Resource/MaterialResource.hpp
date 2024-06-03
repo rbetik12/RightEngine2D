@@ -34,10 +34,17 @@ public:
 	const ResPtr<MaterialResource>& PresentMaterial() const { return m_presentMaterial; }
 
 private:
+	struct LoadAttachmentDescriptor
+	{
+		rhi::AttachmentDescriptor m_descriptor;
+		fs::path m_dependency;
+		int m_depAttachmentIndex;
+	};
+
 	struct ParsedPipelineInfo
 	{
-		eastl::vector<rhi::AttachmentDescriptor>	m_attachments;
-		std::optional<rhi::AttachmentDescriptor>	m_depthAttachment;
+		eastl::vector<LoadAttachmentDescriptor>		m_attachments;
+		std::optional<LoadAttachmentDescriptor>		m_depthAttachment;
 		std::shared_ptr<rhi::Shader>				m_shader;
 		glm::ivec2									m_viewportSize = { 0, 0 };
 		bool										m_compute = false;
@@ -66,6 +73,7 @@ private:
 	eastl::unordered_map<fs::path, ResPtr<MaterialResource>>							m_cache;
 	ResPtr<MaterialResource>															m_renderMaterial;
 	ResPtr<MaterialResource>															m_presentMaterial;
+	ResPtr<MaterialResource>															m_skyboxMaterial;
 };
 
 class ENGINE_API MaterialResource final : public Resource

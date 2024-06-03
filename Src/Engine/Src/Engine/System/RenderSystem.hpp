@@ -51,7 +51,7 @@ struct ENGINE_API CameraComponent : public ecs::Component
     float       m_near = 0.1f ;
     float       m_far = 5000.0f;
     float       m_aspectRatio = 16.0f / 9.0f;
-    float       m_fov = glm::radians(90.0f);
+    float       m_fov = glm::radians(70.0f);
 
     Type        m_type = Type::EDITOR;
     bool        m_active = false;
