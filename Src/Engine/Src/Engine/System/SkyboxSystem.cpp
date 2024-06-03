@@ -97,15 +97,15 @@ void SkyboxSystem::Update(float dt)
     auto& rs = Instance().Service<RenderService>();
 
     bool skyboxDrawn = false;
-    for (auto [e, m, skybox] : W()->View<MeshComponent, SkyboxComponent>())
+    for (auto [e, skybox] : W()->View<SkyboxComponent>())
     {
         ENGINE_ASSERT_WITH_MESSAGE(!skyboxDrawn, "World can't have two skybox components!");
 
-        m.m_material->Material()->UpdateBuffer(1, cameraUB);
+        skybox.m_skyboxMaterial->Material()->UpdateBuffer(1, cameraUB);
 
-        const auto pipeline = rs.Pipeline(m.m_material);
+        const auto pipeline = rs.Pipeline(skybox.m_skyboxMaterial);
         rs.BeginPass(pipeline);
-        rs.BindMaterial(m.m_material);
+        rs.BindMaterial(skybox.m_skyboxMaterial);
 
         rs.Draw(m_skyboxVB, pipeline->VertexCount(m_skyboxVB));
 
