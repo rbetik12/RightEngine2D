@@ -65,6 +65,8 @@ public:
 
     const RPtr<MaterialResource>&       DefaultMaterial() const;
 
+    const RPtr<MaterialResource>&       SkyboxMaterial() const;
+
     const ResPtr<rhi::Pipeline>&        Pipeline(const ResPtr<MaterialResource>& res) const;
 
     template <typename F>

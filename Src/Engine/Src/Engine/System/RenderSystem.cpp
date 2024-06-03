@@ -67,6 +67,11 @@ void RenderSystem::Update(float dt)
     {
         ENGINE_ASSERT(mesh.m_material);
 
+        if (!mesh.m_mesh)
+        {
+            continue;
+        }
+
         auto& pipeline = rs.Pipeline(mesh.m_material);
 
         meshesMap[pipeline].emplace_back(mesh);
@@ -214,7 +219,7 @@ void CameraSystem::Update(float dt)
         }
 
         c.m_view = glm::lookAt(t.m_position, t.m_position + c.m_front, c.m_up);
-        c.m_proj = glm::perspective(glm::radians(c.m_fov), c.m_aspectRatio, c.m_near, c.m_far);
+        c.m_proj = glm::perspective(c.m_fov, c.m_aspectRatio, c.m_near, c.m_far);
         c.m_proj[1][1] *= -1;
         c.m_projView = c.m_proj * c.m_view;
     }
