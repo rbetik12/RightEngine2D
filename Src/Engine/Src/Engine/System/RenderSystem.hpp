@@ -17,6 +17,20 @@ struct CameraUB
     glm::vec4 m_position;
 };
 
+struct LightBufferUB
+{
+    glm::vec4	m_color;
+    glm::vec4	m_position;
+    glm::vec4	m_rotation;
+    float	    m_intensity;
+};
+
+struct ENGINE_API DirectionalLightComponent : public ecs::Component
+{
+    glm::vec3   m_color = glm::vec3(1.0f);
+    float       m_intensity = 1000.0f;
+};
+
 struct ENGINE_API MeshComponent : public ecs::Component
 {
     std::shared_ptr<MaterialResource>    m_material;

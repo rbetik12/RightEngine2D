@@ -196,10 +196,8 @@ void EditorService::Initialize()
     const auto skyboxUuid = em->CreateEntity("Skybox");
     em->Update();
 
-    auto& skyboxMesh = em->AddComponent<MeshComponent>(skyboxUuid);
-    skyboxMesh.m_material = skyboxMaterial;
-
-    em->AddComponent<SkyboxComponent>(skyboxUuid);
+    auto& skybox = em->AddComponent<SkyboxComponent>(skyboxUuid);
+    skybox.m_skyboxMaterial = skyboxMaterial;
 }
 
 glm::ivec2 EditorService::ViewportSize() const
