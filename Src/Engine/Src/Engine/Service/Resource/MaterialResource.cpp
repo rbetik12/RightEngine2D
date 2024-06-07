@@ -199,6 +199,7 @@ void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool offscreen)
 	}
 }
 
+// TODO: Remove compute pass manual texture and storage texture assigning
 MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const fs::path& path)
 {
 	auto& rs = Instance().Service<RenderService>();
@@ -206,31 +207,63 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 	const auto envTex = resourceService.Load<TextureResource>(path);
 	envTex->Wait();
 
-	rhi::TextureDescriptor envCubemapDesc{};
-	envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
-	envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
-	envCubemapDesc.m_layersAmount = 6;
-	envCubemapDesc.m_mipLevels = 1;
-	envCubemapDesc.m_width = 1024;
-	envCubemapDesc.m_height = 1024;
-
-	const auto envCubemap =  rs.CreateTexture(envCubemapDesc);
-
-	auto& computePass = rs.Pipeline(m_equirectToCubemapMaterial)->Descriptor().m_computePass;
-	computePass->m_textures.emplace_back(envTex->Texture());
-	computePass->m_storageTextures.emplace_back(envCubemap);
-
-	m_equirectToCubemapMaterial->Material()->SetTexture(envCubemap, 0);
-	m_equirectToCubemapMaterial->Material()->SetTexture(envTex->Texture(), 1);
-	m_equirectToCubemapMaterial->Material()->Sync();
-
-	const auto state = rs.BeginComputePassImmediate(m_equirectToCubemapMaterial);
-	rs.BindMaterial(m_equirectToCubemapMaterial, state);
-	rs.Dispatch(envCubemap->Width() / 32, envCubemap->Height() / 32, 6, state);
-	rs.EndComputePass(m_equirectToCubemapMaterial, state);
-
 	LoadEnvironmentMapData data{};
-	data.m_cubemap = envCubemap;
+
+	// Equirect to cubemap
+	{
+		rhi::TextureDescriptor envCubemapDesc{};
+		envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
+		envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
+		envCubemapDesc.m_layersAmount = 6;
+		envCubemapDesc.m_mipLevels = 1;
+		envCubemapDesc.m_width = 1024;
+		envCubemapDesc.m_height = 1024;
+
+		const auto envCubemap = rs.CreateTexture(envCubemapDesc);
+
+		auto& computePass = rs.Pipeline(m_equirectToCubemapMaterial)->Descriptor().m_computePass;
+		computePass->m_textures.emplace_back(envTex->Texture());
+		computePass->m_storageTextures.emplace_back(envCubemap);
+
+		m_equirectToCubemapMaterial->Material()->SetTexture(envCubemap, 0);
+		m_equirectToCubemapMaterial->Material()->SetTexture(envTex->Texture(), 1);
+		m_equirectToCubemapMaterial->Material()->Sync();
+
+		const auto state = rs.BeginComputePassImmediate(m_equirectToCubemapMaterial);
+		rs.BindMaterial(m_equirectToCubemapMaterial, state);
+		rs.Dispatch(envCubemap->Width() / 32, envCubemap->Height() / 32, 6, state);
+		rs.EndComputePass(m_equirectToCubemapMaterial, state);
+
+		data.m_cubemap = envCubemap;
+	}
+
+	// Compute irradiance
+	{
+		rhi::TextureDescriptor irrCubemapDesc{};
+		irrCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
+		irrCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
+		irrCubemapDesc.m_layersAmount = 6;
+		irrCubemapDesc.m_mipLevels = 1;
+		irrCubemapDesc.m_width = 32;
+		irrCubemapDesc.m_height = 32;
+
+		const auto irrCubemap = rs.CreateTexture(irrCubemapDesc);
+
+		auto& computePass = rs.Pipeline(m_envmapIrradianceMaterial)->Descriptor().m_computePass;
+		computePass->m_textures.emplace_back(data.m_cubemap);
+		computePass->m_storageTextures.emplace_back(irrCubemap);
+
+		m_envmapIrradianceMaterial->Material()->SetTexture(irrCubemap, 0);
+		m_envmapIrradianceMaterial->Material()->SetTexture(data.m_cubemap, 1);
+		m_envmapIrradianceMaterial->Material()->Sync();
+
+		const auto state = rs.BeginComputePassImmediate(m_envmapIrradianceMaterial);
+		rs.BindMaterial(m_envmapIrradianceMaterial, state);
+		rs.Dispatch(irrCubemap->Width() / 32, irrCubemap->Height() / 32, 6, state);
+		rs.EndComputePass(m_envmapIrradianceMaterial, state);
+
+		data.m_irradianceTexture = irrCubemap;
+	}
 
 	return data;
 }
