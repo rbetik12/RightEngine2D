@@ -33,6 +33,17 @@ public:
 	const ResPtr<MaterialResource>& RenderMaterial() const { return m_renderMaterial; }
 	const ResPtr<MaterialResource>& PresentMaterial() const { return m_presentMaterial; }
 
+	struct LoadEnvironmentMapData
+	{
+		ResPtr<MaterialResource>	m_material;
+		RPtr<rhi::Texture>			m_cubemap;
+		RPtr<rhi::Texture>			m_irradianceTexture;
+		RPtr<rhi::Texture>			m_prefilterTexture;
+		RPtr<rhi::Texture>			m_brdfTexture;
+	};
+
+	LoadEnvironmentMapData			LoadEnvironmentMap(const fs::path& path);
+
 private:
 	struct LoadAttachmentDescriptor
 	{
@@ -74,6 +85,10 @@ private:
 	ResPtr<MaterialResource>															m_renderMaterial;
 	ResPtr<MaterialResource>															m_presentMaterial;
 	ResPtr<MaterialResource>															m_skyboxMaterial;
+	ResPtr<MaterialResource>															m_equirectToCubemapMaterial;
+	ResPtr<MaterialResource>															m_envmapIrradianceMaterial;
+	ResPtr<MaterialResource>															m_irradianceLoadMaterial;
+	ResPtr<MaterialResource>															m_prefilterLoadMaterial;
 };
 
 class ENGINE_API MaterialResource final : public Resource

@@ -132,10 +132,14 @@ void MaterialLoader::LoadSystemResources()
 	m_renderMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/basic_3d.material"));
 	m_skyboxMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/skybox.material"));
 	m_presentMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/present.material"));
+	m_equirectToCubemapMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/equirect_to_cubemap.material"));
+	m_envmapIrradianceMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/envmap_irradiance.material"));
 
 	m_renderMaterial->Wait();
 	m_presentMaterial->Wait();
 	m_skyboxMaterial->Wait();
+	m_equirectToCubemapMaterial->Wait();
+	m_envmapIrradianceMaterial->Wait();
 }
 
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
@@ -195,6 +199,42 @@ void MaterialLoader::ResizePipelines(glm::ivec2 extent, bool offscreen)
 	}
 }
 
+MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const fs::path& path)
+{
+	auto& rs = Instance().Service<RenderService>();
+	auto& resourceService = Instance().Service<ResourceService>();
+	const auto envTex = resourceService.Load<TextureResource>(path);
+	envTex->Wait();
+
+	rhi::TextureDescriptor envCubemapDesc{};
+	envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
+	envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
+	envCubemapDesc.m_layersAmount = 6;
+	envCubemapDesc.m_mipLevels = 1;
+	envCubemapDesc.m_width = 1024;
+	envCubemapDesc.m_height = 1024;
+
+	const auto envCubemap =  rs.CreateTexture(envCubemapDesc);
+
+	auto& computePass = rs.Pipeline(m_equirectToCubemapMaterial)->Descriptor().m_computePass;
+	computePass->m_textures.emplace_back(envTex->Texture());
+	computePass->m_storageTextures.emplace_back(envCubemap);
+
+	m_equirectToCubemapMaterial->Material()->SetTexture(envCubemap, 0);
+	m_equirectToCubemapMaterial->Material()->SetTexture(envTex->Texture(), 1);
+	m_equirectToCubemapMaterial->Material()->Sync();
+
+	const auto state = rs.BeginComputePassImmediate(m_equirectToCubemapMaterial);
+	rs.BindMaterial(m_equirectToCubemapMaterial, state);
+	rs.Dispatch(envCubemap->Width() / 32, envCubemap->Height() / 32, 6, state);
+	rs.EndComputePass(m_equirectToCubemapMaterial, state);
+
+	LoadEnvironmentMapData data{};
+	data.m_cubemap = envCubemap;
+
+	return data;
+}
+
 bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource, bool forcePipelineRecreation)
 {
 	auto& vfs = Instance().Service<io::VirtualFilesystemService>();
@@ -231,7 +271,11 @@ bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource, bool forcePi
 		auto& rs = Instance().Service<RenderService>();
 
 		const auto shaderType = parsedMat.m_shaderPath.extension() == ".glsl" ? rhi::ShaderType::FX : rhi::ShaderType::COMPUTE;
-		const auto shaderData = m_shaderCompiler->Compile(vfs.Absolute(parsedMat.m_shaderPath).generic_u8string(), shaderType);
+
+		const auto shaderData = rs.RunOnRenderThreadWait([&]()
+			{
+				return m_shaderCompiler->Compile(vfs.Absolute(parsedMat.m_shaderPath).generic_u8string(), shaderType);
+			});
 
 		if (!shaderData.m_valid)
 		{

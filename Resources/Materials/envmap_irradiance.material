@@ -1,0 +1,6 @@
+{
+    "name": "irradiance",
+    "version": 0,
+    "shader": "/System/Shaders/envmap_irradiance.glslc",
+    "compute": true
+}

@@ -55,7 +55,6 @@ struct EditorService::Impl
     std::shared_ptr<MeshResource>           m_monkeyMesh;
     eastl::vector<std::shared_ptr<Panel>>   m_panels;
     std::shared_ptr<ViewportPanel>          m_viewportPanel;
-    ResPtr<MaterialResource>                m_equirectToCubemapMaterial;
 
     ImVec2                                  m_viewportSize = ImVec2(1, 1);
     entt::entity                            m_selectedEntity = C_INVALID_ENTITY;
@@ -160,34 +159,9 @@ void EditorService::Initialize()
     auto& cameraTransform = em->GetComponent<TransformComponent>(cameraUuid);
     cameraTransform.m_position = glm::vec3(0, 0, -10);
 
-    m_impl->m_envTex = resourceService.Load<TextureResource>("/System/Textures/spree_bank_env.hdr");
-    m_impl->m_equirectToCubemapMaterial = resourceService.Load<MaterialResource>("/System/Materials/equirect_to_cubemap.material");
+    auto& matLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
 
-    rhi::TextureDescriptor envCubemapDesc{};
-    envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
-    envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
-    envCubemapDesc.m_layersAmount = 6;
-    envCubemapDesc.m_mipLevels = 1;
-    envCubemapDesc.m_width = 1024;
-    envCubemapDesc.m_height = 1024;
-
-    m_impl->m_envCubMap = rs.CreateTexture(envCubemapDesc);
-
-    m_impl->m_envTex->Wait();
-    m_impl->m_equirectToCubemapMaterial->Wait();
-
-    auto& computePass = rs.Pipeline(m_impl->m_equirectToCubemapMaterial)->Descriptor().m_computePass;
-    computePass->m_textures.emplace_back(m_impl->m_envTex->Texture());
-    computePass->m_storageTextures.emplace_back(m_impl->m_envCubMap);
-
-    m_impl->m_equirectToCubemapMaterial->Material()->SetTexture(m_impl->m_envCubMap, 0);
-    m_impl->m_equirectToCubemapMaterial->Material()->SetTexture(m_impl->m_envTex->Texture(), 1);
-    m_impl->m_equirectToCubemapMaterial->Material()->Sync();
-
-    const auto state = rs.BeginComputePassImmediate(m_impl->m_equirectToCubemapMaterial);
-    rs.BindMaterial(m_impl->m_equirectToCubemapMaterial, state);
-    rs.Dispatch(m_impl->m_envCubMap->Width() / 32, m_impl->m_envCubMap->Height() / 32, 6, state);
-    rs.EndComputePass(m_impl->m_equirectToCubemapMaterial, state);
+    m_impl->m_envCubMap = matLoader.LoadEnvironmentMap("/System/Textures/spree_bank_env.hdr").m_cubemap;
 
     auto skyboxMaterial = resourceService.Load<MaterialResource>("/System/Materials/skybox.material");
     skyboxMaterial->Material()->SetTexture(m_impl->m_envCubMap, 3);

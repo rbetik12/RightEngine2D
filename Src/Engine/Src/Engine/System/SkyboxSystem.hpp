@@ -10,9 +10,9 @@ namespace engine
 struct ENGINE_API SkyboxComponent : public ecs::Component
 {
     RPtr<MaterialResource>  m_skyboxMaterial;
-    RPtr<TextureResource>   m_irradianceTexture;
-    RPtr<TextureResource>   m_prefilterTexture;
-    RPtr<TextureResource>   m_brdfTexture;
+    RPtr<rhi::Texture>      m_irradianceTexture;
+    RPtr<rhi::Texture>      m_prefilterTexture;
+    RPtr<rhi::Texture>      m_brdfTexture;
 };
 
 class ENGINE_API SkyboxSystem : public ecs::System
