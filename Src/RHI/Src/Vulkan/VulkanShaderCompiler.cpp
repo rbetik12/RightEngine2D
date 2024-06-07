@@ -541,6 +541,8 @@ void VulkanShaderCompiler::PreprocessShader(Context& ctx)
         line.clear();
         stream.clear();
     }
+
+    ctx.m_stageCodeStr = processedShaders;
 }
 
 ShaderReflection VulkanShaderCompiler::MergeReflection(const ReflectionMap& reflectionMap, std::string_view path)

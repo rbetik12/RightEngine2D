@@ -61,6 +61,19 @@ void RenderSystem::Update(float dt)
 
     auto& rs = Instance().Service<RenderService>();
 
+#if 0
+    LightBufferUB lightBufferUB{};
+
+    for (const auto [e, dirLight, t] : W()->View<DirectionalLightComponent, TransformComponent>())
+    {
+        lightBufferUB.m_position = glm::vec4(t.m_position, 1.0f);
+        lightBufferUB.m_color = glm::vec4(dirLight.m_color, 1.0f);
+        lightBufferUB.m_intensity = dirLight.m_intensity;
+        lightBufferUB.m_rotation = glm::vec4(glm::eulerAngles(t.m_rotation), 1.0f);
+        break;
+    }
+#endif
+
     // Sort all meshes by pipelines
     eastl::vector_map<std::shared_ptr<rhi::Pipeline>, eastl::vector<eastl::reference_wrapper<MeshComponent>>> meshesMap;
     eastl::vector<eastl::reference_wrapper<TransformComponent>> transforms;
