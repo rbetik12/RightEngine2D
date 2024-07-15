@@ -27,6 +27,5 @@ namespace rhi
         AddressMode             m_addressModeU = AddressMode::REPEAT;
         AddressMode             m_addressModeV = AddressMode::REPEAT;
         AddressMode             m_addressModeW = AddressMode::REPEAT;
-        bool                    m_isMipMapped = false;
     };
 }
