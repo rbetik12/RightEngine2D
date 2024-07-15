@@ -215,7 +215,6 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 		envCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
 		envCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
 		envCubemapDesc.m_layersAmount = 6;
-		envCubemapDesc.m_mipLevels = 1;
 		envCubemapDesc.m_width = 1024;
 		envCubemapDesc.m_height = 1024;
 
@@ -243,7 +242,6 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 		irrCubemapDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
 		irrCubemapDesc.m_format = rhi::Format::RGBA16_SFLOAT;
 		irrCubemapDesc.m_layersAmount = 6;
-		irrCubemapDesc.m_mipLevels = 1;
 		irrCubemapDesc.m_width = 32;
 		irrCubemapDesc.m_height = 32;
 
@@ -263,6 +261,19 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 		rs.EndComputePass(m_envmapIrradianceMaterial, state);
 
 		data.m_irradianceTexture = irrCubemap;
+	}
+
+	// Compute prefilter map
+	{
+		rhi::TextureDescriptor prefilterDesc{};
+		prefilterDesc.m_type = rhi::TextureType::TEXTURE_CUBEMAP;
+		prefilterDesc.m_format = rhi::Format::RGBA16_SFLOAT;
+		prefilterDesc.m_layersAmount = 6;
+		prefilterDesc.m_mipmapped = true;
+		prefilterDesc.m_width = 32;
+		prefilterDesc.m_height = 32;
+
+		const auto prefilterCubemap = rs.CreateTexture(prefilterDesc);
 	}
 
 	return data;
@@ -464,7 +475,6 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 			colorAttachmentDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
 			colorAttachmentDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
 			colorAttachmentDesc.m_layersAmount = 1;
-			colorAttachmentDesc.m_mipLevels = 1;
 
 			attachment.m_descriptor.m_texture = rs.CreateTexture(colorAttachmentDesc);
 		}
@@ -493,7 +503,6 @@ std::shared_ptr<rhi::Pipeline> MaterialLoader::AllocatePipeline(ParsedPipelineIn
 			depthDesc.m_width = static_cast<uint16_t>(info.m_viewportSize.x);
 			depthDesc.m_height = static_cast<uint16_t>(info.m_viewportSize.y);
 			depthDesc.m_layersAmount = 1;
-			depthDesc.m_mipLevels = 1;
 
 			depth.m_descriptor.m_texture = rs.CreateTexture(depthDesc);
 		}

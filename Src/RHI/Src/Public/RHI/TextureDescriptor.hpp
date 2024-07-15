@@ -16,12 +16,14 @@ enum class TextureType : uint8_t
     TEXTURE_CUBEMAP
 };
 
+constexpr uint8_t C_MAX_MIPMAP = 255;
+
 struct RHI_API TextureDescriptor
 {
     uint16_t        m_width = 0;
     uint16_t        m_height = 0;
-    uint8_t         m_mipLevels = 1;
     uint8_t         m_layersAmount = 1;
+    bool            m_mipmapped = false;
     Format          m_format = Format::NONE;
     TextureType     m_type = TextureType::NONE;
 

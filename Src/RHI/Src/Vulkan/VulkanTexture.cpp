@@ -96,7 +96,6 @@ void CopyBufferToImage(VkBuffer buffer, VkImage image, TextureDescriptor descrip
 VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_ptr<Sampler>& sampler, const void* data) : Texture(desc, sampler), m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
 {
     RHI_ASSERT(desc.m_width > 0 && desc.m_height > 0);
-    RHI_ASSERT(desc.m_mipLevels > 0);
     RHI_ASSERT(sampler);
 
     if (data)
@@ -119,7 +118,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
     imageCreateInfo.extent.width = desc.m_width;
     imageCreateInfo.extent.height = desc.m_height;
     imageCreateInfo.extent.depth = 1;
-    imageCreateInfo.mipLevels = desc.m_mipLevels;
+    imageCreateInfo.mipLevels = m_params.m_mipLevels;
     imageCreateInfo.arrayLayers = desc.m_layersAmount;
     imageCreateInfo.format = helpers::Format(desc.m_format);
     imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -184,7 +183,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             m_descriptor.m_format,
             m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1,
-            m_descriptor.m_mipLevels);
+            m_params.m_mipLevels);
         if (data)
         {
             CopyBufferToImage(std::static_pointer_cast<VulkanBuffer>(m_stagingBuffer)->Raw(), m_image, m_descriptor);
@@ -196,7 +195,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             m_descriptor.m_format,
             m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1,
-            m_descriptor.m_mipLevels);
+            m_params.m_mipLevels);
     }
     else
     {
@@ -205,7 +204,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
             m_descriptor.m_format,
             m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1,
-            m_descriptor.m_mipLevels,
+            m_params.m_mipLevels,
             true);
     }
 
@@ -237,7 +236,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     }
     viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = m_descriptor.m_mipLevels;
+    viewInfo.subresourceRange.levelCount = m_params.m_mipLevels;
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1;
 
@@ -264,7 +263,7 @@ void VulkanTexture::ChangeImageLayout(VkCommandBuffer cmdBuffer, VkImageLayout o
         newLayout, 
         m_descriptor.m_format, 
         m_descriptor.m_layersAmount,
-        m_descriptor.m_mipLevels,
+        m_params.m_mipLevels,
         isDepth);
 }
 
@@ -278,7 +277,7 @@ void VulkanTexture::ChangeImageLayout(VkImageLayout oldLayout, VkImageLayout new
         newLayout,
         m_descriptor.m_format,
         m_descriptor.m_layersAmount,
-        m_descriptor.m_mipLevels,
+        m_params.m_mipLevels,
         isDepth);
 }
 
@@ -344,7 +343,7 @@ void VulkanTexture::ChangeImageLayout(VkImage image,
         newLayout,
         m_descriptor.m_format,
         m_descriptor.m_layersAmount,
-        m_descriptor.m_mipLevels,
+        m_params.m_mipLevels,
         isDepth);
 
     cmdBuffer.End();
