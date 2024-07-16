@@ -148,7 +148,6 @@ bool TextureLoader::Load(const ResPtr<TextureResource>& resource)
 	descriptor.m_height = static_cast<uint16_t>(height);
 	descriptor.m_format = ChooseTextureFormat(desiredComponentAmount, isHdr);
 	descriptor.m_type = rhi::TextureType::TEXTURE_2D;
-	descriptor.m_mipmapped = true;
 
 	auto& rs = Instance().Service<RenderService>();
 	resource->m_texture = rs.CreateTexture(descriptor, {}, buffer);

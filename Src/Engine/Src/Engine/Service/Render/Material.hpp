@@ -19,7 +19,7 @@ public:
     struct TextureData
     {
         std::weak_ptr<rhi::Texture> m_texture;
-        int                         m_slot;
+        uint8_t                     m_slot;
 
         bool operator<(const TextureData& other) const
         {
@@ -39,7 +39,7 @@ public:
         return {};
     }
 
-    void AddTexData(const std::shared_ptr<rhi::Shader>& shader, const std::shared_ptr<rhi::Texture>& texture, int slot)
+    void AddTexData(const std::shared_ptr<rhi::Shader>& shader, const std::shared_ptr<rhi::Texture>& texture, uint8_t slot)
     {
         m_texData[shader->Descriptor().m_path].insert({ texture, slot });
     }
@@ -87,7 +87,7 @@ public:
 
     void SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0);
 
-    void SetTexture(const std::shared_ptr<rhi::Texture>& texture, int slot);
+    void SetTexture(const std::shared_ptr<rhi::Texture>& texture, uint8_t slot, uint8_t mipLevel = 0);
 
     void Sync();
 
@@ -103,6 +103,7 @@ private:
     struct TextureInfo
     {
         std::shared_ptr<rhi::Texture> m_texture;
+        uint8_t                       m_mipLevel = 0;
     };
 
     eastl::vector<BufferInfo>                        m_buffers;

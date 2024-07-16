@@ -61,12 +61,13 @@ void Material::SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std:
     m_dirty = true;
 }
 
-void Material::SetTexture(const std::shared_ptr<rhi::Texture>& texture, int slot)
+void Material::SetTexture(const std::shared_ptr<rhi::Texture>& texture, uint8_t slot, uint8_t mipLevel)
 {
     m_dirty = true;
 
     TextureInfo info{};
     info.m_texture = texture;
+    info.m_mipLevel = mipLevel;
 
     m_pendingTextures.emplace_back(slot, info);
     s_storage.AddTexData(m_shader, texture, slot);
@@ -94,7 +95,7 @@ void Material::Sync()
 
     for (auto&& [slot, texture] : m_pendingTextures)
     {
-        m_gpuMaterial->SetTexture(texture.m_texture, slot);
+        m_gpuMaterial->SetTexture(texture.m_texture, slot, texture.m_mipLevel);
         m_textures[slot] = std::move(texture);
     }
 

@@ -87,6 +87,7 @@ private:
 	ResPtr<MaterialResource>															m_skyboxMaterial;
 	ResPtr<MaterialResource>															m_equirectToCubemapMaterial;
 	ResPtr<MaterialResource>															m_envmapIrradianceMaterial;
+	ResPtr<MaterialResource>															m_envmapPrefilterMaterial;
 	ResPtr<MaterialResource>															m_irradianceLoadMaterial;
 	ResPtr<MaterialResource>															m_prefilterLoadMaterial;
 };

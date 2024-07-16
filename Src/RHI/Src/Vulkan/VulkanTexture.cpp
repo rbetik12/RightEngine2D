@@ -208,41 +208,42 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             true);
     }
 
-    // TODO: For texture arrays we must create as many image views as we have layers in the image
-
-    VkImageViewCreateInfo viewInfo{};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = m_image;
-    viewInfo.viewType = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = helpers::Format(m_descriptor.m_format);
-    if (IsDepthTexture(m_descriptor.m_format))
+    m_imageViews.resize(m_params.m_mipLevels);
+    for (int i = 0; i < m_params.m_mipLevels; i++)
     {
-        switch (m_descriptor.m_format)
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = m_image;
+        viewInfo.viewType = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = helpers::Format(m_descriptor.m_format);
+        if (IsDepthTexture(m_descriptor.m_format))
         {
-        case Format::D32_SFLOAT_S8_UINT:
+            switch (m_descriptor.m_format)
+            {
+            case Format::D32_SFLOAT_S8_UINT:
+            {
+                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+                break;
+            }
+            case Format::D32_SFLOAT:
+            {
+                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+                break;
+            }
+            }
+        }
+        else
         {
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-            break;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
-        case Format::D32_SFLOAT:
-        {
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            break;
-        }
-        }
-    }
-    else
-    {
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = m_params.m_mipLevels;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1;
+        viewInfo.subresourceRange.baseMipLevel = i;
+        viewInfo.subresourceRange.levelCount = m_params.m_mipLevels;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1;
 
-    auto& view = m_imageViews.emplace_back();
-    RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &viewInfo, nullptr, &view) == VK_SUCCESS);
-    RHI_ASSERT(view);
+        RHI_ASSERT(vkCreateImageView(VulkanDevice::s_ctx.m_device, &viewInfo, nullptr, &m_imageViews[i]) == VK_SUCCESS);
+        RHI_ASSERT(m_imageViews[i]);
+    }
 }
 
 VulkanTexture::~VulkanTexture()

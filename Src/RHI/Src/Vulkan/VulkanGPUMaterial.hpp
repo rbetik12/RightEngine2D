@@ -14,7 +14,7 @@ public:
 
     VkDescriptorSet     DescriptorSet() const { return m_descriptorSet; }
 
-    virtual void        SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot) override;
+    virtual void        SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot, uint8_t mipLevel = 0) override;
     virtual void        SetBuffer(const std::shared_ptr<Buffer>& buffer,
         uint8_t slot,
         ShaderStage stage,
@@ -40,6 +40,7 @@ private:
     {
         std::weak_ptr<rhi::Texture> m_texture;
         uint8_t                     m_slot = 0;
+        uint8_t                     m_mipLevel = 0;
     };
 
     eastl::vector<BufferInfo>           m_buffersToSync;
