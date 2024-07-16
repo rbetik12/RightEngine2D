@@ -37,13 +37,14 @@ VulkanGPUMaterial::~VulkanGPUMaterial()
 }
 
 // TODO: Add validation for texture slots from reflection
-void VulkanGPUMaterial::SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot)
+void VulkanGPUMaterial::SetTexture(const std::shared_ptr<Texture>& texture, uint8_t slot, uint8_t mipLevel)
 {
     m_dirty = true;
 
     TextureInfo info;
     info.m_texture = texture;
     info.m_slot = slot;
+    info.m_mipLevel = mipLevel;
 
     m_texturesToSync.emplace_back(info);
 }
@@ -130,7 +131,7 @@ void VulkanGPUMaterial::Sync()
         }
 
         // TODO: Here we probably need to add some index somewhere to represent which part of the texture we want to get
-        imageInfo.imageView = texPtr->ImageView(0);
+        imageInfo.imageView = texPtr->ImageView(texture.m_mipLevel);
 
         // TODO: We need to see whether the texture we are currently using was changed (e.g. sampler changed) and update it here
         imageInfo.sampler = std::static_pointer_cast<VulkanSampler>(texPtr->GetSampler())->Raw();

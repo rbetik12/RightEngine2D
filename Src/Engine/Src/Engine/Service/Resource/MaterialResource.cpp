@@ -134,12 +134,14 @@ void MaterialLoader::LoadSystemResources()
 	m_presentMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/present.material"));
 	m_equirectToCubemapMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/equirect_to_cubemap.material"));
 	m_envmapIrradianceMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/envmap_irradiance.material"));
+	m_envmapPrefilterMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/envmap_prefilter.material"));
 
 	m_renderMaterial->Wait();
 	m_presentMaterial->Wait();
 	m_skyboxMaterial->Wait();
 	m_equirectToCubemapMaterial->Wait();
 	m_envmapIrradianceMaterial->Wait();
+	m_envmapPrefilterMaterial->Wait();
 }
 
 const ResPtr<rhi::Pipeline>& MaterialLoader::Pipeline(const ResPtr<MaterialResource>& res) const
@@ -272,8 +274,26 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 		prefilterDesc.m_mipmapped = true;
 		prefilterDesc.m_width = 32;
 		prefilterDesc.m_height = 32;
-
+	
 		const auto prefilterCubemap = rs.CreateTexture(prefilterDesc);
+	
+		auto& computePass = rs.Pipeline(m_envmapPrefilterMaterial)->Descriptor().m_computePass;
+		computePass->m_textures.emplace_back(data.m_cubemap);
+		computePass->m_storageTextures.emplace_back(prefilterCubemap);
+	
+		for (uint8_t mipLevel = 0; mipLevel < prefilterCubemap->CalculateMipCount(); mipLevel++)
+		{
+			m_envmapPrefilterMaterial->Material()->SetTexture(prefilterCubemap, 0, mipLevel);
+			m_envmapPrefilterMaterial->Material()->SetTexture(data.m_cubemap, 1);
+			m_envmapPrefilterMaterial->Material()->Sync();
+	
+			const auto state = rs.BeginComputePassImmediate(m_envmapPrefilterMaterial);
+			rs.BindMaterial(m_envmapPrefilterMaterial, state);
+			rs.Dispatch(prefilterCubemap->Width() / 32, prefilterCubemap->Height() / 32, 6, state);
+			rs.EndComputePass(m_envmapPrefilterMaterial, state);
+		}
+	
+		data.m_prefilterTexture = prefilterCubemap;
 	}
 
 	return data;

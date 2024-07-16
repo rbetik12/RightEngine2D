@@ -19,16 +19,16 @@ public:
     uint16_t                        Width() const { return m_descriptor.m_width; }
     uint16_t                        Height() const { return m_descriptor.m_height; }
 
+    inline uint8_t                 CalculateMipCount()
+    {
+        return (uint8_t)glm::floor(glm::log2(glm::min<float>(Width(), Height()))) + 1;
+    }
+
 protected:
     struct InternalParams
     {
         uint8_t m_mipLevels = 0;
     };
-
-    inline uint8_t                 CalculateMipCount()
-    {
-        return (uint8_t)glm::floor(glm::log2(glm::min<float>(Width(), Height()))) + 1;
-    }
 
     TextureDescriptor           m_descriptor;
     InternalParams              m_params;
