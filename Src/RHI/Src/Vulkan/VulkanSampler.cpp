@@ -17,7 +17,7 @@ namespace rhi::vulkan
         samplerInfo.addressModeV = helpers::AddressMode(descriptor.m_addressModeV);
         samplerInfo.addressModeW = helpers::AddressMode(descriptor.m_addressModeW);
         samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = VulkanDevice::s_ctx.m_properties.m_maxSamplerAnisotropy;
+        samplerInfo.maxAnisotropy = VulkanDevice::s_ctx.m_instance->m_parameters.m_maxSamplerAnisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_TRUE;

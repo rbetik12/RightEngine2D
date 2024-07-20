@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include <Core/Assert.hpp>
+#include <glm/glm.hpp>
 #include <limits>
 
 namespace core::math
@@ -22,7 +23,21 @@ inline uint32_t roundUpToNextHighestPowerOfTwo(uint32_t value)
 
 inline bool almostEqual(float a, float b, float epsilon = std::numeric_limits<float>::epsilon())
 {
-    return std::abs(a - b) <= epsilon;
+    return glm::abs(a - b) <= epsilon;
+}
+
+inline uint32_t roundToDivisible(uint32_t num, uint32_t divisor)
+{
+    CORE_ASSERT(divisor != 0);
+
+    const uint32_t remainder = num % divisor;
+
+    if (remainder == 0) 
+    {
+        return num;
+    }
+
+    return num + (divisor - remainder);
 }
 
 } // core::math

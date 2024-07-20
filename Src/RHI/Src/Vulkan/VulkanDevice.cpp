@@ -156,6 +156,9 @@ bool IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 
 VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
 {
+    s_ctx.m_instance = this;
+    m_context = context;
+
     PickPhysicalDevice(context);
     CreateLogicalDevice(context);
     SetupDeviceQueues(context);
@@ -163,23 +166,19 @@ VulkanDevice::VulkanDevice(const std::shared_ptr<VulkanContext>& context)
     SetupAllocator(context);
     SetupCommandPool(context);
 
-    s_ctx.m_instance = this;
+    m_cmdBuffers.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_computeCmdBuffers.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_fences.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_computeFences.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_renderSemaphores.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_presentSemaphores.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
+    m_computeSemaphores.resize(s_ctx.m_instance->m_parameters.m_framesInFlight);
 
-    m_context = context;
-
-    m_cmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
-    m_computeCmdBuffers.resize(s_ctx.m_properties.m_framesInFlight);
-    m_fences.resize(s_ctx.m_properties.m_framesInFlight);
-    m_computeFences.resize(s_ctx.m_properties.m_framesInFlight);
-    m_renderSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
-    m_presentSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
-    m_computeSemaphores.resize(s_ctx.m_properties.m_framesInFlight);
-
-    for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
+    for (uint32_t i = 0; i < s_ctx.m_instance->m_parameters.m_framesInFlight; i++)
     {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = VulkanDevice::s_ctx.m_instance->CommandPool();
+        allocInfo.commandPool = s_ctx.m_instance->CommandPool();
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = 1;
         RHI_ASSERT(vkAllocateCommandBuffers(VulkanDevice::s_ctx.m_device, &allocInfo, &m_cmdBuffers[i]) == VK_SUCCESS);
@@ -205,7 +204,7 @@ VulkanDevice::~VulkanDevice()
     VulkanGPUMaterial::Destroy();
     m_swapchain.reset();
 
-    for (uint32_t i = 0; i < s_ctx.m_properties.m_framesInFlight; i++)
+    for (uint32_t i = 0; i < s_ctx.m_instance->m_parameters.m_framesInFlight; i++)
     {
         vkDestroyFence(s_ctx.m_device, m_fences[i], nullptr);
         vkDestroySemaphore(s_ctx.m_device, m_presentSemaphores[i], nullptr);
@@ -424,7 +423,7 @@ void VulkanDevice::Present()
         }
     }
 
-    const uint32_t nextFrameIndex = (m_frameIndex + 1) % s_ctx.m_properties.m_framesInFlight;
+    const uint32_t nextFrameIndex = (m_frameIndex + 1) % s_ctx.m_instance->m_parameters.m_framesInFlight;
     RHI_ASSERT(vkWaitForFences(s_ctx.m_device, 1, &m_fences[nextFrameIndex], VK_TRUE, UINT64_MAX) == VK_SUCCESS);
 }
 
@@ -825,9 +824,9 @@ void VulkanDevice::FillProperties()
     VkPhysicalDeviceProperties deviceProps;
     vkGetPhysicalDeviceProperties(s_ctx.m_physicalDevice, &deviceProps);
 
-    Properties& properties = s_ctx.m_properties;
+    Parameters& properties = s_ctx.m_instance->m_parameters;
 
-    properties.m_minUniformBufferOffsetAlignment = deviceProps.limits.minUniformBufferOffsetAlignment;
+    properties.m_minUniformBufferAlignment = static_cast<uint32_t>(deviceProps.limits.minUniformBufferOffsetAlignment);
     properties.m_maxSamplerAnisotropy = deviceProps.limits.maxSamplerAnisotropy;
 }
 

@@ -418,6 +418,11 @@ const ResPtr<rhi::Pipeline>& RenderService::Pipeline(const ResPtr<MaterialResour
     return materialLoader.Pipeline(res);
 }
 
+const rhi::Device::Parameters& RenderService::DeviceParams() const
+{
+    return m_impl->m_device->m_parameters;
+}
+
 void RenderService::CreateRenderResources(glm::ivec2 extent)
 {
     PROFILER_CPU_ZONE;
@@ -478,6 +483,7 @@ void RenderService::LoadSystemResources()
     albedoTex->Wait();
 
     m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
+    m_impl->m_renderMaterial->Material()->SetBuffer<LightBufferUB>(2, rhi::ShaderStage::VERTEX, "LightBufferUB");
     m_impl->m_renderMaterial->Material()->SetTexture(albedoTex->Texture(), 1);
     m_impl->m_renderMaterial->Material()->Sync();
 

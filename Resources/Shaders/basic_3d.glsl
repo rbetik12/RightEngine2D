@@ -63,8 +63,27 @@ layout(location = 0) in VertexOutput Output;
 layout(location = 0) out vec4 outColor;
 layout(binding = 1) uniform sampler2D u_Albedo;
 
+struct DirectionalLight
+{
+    vec4	color;
+    vec4	position;
+    vec4	rotation;
+    float	intensity;
+};
+
+struct LightBuffer
+{
+    DirectionalLight directionalLight;
+};
+
+layout(binding = 2) uniform LightBufferUB
+{
+    LightBuffer lightBuffer;
+};
+
 void main() {
     outColor = texture(u_Albedo, Output.UV);
+    outColor = outColor * lightBuffer.directionalLight.color;
 }
 
 #pragma stage end

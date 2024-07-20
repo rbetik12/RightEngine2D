@@ -52,6 +52,8 @@ void VulkanGPUMaterial::SetTexture(const std::shared_ptr<Texture>& texture, uint
 // TODO: Add validation for buffer slots from reflection
 void VulkanGPUMaterial::SetBuffer(const std::shared_ptr<Buffer>& buffer, uint8_t slot, ShaderStage stage, int offset)
 {
+    RHI_ASSERT_WITH_MESSAGE(buffer->Descriptor().m_size % VulkanDevice::s_ctx.m_instance->m_parameters.m_minUniformBufferAlignment == 0, fmt::format("GPU Buffer size must be multiple of {}", VulkanDevice::s_ctx.m_instance->m_parameters.m_minUniformBufferAlignment).c_str());
+
     m_dirty = true;
 
     BufferInfo info;
@@ -74,6 +76,10 @@ void VulkanGPUMaterial::Sync()
     eastl::vector<VkWriteDescriptorSet> writeDescriptorSets;
     eastl::vector<VkDescriptorBufferInfo> bufferInfos;
 
+    writeDescriptorSets.reserve(m_buffersToSync.size() + 1);
+    bufferInfos.reserve(m_buffersToSync.size() + 1);
+
+    uint32_t i = 0;
     for (auto& buffer : m_buffersToSync)
     {
         if (buffer.m_buffer.expired())
@@ -99,14 +105,15 @@ void VulkanGPUMaterial::Sync()
         descriptorWrite.dstArrayElement = 0;
         descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfos.back();
+        descriptorWrite.pBufferInfo = &bufferInfos[i];
 
         writeDescriptorSets.emplace_back(descriptorWrite);
+        i++;
     }
 
     eastl::vector<VkDescriptorImageInfo> textureInfos;
     // To prevent reallocation
-    textureInfos.set_capacity(m_texturesToSync.size());
+    textureInfos.reserve(m_texturesToSync.size() + 1);
 
     for (auto& texture : m_texturesToSync)
     {
