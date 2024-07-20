@@ -24,6 +24,8 @@ struct ComputeState;
 class RHI_API Device : public core::NonCopyable
 {
 public:
+    Device() : m_parameters()
+    {}
     virtual ~Device() = default;
 
     virtual std::shared_ptr<ShaderCompiler>     CreateShaderCompiler(const ShaderCompiler::Options& options = {}) = 0;
@@ -57,6 +59,15 @@ public:
     virtual void                                WaitForIdle() = 0;
 
     static std::shared_ptr<Device>              Create(const std::shared_ptr<IContext>& ctx);
+
+    struct Parameters
+    {
+        uint32_t    m_minUniformBufferAlignment = 64;
+        uint8_t     m_framesInFlight = 1;
+        float       m_maxSamplerAnisotropy = 0;
+    };
+
+    Parameters m_parameters;
 };
 
 }

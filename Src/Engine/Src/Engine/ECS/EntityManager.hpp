@@ -37,28 +37,42 @@ public:
     const EntityInfo&   GetEntityInfo(entt::entity e);
 
     template<typename T>
-    T& GetComponent(entt::entity e)
+    T*                  TryGetComponent(entt::entity e)
     {
-        auto ptr = m_registry.try_get<T>(e);
-        ENGINE_ASSERT(ptr);
-
-        return *ptr;
+        static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
+        ENGINE_ASSERT(engine::registration::helpers::typeRegistered<T>());
+        return m_registry.try_get<T>(e);
     }
 
     template<typename T>
-    T& GetComponent(const uuids::uuid& uuid)
+    T*                  TryGetComponent(const uuids::uuid& uuid)
     {
         const auto it = m_uuidToEntity.find(uuid);
         ENGINE_ASSERT(it != m_uuidToEntity.end());
 
-        auto ptr = m_registry.try_get<T>(it->second);
-        ENGINE_ASSERT(ptr);
+        return TryGetComponent<T>(it->second);
+    }
 
-        return *ptr;
+    template<typename T>
+    T&                  GetComponent(entt::entity e)
+    {
+        ENGINE_ASSERT(engine::registration::helpers::typeRegistered<T>());
+        ENGINE_ASSERT(TryGetComponent<T>(e));
+
+        return m_registry.get<T>(e);
+    }
+
+    template<typename T>
+    T&                  GetComponent(const uuids::uuid& uuid)
+    {
+        const auto it = m_uuidToEntity.find(uuid);
+        ENGINE_ASSERT(it != m_uuidToEntity.end());
+
+        return GetComponent<T>(it->second);
     }
 
     template<typename T, typename... Args>
-    T&              AddComponent(const uuids::uuid& uuid, Args&&... args)
+    T&                  AddComponent(const uuids::uuid& uuid, Args&&... args)
     {
         const auto it = m_uuidToEntity.find(uuid);
         ENGINE_ASSERT(it != m_uuidToEntity.end());
@@ -67,27 +81,27 @@ public:
     }
 
     template<typename T, typename... Args>
-    T&              AddComponent(entt::entity e, Args&&... args)
+    T&                  AddComponent(entt::entity e, Args&&... args)
     {
         static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
-        ENGINE_ASSERT(rttr::type::get<T>().get_constructor().is_valid());
-        ENGINE_ASSERT(!m_registry.try_get<T>(e));
+        ENGINE_ASSERT(engine::registration::helpers::typeRegistered<T>());
+        ENGINE_ASSERT(!TryGetComponent<T>(e));
 
         return m_registry.emplace<T>(e, std::forward<Args>(args)...);
     }
 
     template<typename T>
-    T&              RemoveComponent(entt::entity e)
+    bool                 RemoveComponent(entt::entity e)
     {
         static_assert(std::is_base_of_v<Component, T>, "Class must be a derived of engine::ecs::Component");
-        ENGINE_ASSERT(m_registry.try_get<T>());
-        ENGINE_ASSERT(rttr::type::get<T>().get_constructor().is_valid());
+        ENGINE_ASSERT(TryGetComponent<T>(e));
+        ENGINE_ASSERT(engine::registration::helpers::typeRegistered<T>());
 
-        return m_registry.remove<T>(e);
+        return m_registry.remove<T>(e) != 0;
     }
 
     template<typename T>
-    T&              RemoveComponent(const uuids::uuid& uuid)
+    bool                 RemoveComponent(const uuids::uuid& uuid)
     {
         const auto it = m_uuidToEntity.find(uuid);
         ENGINE_ASSERT(it != m_uuidToEntity.end());

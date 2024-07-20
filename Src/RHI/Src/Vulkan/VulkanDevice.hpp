@@ -39,21 +39,12 @@ struct QueueFamilyIndices
 class RHI_API VulkanDevice : public Device
 {
 public:
-    // Device properties cache
-    struct Properties
-    {
-        uint32_t    m_framesInFlight = 1;
-        size_t      m_minUniformBufferOffsetAlignment = 0;
-        float       m_maxSamplerAnisotropy = 0;
-    };
-
     // Global context needed for operations with memory (buffers, texture and other allocations)
     struct ContextHolder
     {
         VkDevice            m_device = nullptr;
         VmaAllocator        m_allocator = nullptr;
         VkPhysicalDevice    m_physicalDevice = nullptr;
-        Properties          m_properties;
         VulkanDevice*       m_instance = nullptr;
     };
 

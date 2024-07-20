@@ -4,8 +4,6 @@
 #include <Engine/ECS/System.hpp>
 #include <Engine/ECS/World.hpp>
 #include <Engine/ECS/Component.hpp>
-#include <Engine/Service/Render/Material.hpp>
-#include <Engine/Service/Render/Mesh.hpp>
 #include <Engine/Service/Resource/MeshResource.hpp>
 
 namespace engine
@@ -19,10 +17,15 @@ struct CameraUB
 
 struct LightBufferUB
 {
-    glm::vec4	m_color;
-    glm::vec4	m_position;
-    glm::vec4	m_rotation;
-    float	    m_intensity;
+    struct DirectionalLight
+    {
+        glm::vec4	m_color;
+        glm::vec4	m_position;
+        glm::vec4	m_rotation;
+        float	    m_intensity = 0.0f;
+    };
+
+    DirectionalLight m_directionalLight;
 };
 
 struct ENGINE_API DirectionalLightComponent : public ecs::Component

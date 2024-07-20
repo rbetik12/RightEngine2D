@@ -1,15 +1,12 @@
 #include <Engine/Editor/ComponentPanel.hpp>
-#include <Engine/Service/Imgui/ImguiService.hpp>
-#include <Engine/Service/Render/RenderService.hpp>
 #include <Engine/Service/EditorService.hpp>
 #include <Engine/Service/WorldService.hpp>
 #include <Engine/System/TransformSystem.hpp>
-#include <RHI/Pipeline.hpp>
+#include <Engine/System/RenderSystem.hpp>
+#include <Engine/Registration.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -83,6 +80,54 @@ void DrawVec3Control(const std::string& label, glm::vec3& values, float resetVal
 	ImGui::PopID();
 }
 
+template <class T>
+void DrawComponent(entt::entity entity, std::unique_ptr<engine::ecs::EntityManager>& em, std::function<void(T&)>&& uiFunction)
+{
+	ENGINE_ASSERT(engine::registration::helpers::typeRegistered<T>());
+
+	const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed
+		| ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap
+		| ImGuiTreeNodeFlags_FramePadding;
+
+	if (em->TryGetComponent<T>(entity))
+	{
+		const auto type = rttr::type::get<T>();
+		const auto typeId = type.get_id();
+
+		ImGui::PushID(&typeId);
+
+		bool open = ImGui::TreeNodeEx(&typeId, treeNodeFlags, type.get_name().data());
+
+		ImGui::SameLine();
+		if (ImGui::Button("+"))
+		{
+			ImGui::OpenPopup("ComponentSettings");
+		}
+
+		bool removeComponent = false;
+		if (ImGui::BeginPopup("ComponentSettings"))
+		{
+			if (ImGui::MenuItem("Remove component"))
+				removeComponent = true;
+
+			ImGui::EndPopup();
+		}
+
+		if (open)
+		{
+			uiFunction(em->GetComponent<T>(entity));
+			ImGui::TreePop();
+		}
+
+		if (removeComponent)
+		{
+			em->RemoveComponent<T>(entity);
+		}
+
+		ImGui::PopID();
+	}
+}
+
 } // unnamed
 
 namespace engine::editor
@@ -100,23 +145,23 @@ void ComponentPanel::DrawPanel()
         return;
     }
 
-	auto& transformComponent = em->GetComponent<TransformComponent>(selectedEntity);
-
-	if (ImGui::BeginChild("##Transform"))
+	DrawComponent<TransformComponent>(selectedEntity, em, [](TransformComponent& t)
 	{
-		ImGui::TextUnformatted("Transform");
-		ImGui::Separator();
+		auto rotation = glm::degrees(glm::eulerAngles(t.m_rotation));
 
-		auto rotation = glm::degrees(glm::eulerAngles(transformComponent.m_rotation));
-
-		DrawVec3Control("Position", transformComponent.m_position);
+		DrawVec3Control("Position", t.m_position);
 		DrawVec3Control("Rotation", rotation);
-		DrawVec3Control("Scale", transformComponent.m_scale);
+		DrawVec3Control("Scale", t.m_scale);
 
-		transformComponent.m_rotation = glm::quat(glm::radians(rotation));
-		ImGui::EndChild();
-	}
+		t.m_rotation = glm::quat(glm::radians(rotation));
+	});
 
+	DrawComponent<DirectionalLightComponent>(selectedEntity, em, [](DirectionalLightComponent& l)
+	{
+		DrawVec3Control("Color", l.m_color);
+		ImGui::Spacing();
+		ImGui::DragFloat("Intensity", &l.m_intensity, 1, 0, 1000);
+	});
 }
 
 } // engine::editor

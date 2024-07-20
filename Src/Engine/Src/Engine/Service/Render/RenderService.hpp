@@ -69,6 +69,8 @@ public:
 
     const ResPtr<rhi::Pipeline>&        Pipeline(const ResPtr<MaterialResource>& res) const;
 
+    const rhi::Device::Parameters&      DeviceParams() const;
+
     template <typename F>
     auto RunOnRenderThread(F&& f)
     {

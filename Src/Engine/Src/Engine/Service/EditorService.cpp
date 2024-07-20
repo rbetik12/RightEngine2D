@@ -148,6 +148,7 @@ void EditorService::Initialize()
 
     const auto uuid = em->CreateEntity("Monkey");
     const auto cameraUuid = em->CreateEntity("Editor Camera");
+    const auto dirLightUuid = em->CreateEntity("Directional Light");
     em->Update();
 
     em->AddComponent<MeshComponent>(uuid, meshComponent);
@@ -172,6 +173,8 @@ void EditorService::Initialize()
 
     auto& skybox = em->AddComponent<SkyboxComponent>(skyboxUuid);
     skybox.m_skyboxMaterial = skyboxMaterial;
+
+    em->AddComponent<DirectionalLightComponent>(dirLightUuid);
 }
 
 glm::ivec2 EditorService::ViewportSize() const

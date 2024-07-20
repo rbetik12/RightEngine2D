@@ -50,7 +50,7 @@ void Material::SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std:
     buffer.m_stage = stage;
 
     rhi::BufferDescriptor descriptor{};
-    descriptor.m_size = static_cast<uint32_t>(type.get_sizeof());
+    descriptor.m_size = core::math::roundToDivisible(static_cast<uint32_t>(type.get_sizeof()), rs.DeviceParams().m_minUniformBufferAlignment);
     descriptor.m_memoryType = rhi::MemoryType::CPU_GPU;
     descriptor.m_type = rhi::BufferType::UNIFORM;
     descriptor.m_name = name;

@@ -59,20 +59,17 @@ void RenderSystem::Update(float dt)
         break;
     }
 
-    auto& rs = Instance().Service<RenderService>();
-
-#if 0
     LightBufferUB lightBufferUB{};
 
-    for (const auto [e, dirLight, t] : W()->View<DirectionalLightComponent, TransformComponent>())
+    for (const auto [e, l, t] : W()->View<DirectionalLightComponent, TransformComponent>())
     {
-        lightBufferUB.m_position = glm::vec4(t.m_position, 1.0f);
-        lightBufferUB.m_color = glm::vec4(dirLight.m_color, 1.0f);
-        lightBufferUB.m_intensity = dirLight.m_intensity;
-        lightBufferUB.m_rotation = glm::vec4(glm::eulerAngles(t.m_rotation), 1.0f);
-        break;
+        lightBufferUB.m_directionalLight.m_position = glm::vec4(t.m_position, 1.0f);
+        lightBufferUB.m_directionalLight.m_color = glm::vec4(l.m_color, 1.0f);
+        lightBufferUB.m_directionalLight.m_intensity = l.m_intensity;
+        lightBufferUB.m_directionalLight.m_rotation = glm::vec4(glm::eulerAngles(t.m_rotation), 1.0f);
     }
-#endif
+
+    auto& rs = Instance().Service<RenderService>();
 
     // Sort all meshes by pipelines
     eastl::vector_map<std::shared_ptr<rhi::Pipeline>, eastl::vector<eastl::reference_wrapper<MeshComponent>>> meshesMap;
@@ -106,6 +103,7 @@ void RenderSystem::Update(float dt)
             }
 
             mesh.get().m_material->Material()->UpdateBuffer(0, cameraUB);
+            mesh.get().m_material->Material()->UpdateBuffer(2, lightBufferUB);
         }
     }
 
