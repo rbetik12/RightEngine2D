@@ -288,6 +288,15 @@ void RenderService::EndComputePass(const ResPtr<MaterialResource>& material, con
         });
 }
 
+void RenderService::PushConstantComputeImmediate(const void* data, uint32_t size,
+    const ResPtr<MaterialResource>& material, const std::shared_ptr<rhi::ComputeState>& state)
+{
+    RunOnRenderThreadWait([&]()
+        {
+            m_impl->m_device->PushConstantComputeImmediate(data, size, Pipeline(material), state);
+        });
+}
+
 void RenderService::Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount)
 {
     RunOnRenderThread([=]()
@@ -482,9 +491,7 @@ void RenderService::LoadSystemResources()
     auto albedoTex = Instance().Service<ResourceService>().Load<TextureResource>("/Textures/brick.png");
     albedoTex->Wait();
 
-    m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(0, rhi::ShaderStage::VERTEX, "CameraUB");
-    m_impl->m_renderMaterial->Material()->SetBuffer<LightBufferUB>(2, rhi::ShaderStage::VERTEX, "LightBufferUB");
-    m_impl->m_renderMaterial->Material()->SetTexture(albedoTex->Texture(), 1);
+    m_impl->m_renderMaterial->Material()->SetBuffer<CameraUB>(1, rhi::ShaderStage::VERTEX, "CameraUB");
     m_impl->m_renderMaterial->Material()->Sync();
 
     rhi::BufferDescriptor presentVBDesc{};

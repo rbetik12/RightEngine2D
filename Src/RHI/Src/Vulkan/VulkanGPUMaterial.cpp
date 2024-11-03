@@ -127,7 +127,8 @@ void VulkanGPUMaterial::Sync()
 
         VkDescriptorImageInfo imageInfo{};
         if (texPtr->Descriptor().m_format == Format::D32_SFLOAT_S8_UINT ||
-            m_shaderDesc->m_reflection.m_storageImages.find({ texture.m_slot })
+            eastl::find_if(m_shaderDesc->m_reflection.m_storageImages.begin(), 
+                m_shaderDesc->m_reflection.m_storageImages.end(), [&texture](const auto& info) { return info.m_slot == texture.m_slot; })
             != m_shaderDesc->m_reflection.m_storageImages.end())
         {
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -221,8 +222,11 @@ void VulkanGPUMaterial::AllocateDescriptorPool()
 
 VkDescriptorType VulkanGPUMaterial::DescriptorType(uint8_t slot)
 {
-    const auto texIt = m_shaderDesc->m_reflection.m_textures.find({ slot });
-    const auto storageImgIt = m_shaderDesc->m_reflection.m_storageImages.find({ slot });
+    const auto texIt = eastl::find_if(m_shaderDesc->m_reflection.m_textures.begin(), 
+        m_shaderDesc->m_reflection.m_textures.end(), [slot](const auto& info) { return info.m_slot == slot; });
+
+    const auto storageImgIt = eastl::find_if(m_shaderDesc->m_reflection.m_storageImages.begin(),
+        m_shaderDesc->m_reflection.m_storageImages.end(), [slot](const auto& info) { return info.m_slot == slot; });
 
     if (texIt != m_shaderDesc->m_reflection.m_textures.end())
     {

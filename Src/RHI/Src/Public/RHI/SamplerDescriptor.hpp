@@ -21,9 +21,9 @@ namespace rhi
     {
         float                   m_minLod = 0.0f;
         float                   m_maxLod = 1.0f;
-        SamplerFilter           m_minFilter = SamplerFilter::NEAREST;
-        SamplerFilter           m_magFilter = SamplerFilter::NEAREST;
-        SamplerFilter           m_mipMapFilter = SamplerFilter::NEAREST;
+        SamplerFilter           m_minFilter = SamplerFilter::LINEAR;
+        SamplerFilter           m_magFilter = SamplerFilter::LINEAR;
+        SamplerFilter           m_mipMapFilter = SamplerFilter::LINEAR;
         AddressMode             m_addressModeU = AddressMode::REPEAT;
         AddressMode             m_addressModeV = AddressMode::REPEAT;
         AddressMode             m_addressModeW = AddressMode::REPEAT;

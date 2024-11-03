@@ -145,6 +145,8 @@ void ComponentPanel::DrawPanel()
         return;
     }
 
+
+
 	DrawComponent<TransformComponent>(selectedEntity, em, [](TransformComponent& t)
 	{
 		auto rotation = glm::degrees(glm::eulerAngles(t.m_rotation));

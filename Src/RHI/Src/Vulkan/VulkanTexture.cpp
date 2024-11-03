@@ -237,7 +237,7 @@ VulkanTexture::VulkanTexture(const TextureDescriptor& desc, const std::shared_pt
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
         viewInfo.subresourceRange.baseMipLevel = i;
-        viewInfo.subresourceRange.levelCount = m_params.m_mipLevels;
+        viewInfo.subresourceRange.levelCount = m_params.m_mipLevels - i;
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = m_descriptor.m_type == TextureType::TEXTURE_CUBEMAP ? 6 : 1;
 

@@ -10,7 +10,7 @@ namespace
 {
 
 constexpr float         C_MOUSE_SENSITIVITY = 0.002f;
-constexpr float         C_EDITOR_CAMERA_SPEED = 40.0f;
+constexpr float         C_EDITOR_CAMERA_SPEED = 20.0f;
 constexpr glm::vec3     C_WORLD_UP = glm::vec3(0, 1, 0);
 
 } // unnamed
@@ -31,6 +31,7 @@ RTTR_REGISTRATION
 
     engine::registration::Class<engine::CameraUB>("engine::CameraUB");
     engine::registration::Class<engine::LightBufferUB>("engine::LightBufferUB");
+    engine::registration::Class<engine::MaterialDataUB>("engine::MaterialDataUB");
 }
 
 namespace engine
@@ -102,8 +103,8 @@ void RenderSystem::Update(float dt)
                 continue;
             }
 
-            mesh.get().m_material->Material()->UpdateBuffer(0, cameraUB);
-            mesh.get().m_material->Material()->UpdateBuffer(2, lightBufferUB);
+            mesh.get().m_material->Material()->UpdateBuffer(1, cameraUB);
+            //mesh.get().m_material->Material()->UpdateBuffer(2, lightBufferUB);
         }
     }
 

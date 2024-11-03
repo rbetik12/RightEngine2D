@@ -53,8 +53,9 @@ struct ShaderReflection
 
     struct TextureInfo
     {
-        uint8_t     m_slot;
         std::string m_name;
+        uint8_t     m_slot;
+        bool        m_isCubemap = false;
 
         inline bool operator<(const TextureInfo& other) const
         {

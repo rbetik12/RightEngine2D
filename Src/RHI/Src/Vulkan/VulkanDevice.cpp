@@ -397,6 +397,17 @@ void VulkanDevice::EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline,
     Execute(vkState->m_cmdBuffer)->Wait();
 }
 
+void VulkanDevice::PushConstantComputeImmediate(const void* data, uint32_t size, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state)
+{
+    const auto vkState = std::static_pointer_cast<VulkanComputeState>(state);
+    vkCmdPushConstants(vkState->m_cmdBuffer.Raw(),
+        std::static_pointer_cast<VulkanPipeline>(pipeline)->Layout(),
+        VK_SHADER_STAGE_COMPUTE_BIT,
+        0,
+        size,
+        data);
+}
+
 void VulkanDevice::Present()
 {
     VkResult result;

@@ -43,6 +43,7 @@ public:
     RPtr<rhi::ComputeState>     BeginComputePassImmediate(const ResPtr<MaterialResource>& material);
     void                        EndComputePass(const ResPtr<MaterialResource>& material);
     void                        EndComputePass(const ResPtr<MaterialResource>& material, const RPtr<rhi::ComputeState>& state);
+    void                        PushConstantComputeImmediate(const void* data, uint32_t size, const ResPtr<MaterialResource>& material, const std::shared_ptr<rhi::ComputeState>& state);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount = 1);
     void                        Draw(const std::shared_ptr<rhi::Buffer>& vb, const std::shared_ptr<rhi::Buffer>& ib, uint32_t instanceCount = 1);
     void                        Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
