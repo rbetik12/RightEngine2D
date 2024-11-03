@@ -129,7 +129,7 @@ ResPtr<Resource> MaterialLoader::Get(const fs::path& path) const
 
 void MaterialLoader::LoadSystemResources()
 {
-	m_renderMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/basic_3d.material"));
+	m_renderMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/pbr.material"));
 	m_skyboxMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/skybox.material"));
 	m_presentMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/present.material"));
 	m_equirectToCubemapMaterial = std::static_pointer_cast<MaterialResource>(Load("/System/Materials/equirect_to_cubemap.material"));
@@ -274,21 +274,26 @@ MaterialLoader::LoadEnvironmentMapData MaterialLoader::LoadEnvironmentMap(const 
 		prefilterDesc.m_mipmapped = true;
 		prefilterDesc.m_width = 32;
 		prefilterDesc.m_height = 32;
-	
+
 		const auto prefilterCubemap = rs.CreateTexture(prefilterDesc);
 	
 		auto& computePass = rs.Pipeline(m_envmapPrefilterMaterial)->Descriptor().m_computePass;
 		computePass->m_textures.emplace_back(data.m_cubemap);
 		computePass->m_storageTextures.emplace_back(prefilterCubemap);
+
+		const auto maxMipLevel = prefilterCubemap->CalculateMipCount();
 	
-		for (uint8_t mipLevel = 0; mipLevel < prefilterCubemap->CalculateMipCount(); mipLevel++)
+		for (uint8_t mipLevel = 0; mipLevel < maxMipLevel; mipLevel++)
 		{
 			m_envmapPrefilterMaterial->Material()->SetTexture(prefilterCubemap, 0, mipLevel);
 			m_envmapPrefilterMaterial->Material()->SetTexture(data.m_cubemap, 1);
 			m_envmapPrefilterMaterial->Material()->Sync();
+
+			const float roughness = static_cast<float>(mipLevel) / static_cast<float>(maxMipLevel);
 	
 			const auto state = rs.BeginComputePassImmediate(m_envmapPrefilterMaterial);
 			rs.BindMaterial(m_envmapPrefilterMaterial, state);
+			rs.PushConstantComputeImmediate(&roughness, sizeof(roughness), m_envmapPrefilterMaterial, state);
 			rs.Dispatch(prefilterCubemap->Width() / 32, prefilterCubemap->Height() / 32, 6, state);
 			rs.EndComputePass(m_envmapPrefilterMaterial, state);
 		}
@@ -382,7 +387,7 @@ bool MaterialLoader::Load(const ResPtr<MaterialResource>& resource, bool forcePi
 		if (parsedMat.m_parsedPipeline.m_viewportSize.x < 1 ||
 			parsedMat.m_parsedPipeline.m_viewportSize.y < 1 ||
 			parsedMat.m_parsedPipeline.m_viewportSize.x > 65536 ||
-			parsedMat.m_parsedPipeline.m_viewportSize.x > 65536)
+			parsedMat.m_parsedPipeline.m_viewportSize.y > 65536)
 		{
 			core::log::warning("[MaterialLoader] Viewport size is out of bounds: {}x{}", parsedMat.m_parsedPipeline.m_viewportSize.x,
 				parsedMat.m_parsedPipeline.m_viewportSize.y);

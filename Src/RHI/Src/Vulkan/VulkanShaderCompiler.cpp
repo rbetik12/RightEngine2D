@@ -276,7 +276,20 @@ core::Blob VulkanShaderCompiler::CompileShader(const std::string& shaderStr, std
         return {};
     }
 
-    glslang_program_SPIRV_generate(program, RHITypeToGLSLangType(stage));
+    // TODO: Add debug and release shaders compilation settings
+
+    glslang_spv_options_t spv_options;
+    spv_options.generate_debug_info = true;
+    spv_options.strip_debug_info = false;
+    spv_options.emit_nonsemantic_shader_debug_info = true;
+    spv_options.emit_nonsemantic_shader_debug_source = true;
+    spv_options.disable_optimizer = true;
+    spv_options.optimize_size = false;
+    spv_options.disassemble = true;
+    spv_options.validate = true;
+    spv_options.compile_only = false;
+
+    glslang_program_SPIRV_generate_with_options(program, RHITypeToGLSLangType(stage), &spv_options);
 
     std::vector<uint32_t> spirvBinary(glslang_program_SPIRV_get_size(program));
     glslang_program_SPIRV_get(program, spirvBinary.data());
@@ -318,9 +331,12 @@ ShaderReflection VulkanShaderCompiler::ReflectShader(const core::Blob& shaderBlo
         auto& name = texture.name;
         const auto slot = static_cast<uint8_t>(spirvCompiler.get_decoration(texture.id, spv::DecorationBinding));
 
+        const auto type = spirvCompiler.get_type(texture.type_id);
+
         auto texData = ShaderReflection::TextureInfo();
         texData.m_slot = slot;
         texData.m_name = std::move(name);
+        texData.m_isCubemap = type.image.dim == spv::DimCube;
 
         RHI_ASSERT(reflectionData.m_textures.find(texData) == reflectionData.m_textures.end());
         reflectionData.m_textures.emplace(std::move(texData));

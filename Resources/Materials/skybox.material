@@ -11,7 +11,7 @@
             "storeOperation": "STORE",
             "dependency": 
             {
-                "path": "/System/Materials/basic_3d.material",
+                "path": "/System/Materials/pbr.material",
                 "index": 0
             }
         }
@@ -22,7 +22,7 @@
         "storeOperation": "STORE",
         "dependency": 
         {
-            "path": "/System/Materials/basic_3d.material",
+            "path": "/System/Materials/pbr.material",
             "index": 0
         }
     }

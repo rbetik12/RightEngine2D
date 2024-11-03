@@ -70,6 +70,7 @@ public:
     virtual void                            EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual std::shared_ptr<ComputeState>   BeginComputePipelineImmediate(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state) override;
+    virtual void                            PushConstantComputeImmediate(const void* data, uint32_t size, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state) override;
     virtual void                            Present() override;
     virtual void                            BeginPipeline(const std::shared_ptr<Pipeline>& pipeline) override;
     virtual void                            EndPipeline(const std::shared_ptr<Pipeline>& pipeline) override;

@@ -46,6 +46,7 @@ public:
     virtual void                                EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline) = 0;
     virtual std::shared_ptr<ComputeState>       BeginComputePipelineImmediate(const std::shared_ptr<Pipeline>& pipeline) = 0;
     virtual void                                EndComputePipeline(const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state) = 0;
+    virtual void                                PushConstantComputeImmediate(const void* data, uint32_t size, const std::shared_ptr<Pipeline>& pipeline, const std::shared_ptr<ComputeState>& state) = 0;
     virtual void                                Draw(const std::shared_ptr<Buffer>& buffer, uint32_t vertexCount, uint32_t instanceCount) = 0;
     virtual void                                Draw(const std::shared_ptr<Buffer>& vb, const std::shared_ptr<Buffer>& ib, uint32_t indexCount, uint32_t instanceCount) = 0;
     virtual void                                Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;

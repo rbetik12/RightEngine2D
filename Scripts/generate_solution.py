@@ -38,6 +38,18 @@ if not check_lib_version("rttr", "0.9.6.2"):
     sub.run("conan create Scripts/lib/rttr/all -s build_type=Debug --version 0.9.6.2")
     sub.run("conan create Scripts/lib/rttr/all -s build_type=Release --version 0.9.6.2")
 
+if not check_lib_version("glslang", "1.3.296.0"):
+    sub.run("conan create Scripts/lib/glslang/all -s build_type=Debug --version 1.3.296.0")
+    sub.run("conan create Scripts/lib/glslang/all -s build_type=Release --version 1.3.296.0")
+
+if not check_lib_version("spirv-cross", "1.3.296.0"):
+    sub.run("conan create Scripts/lib/spirv-cross/all -s build_type=Debug --version 1.3.296.0")
+    sub.run("conan create Scripts/lib/spirv-cross/all -s build_type=Release --version 1.3.296.0")
+
+if not check_lib_version("spirv-tools", "1.3.296.0"):
+    sub.run("conan create Scripts/lib/spirv-tools/all -s build_type=Debug --version 1.3.296.0")
+    sub.run("conan create Scripts/lib/spirv-tools/all -s build_type=Release --version 1.3.296.0")
+
 #Generate solution and copy all prebuilt binaries to binary folder
 
 def copy_files(source_dir, destination_dir, extension=".dll"):
@@ -74,10 +86,10 @@ def check_process_status_code(code, proc_stderr):
 print(f"Generating solution...")
 
 try:
-    status_code = sub.run(f"conan install . --deployer=dll_deployer --output-folder=.build/Win/.lib --build=missing --profile=win-64 -s build_type={build_type}", shell=True, check=True, text=True)
+    status_code = sub.run(f"conan install . --deployer=dll_deployer -c tools.cmake.cmake_layout:build_folder=\".build/Win\" --build=missing --profile=win-64 -s build_type={build_type}", shell=True, check=True, text=True)
     check_process_status_code(status_code.returncode, status_code.stderr)
 
-    copy_files(".build/Win/.lib/dll", f".build/Win/.bin/{build_type}", ".dll")
+    copy_files(".build/Win/dll", f".build/Win/.bin/{build_type}", ".dll")
     copy_files("Scripts/bin", f".build/Win/.bin/{build_type}", ".exe")
 
     status_code = sub.run(f"cmake -B .build/Win -DCMAKE_BUILD_TYPE={build_type} --preset conan-default .", shell=True, check=True, text=True)

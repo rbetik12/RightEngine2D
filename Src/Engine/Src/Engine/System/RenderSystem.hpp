@@ -9,6 +9,13 @@
 namespace engine
 {
 
+struct MaterialDataUB
+{
+    glm::vec4 m_Albedo;
+    float m_Metallic;
+    float m_Roughness;
+};
+
 struct CameraUB
 {
     glm::mat4 m_projView;

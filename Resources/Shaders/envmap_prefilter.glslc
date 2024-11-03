@@ -7,7 +7,6 @@
 // Pre-filters environment cube map using GGX NDF importance sampling.
 // Part of specular IBL split-sum approximation.
 
-
 const uint NumSamples = 1024;
 const float InvNumSamples = 1.0 / float(NumSamples);
 
@@ -16,7 +15,6 @@ vec2 SampleHammersley(uint i)
 	return vec2(i * InvNumSamples, RadicalInverse_VdC(i));
 }
 
-const int NumMipLevels = 1;
 layout(binding = 0, rgba32f) restrict writeonly uniform imageCube outputTexture;
 layout(binding = 1) uniform samplerCube inputTexture;
 
@@ -25,16 +23,15 @@ layout (push_constant) uniform Uniforms
 	float Roughness;
 } u_Uniforms;
 
-#define PARAM_LEVEL     0
 #define PARAM_ROUGHNESS u_Uniforms.Roughness
-
 
 layout(local_size_x=32, local_size_y=32, local_size_z=1) in;
 void main(void)
 {
 	// Make sure we won't write past output when computing higher mipmap levels.
 	ivec2 outputSize = imageSize(outputTexture);
-	if(gl_GlobalInvocationID.x >= outputSize.x || gl_GlobalInvocationID.y >= outputSize.y) {
+	if (gl_GlobalInvocationID.x >= outputSize.x || gl_GlobalInvocationID.y >= outputSize.y) 
+	{
 		return;
 	}
 	
@@ -55,7 +52,7 @@ void main(void)
 
 	// Convolve environment map using GGX NDF importance sampling.
 	// Weight by cosine term since Epic claims it generally improves quality.
-	for(uint i = 0; i < NumSamples; i++)
+	for (uint i = 0; i < NumSamples; i++)
 	{
 		vec2 u = SampleHammersley(i);
 		vec3 Lh = TangentToWorld(SampleGGX(u.x, u.y, PARAM_ROUGHNESS), N, S, T);
@@ -64,7 +61,8 @@ void main(void)
 		vec3 Li = 2.0 * dot(Lo, Lh) * Lh - Lo;
 
 		float cosLi = dot(N, Li);
-		if(cosLi > 0.0) {
+		if (cosLi > 0.0) 
+		{
 			// Use Mipmap Filtered Importance Sampling to improve convergence.
 			// See: https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch20.html, section 20.4
 

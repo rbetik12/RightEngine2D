@@ -78,3 +78,9 @@ add_subdirectory(Src/EngineLauncher)
 set_target_properties(Core PROPERTIES FOLDER ${ENGINE_PROJECT_DIR})
 set_target_properties(RHI PROPERTIES FOLDER ${ENGINE_PROJECT_DIR})
 set_target_properties(Engine PROPERTIES FOLDER ${ENGINE_PROJECT_DIR})
+
+if (MSVC)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT EngineLauncher)
+    set_target_properties(EngineLauncher PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--project ${CMAKE_CURRENT_SOURCE_DIR}/Projects/Sandbox/sandbox.project")
+endif()
+

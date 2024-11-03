@@ -52,6 +52,10 @@ struct EditorService::Impl
     std::shared_ptr<render::Material>       m_material;
     std::shared_ptr<rhi::Texture>           m_envCubMap;
     std::shared_ptr<TextureResource>        m_envTex;
+    std::shared_ptr<TextureResource>        m_brickTex;
+    std::shared_ptr<TextureResource>        m_whiteTex;
+    std::shared_ptr<TextureResource>        m_normalTex;
+    std::shared_ptr<TextureResource>        m_brdfTex;
     std::shared_ptr<MeshResource>           m_monkeyMesh;
     eastl::vector<std::shared_ptr<Panel>>   m_panels;
     std::shared_ptr<ViewportPanel>          m_viewportPanel;
@@ -135,13 +139,43 @@ void EditorService::Initialize()
     auto& resourceService = Instance().Service<ResourceService>();
 
     auto& meshLoader = resourceService.GetLoader<MeshLoader>();
-    m_impl->m_monkeyMesh = std::static_pointer_cast<MeshResource>(meshLoader.Load("/Meshes/monkey.fbx"));
+    m_impl->m_monkeyMesh = std::static_pointer_cast<MeshResource>(meshLoader.Load("/System/Models/sphere.fbx"));
 
     while (!m_impl->m_monkeyMesh->Ready()) {}
 
+    auto& matLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
+    const auto env = matLoader.LoadEnvironmentMap("/System/Textures/spree_bank_env.hdr");
+    m_impl->m_envCubMap = env.m_cubemap;
+
+    auto skyboxMaterial = resourceService.Load<MaterialResource>("/System/Materials/skybox.material");
+    skyboxMaterial->Material()->SetTexture(m_impl->m_envCubMap, 3);
+    skyboxMaterial->Material()->Sync();
+
+    const auto defaultMat = rs.DefaultMaterial();
+
     MeshComponent meshComponent;
     meshComponent.m_mesh = m_impl->m_monkeyMesh;
-    meshComponent.m_material = rs.DefaultMaterial();
+    meshComponent.m_material = defaultMat;
+
+    m_impl->m_brickTex = Instance().Service<ResourceService>().Load<TextureResource>("/System/Textures/white.png");
+    m_impl->m_whiteTex = Instance().Service<ResourceService>().Load<TextureResource>("/System/Textures/white.png");
+    m_impl->m_normalTex = Instance().Service<ResourceService>().Load<TextureResource>("/System/Textures/normal_map.png");
+    m_impl->m_brdfTex = Instance().Service<ResourceService>().Load<TextureResource>("/System/Textures/brdf_lut.tga");
+
+    m_impl->m_whiteTex->Wait();
+    m_impl->m_normalTex->Wait();
+    m_impl->m_brickTex->Wait();
+    m_impl->m_brdfTex->Wait();
+
+    defaultMat->Material()->SetTexture(m_impl->m_brickTex->Texture(), 3);
+    defaultMat->Material()->SetTexture(m_impl->m_normalTex->Texture(), 4);
+    defaultMat->Material()->SetTexture(m_impl->m_whiteTex->Texture(), 5);
+    defaultMat->Material()->SetTexture(m_impl->m_whiteTex->Texture(), 6);
+    defaultMat->Material()->SetTexture(m_impl->m_whiteTex->Texture(), 7);
+    defaultMat->Material()->SetTexture(env.m_irradianceTexture, 8);
+    defaultMat->Material()->SetTexture(env.m_prefilterTexture, 9);
+    defaultMat->Material()->SetTexture(m_impl->m_brdfTex->Texture(), 10);
+    defaultMat->Material()->Sync();
 
     auto& ws = Instance().Service<WorldService>();
     auto& em = ws.CurrentWorld()->GetEntityManager();
@@ -159,14 +193,6 @@ void EditorService::Initialize()
 
     auto& cameraTransform = em->GetComponent<TransformComponent>(cameraUuid);
     cameraTransform.m_position = glm::vec3(0, 0, -10);
-
-    auto& matLoader = Instance().Service<ResourceService>().GetLoader<MaterialLoader>();
-
-    m_impl->m_envCubMap = matLoader.LoadEnvironmentMap("/System/Textures/spree_bank_env.hdr").m_cubemap;
-
-    auto skyboxMaterial = resourceService.Load<MaterialResource>("/System/Materials/skybox.material");
-    skyboxMaterial->Material()->SetTexture(m_impl->m_envCubMap, 3);
-    skyboxMaterial->Material()->Sync();
 
     const auto skyboxUuid = em->CreateEntity("Skybox");
     em->Update();
