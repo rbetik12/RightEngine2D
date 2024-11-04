@@ -31,7 +31,7 @@ RTTR_REGISTRATION
 
     engine::registration::Class<engine::CameraUB>("engine::CameraUB");
     engine::registration::Class<engine::LightBufferUB>("engine::LightBufferUB");
-    engine::registration::Class<engine::MaterialDataUB>("engine::MaterialDataUB");
+    engine::registration::Class<engine::PBRMaterialUB>("engine::PBRMaterialUB");
 }
 
 namespace engine
@@ -104,7 +104,6 @@ void RenderSystem::Update(float dt)
             }
 
             mesh.get().m_material->Material()->UpdateBuffer(1, cameraUB);
-            //mesh.get().m_material->Material()->UpdateBuffer(2, lightBufferUB);
         }
     }
 

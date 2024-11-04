@@ -48,6 +48,9 @@ void main()
 
 #pragma stage fragment
 #version 450 core
+
+#include "common/pbr_buffers.glslh"
+
 layout (location = 0) out vec4 aAlbedo;
 
 struct VertexOutput
@@ -138,9 +141,37 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 void main()
 {
-    vec3 albedo = pow(texture(u_Albedo, Output.UV).rgb, vec3(2.2));
-    float metallic = 0.0f;
-    float roughness = 1.0f;
+    vec3 albedo;
+    if (u_UseAlbedoTex)
+    {
+        albedo = texture(u_Albedo, Output.UV).rgb;
+    }
+    else
+    {
+        albedo = u_AlbedoVec;
+    }
+    albedo = pow(albedo, vec3(2.2));
+
+    float metallic;
+    if (u_UseMetallicTex)
+    {
+        metallic = texture(u_Metallic, Output.UV).r;
+    }
+    else
+    {
+        metallic = u_MetallicValue;
+    }
+
+    float roughness;
+    if (u_UseRoughnessTex)
+    {
+        roughness = texture(u_Rougness, Output.UV).r;
+    }
+    else
+    {
+        roughness = u_RoughnessValue;
+    }
+    
     float ao = 1.0f;
 
     vec3 N = getNormalFromMap();

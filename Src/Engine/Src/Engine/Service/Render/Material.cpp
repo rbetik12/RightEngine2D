@@ -101,8 +101,19 @@ void Material::Sync()
 
     m_gpuMaterial->Sync();
 
+    for (auto&& [slot, _] : m_pendingBuffers)
+    {
+        UpdateBuffer(slot);
+    }
+
     m_pendingBuffers.clear();
     m_pendingTextures.clear();
+}
+
+void Material::UpdateBuffer(int slot)
+{
+    auto& info = m_buffers[slot];
+    info.m_gpuBuffer->CopyToBuffer(info.m_cpuBuffer.get_raw_ptr(), info.m_cpuBuffer.get_type().get_sizeof());
 }
 
 } // engine::render

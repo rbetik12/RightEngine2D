@@ -9,11 +9,20 @@
 namespace engine
 {
 
-struct MaterialDataUB
+struct PBRMaterialUB
 {
-    glm::vec4 m_Albedo;
-    float m_Metallic;
-    float m_Roughness;
+    // Default value is red plastic
+    glm::vec3 m_albedoVec = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    float m_roughness = 1.0f;
+    float m_metallic = 0.0f;
+
+    bool m_useAlbedoTex = false;
+    bool m_useNormalTex = false;
+    bool m_useMetallicTex = false;
+    bool m_useRoughnessTex = false;
+
+    glm::vec2 _padding_;
 };
 
 struct CameraUB
