@@ -10,13 +10,13 @@
 #include <Core/Config.hpp>
 #include <Core/EASTLIntergration.hpp>
 #include <Core/Hash.hpp>
+#include <Core/NatvisHolder.hpp>
 
 #include <rttr/registration>
 #include <rttr/registration_friend>
 #include <rttr/rttr_enable.h>
 #include <rttr/type>
 #include <rttr/variant.h>
-#include <rttr/string_view.h>
 #include <fmt/format.h>
 
 namespace eastl
@@ -361,15 +361,112 @@ struct associative_container_mapper<eastl::vector_set<
 
 } // rttr
 
-FMT_BEGIN_NAMESPACE
-    template <>
-    struct formatter<rttr::string_view> final : formatter<std::string_view>
+namespace rttr_natvis
+{
+
+class CORE_API RttrNatvisFactories
+{
+public:
+    static RttrNatvisFactories& Instance();
+
+    class IRTTRNatvis : public core::INatvisHolder
     {
-        template <typename FormatContext>
-        auto format(rttr::string_view value, FormatContext& ctx) const -> typename FormatContext::iterator
-        {
-            return formatter<std::string_view>::format(value.data(), ctx);
-        }
+    public:
+        virtual core::INatvisHolder* Value(const rttr::variant& v) = 0;
     };
 
-FMT_END_NAMESPACE
+    template<typename T>
+    class RTTRNatvisHolder : public IRTTRNatvis
+    {
+        explicit RTTRNatvisHolder(const T* p) : m_p(p) {}
+
+    public:
+        RTTRNatvisHolder() = default;
+
+        core::INatvisHolder* Value(const rttr::variant& v) override
+        {
+            static auto rttrType = rttr::type::get<T>();
+
+            const T* p = nullptr;
+
+            if (v.get_type().is_pointer())
+            {
+                p = v.get_value_unsafe<T*>();
+            }
+            else if (v.get_type().is_wrapper())
+            {
+                p = &v.get_wrapped_value_unsafe<T>();
+            }
+            else
+            {
+                p = &v.get_value_unsafe<T>();
+            }
+
+            return new RTTRNatvisHolder(p);
+        }
+
+    private:
+        const T* m_p = nullptr;
+    };
+
+    template<typename T>
+    void RegisterType()
+    {
+        static_assert(!std::is_const_v<T> && !std::is_pointer_v<T>);
+
+        auto factory = std::make_shared<RTTRNatvisHolder<T>>();
+
+        RegisterSingle<T>(factory);
+    }
+
+    void Cleanup();
+
+private:
+    template<typename T>
+    void RegisterSingle(std::shared_ptr<IRTTRNatvis> factory)
+    {
+        m_fns[rttr::type::get<T>()] = factory;
+    }
+
+    core::INatvisHolder* GetNatvis(const void* var);
+
+private:
+    eastl::unordered_map<rttr::type, std::shared_ptr<IRTTRNatvis>> m_fns;
+};
+
+} // rttr_natvis
+
+#define RTTR_NATVIS_REGISTER(T) rttr_natvis::RttrNatvisFactories::Instance().RegisterType<T>()
+
+namespace core
+{
+
+template<typename T>
+class RTTRObject
+{
+public:
+    explicit RTTRObject(std::string_view name) : m_class(validate(name)) { }
+
+    ~RTTRObject()
+    {
+        RTTR_NATVIS_REGISTER(T);
+    }
+
+private:
+    static std::string_view validate(std::string_view name)
+    {
+        const auto typeByName = rttr::type::get_by_name(name);
+
+        CORE_ASSERT_WITH_MESSAGE((!typeByName.is_valid() 
+            || !rttr::type::get<T>().is_valid() 
+            || (rttr::type::get<T>().get_id() == typeByName.get_id())), 
+            "Looks like you're trying to register type twice or with the same name.");
+
+        return name;
+    }
+
+protected:
+    rttr::registration::class_<T> m_class;
+};
+
+} // core

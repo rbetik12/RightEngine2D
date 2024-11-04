@@ -21,7 +21,6 @@ namespace fs = std::filesystem;
 
 class ENGINE_API Loader : public core::NonCopyable
 {
-	RTTR_ENABLE()
 public:
 	virtual ~Loader() {}
 

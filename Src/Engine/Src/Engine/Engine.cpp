@@ -173,7 +173,7 @@ void Engine::ParseCfg(int argCount, char* argPtr[])
     m_config.m_domain = rttr::type::get_by_name("engine::Domain")
                                 .get_enumeration()
                                 .name_to_value(launchMode.data())
-                                .get_value<Domain>();
+                                .get_value_safe<Domain>();
 
     const io::fs::path projectPath = registration::CommandLineArgs::Get("--project");
     if (projectPath.is_absolute())

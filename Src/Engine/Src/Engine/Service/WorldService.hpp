@@ -7,9 +7,8 @@
 namespace engine
 {
 
-class ENGINE_API WorldService : public IService
+class ENGINE_API WorldService : public Service<WorldService>
 {
-    RTTR_ENABLE(IService);
 public:
     WorldService();
     virtual ~WorldService() override;

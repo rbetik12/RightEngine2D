@@ -13,7 +13,6 @@ class MaterialResource;
 
 class ENGINE_API MaterialLoader final : public Loader
 {
-	RTTR_ENABLE(Loader)
 public:
 	MaterialLoader();
 

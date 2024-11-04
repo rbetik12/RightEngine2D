@@ -34,9 +34,9 @@ if not check_lib_version("imguizmo", "1.83.2"):
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Debug --version 1.83.2")
     sub.run("conan create Scripts/lib/imguizmo/all -s build_type=Release --version 1.83.2")
 
-if not check_lib_version("rttr", "0.9.6.2"):
-    sub.run("conan create Scripts/lib/rttr/all -s build_type=Debug --version 0.9.6.2")
-    sub.run("conan create Scripts/lib/rttr/all -s build_type=Release --version 0.9.6.2")
+if not check_lib_version("rttr", "0.9.7"):
+    sub.run("conan create Scripts/lib/rttr/all -s build_type=Debug --version 0.9.7")
+    sub.run("conan create Scripts/lib/rttr/all -s build_type=Release --version 0.9.7")
 
 if not check_lib_version("glslang", "1.3.296.0"):
     sub.run("conan create Scripts/lib/glslang/all -s build_type=Debug --version 1.3.296.0")

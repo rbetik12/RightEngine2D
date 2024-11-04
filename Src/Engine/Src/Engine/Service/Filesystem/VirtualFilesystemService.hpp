@@ -23,9 +23,8 @@ struct ENGINE_API VFSSettings
     eastl::vector<Setting> m_settings;
 };
 
-class ENGINE_API VirtualFilesystemService : public IService
+class ENGINE_API VirtualFilesystemService : public Service<VirtualFilesystemService>
 {
-    RTTR_ENABLE(IService);
 public:
     VirtualFilesystemService();
 

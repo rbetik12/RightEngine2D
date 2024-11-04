@@ -19,7 +19,7 @@ public:
     template<typename T>
     void Add()
     {
-        static_assert(std::is_base_of_v<System, T>);
+        static_assert(std::is_base_of_v<ISystem, T>);
         ENGINE_ASSERT(rttr::type::get<T>().get_constructor({rttr::type::get<World*>()}).is_valid());
 
         m_systems.emplace_back(std::make_unique<T>(m_world));
@@ -34,11 +34,11 @@ private:
         float dt;
     };
 
-    eastl::vector<std::unique_ptr<System>>                        m_systems;
-    eastl::unordered_map<rttr::type, System*>                    m_typeToSystem;
-    World*                                                        m_world;
-    tf::Taskflow                                                m_taskflow;
-    ExecutionParams                                                m_execParams;
+    eastl::vector<std::unique_ptr<ISystem>>         m_systems;
+    eastl::unordered_map<rttr::type, ISystem*>      m_typeToSystem;
+    World*                                          m_world;
+    tf::Taskflow                                    m_taskflow;
+    ExecutionParams                                 m_execParams;
 };
 
 } // engine::ecs

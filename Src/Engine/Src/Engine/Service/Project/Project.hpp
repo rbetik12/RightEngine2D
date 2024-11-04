@@ -28,7 +28,7 @@ public:
 
         ENGINE_ASSERT(it != m_settings.end());
 
-        return it->template get_value<T>();
+        return it->template get_value_safe<T>();
     }
 
 private:

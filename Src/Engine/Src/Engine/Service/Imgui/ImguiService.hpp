@@ -7,9 +7,8 @@
 namespace engine
 {
 
-class ENGINE_API ImguiService : public IService
+class ENGINE_API ImguiService : public Service<ImguiService>
 {
-    RTTR_ENABLE(IService);
 public:
     ImguiService();
     virtual ~ImguiService() override;

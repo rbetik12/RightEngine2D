@@ -13,7 +13,6 @@ class MeshResource;
 
 class ENGINE_API MeshLoader final : public Loader
 {
-	RTTR_ENABLE(Loader)
 public:
 	MeshLoader();
 

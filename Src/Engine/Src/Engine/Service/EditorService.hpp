@@ -12,9 +12,8 @@ namespace editor
 constexpr entt::entity C_INVALID_ENTITY = (entt::entity) std::numeric_limits<uint32_t>::max();
 } // editor
 
-class ENGINE_API EditorService final : public IService
+class ENGINE_API EditorService final : public Service<EditorService>
 {
-    RTTR_ENABLE(IService);
 public:
     struct Impl;
 

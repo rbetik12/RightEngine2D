@@ -12,7 +12,6 @@ class TextureResource;
 
 class ENGINE_API TextureLoader final : public Loader
 {
-	RTTR_ENABLE(Loader)
 public:
 	TextureLoader();
 

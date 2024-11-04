@@ -31,11 +31,11 @@ void SystemManager::UpdateDependenciesOrder()
     // Gather type deps map
     for (const auto& systemPtr : m_systems)
     {
-        System& sys = *systemPtr.get();
+        ISystem& sys = *systemPtr.get();
         const rttr::instance instance = sys;
         const auto sysType = instance.get_derived_type();
 
-        auto meta = sysType.get_metadata(engine::registration::C_METADATA_KEY).get_value<System::MetaInfo>();
+        auto meta = sysType.get_metadata(engine::registration::C_METADATA_KEY).get_value_unsafe<ISystem::MetaInfo>();
 
         dependencies[sysType].insert(meta.m_updateBefore.begin(), meta.m_updateBefore.end());
 

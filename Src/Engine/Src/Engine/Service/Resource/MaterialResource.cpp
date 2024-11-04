@@ -73,7 +73,7 @@ T StringToEnum(std::string_view str)
 	ENGINE_ASSERT(enumValue.is_valid());
 	ENGINE_ASSERT(!enumValue.get_type().get_name().empty());
 
-	return enumValue.name_to_value(rttr::string_view(str.data())).template get_value<T>();
+	return enumValue.name_to_value(std::string_view(str.data())).template get_value_unsafe<T>();
 }
 
 } // unnamed
