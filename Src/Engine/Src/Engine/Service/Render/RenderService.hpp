@@ -16,9 +16,8 @@ class MaterialResource;
 template<typename T>
 using RPtr = std::shared_ptr<T>;
 
-class ENGINE_API RenderService final : public IService
+class ENGINE_API RenderService final : public Service<RenderService>
 {
-    RTTR_ENABLE(IService)
 public:
     RenderService();
     virtual ~RenderService() override;

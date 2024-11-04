@@ -15,9 +15,8 @@ struct ENGINE_API SkyboxComponent : public ecs::Component
     RPtr<rhi::Texture>      m_brdfTexture;
 };
 
-class ENGINE_API SkyboxSystem : public ecs::System
+class ENGINE_API SkyboxSystem : public ecs::System<SkyboxSystem>
 {
-    RTTR_ENABLE(System)
 public:
     SkyboxSystem(ecs::World* world);
     virtual ~SkyboxSystem() = default;

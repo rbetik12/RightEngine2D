@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="rttr::basic_string_view&lt;*,*&gt;">
+		<DisplayString>{m_data,[m_size]s}</DisplayString>
+	</Type>
+	<Type Name="rttr::type">
+		<DisplayString>{m_type_data->m_name}</DisplayString>
+	</Type>
+	<Type Name="rttr::property">
+		<DisplayString>{m_wrapper->m_name}</DisplayString>
+	</Type>
+	<Type Name="rttr::variant">
+		<Intrinsic Name="_nv" Expression="Core.dll!rttr_natvis::RttrNatvisFactories::Instance().GetNatvis(this)" SideEffect="true"/>
+		<!--<DisplayString>{*_nv()}</DisplayString>-->
+		<Expand>
+			<Item Name="[value]">*_nv()</Item>
+			<Item Name="[ptr]">*(void**)m_data._Pad</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>

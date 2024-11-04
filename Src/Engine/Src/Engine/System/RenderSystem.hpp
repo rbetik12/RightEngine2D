@@ -47,9 +47,8 @@ struct ENGINE_API MeshComponent : public ecs::Component
     std::shared_ptr<MeshResource>        m_mesh;
 };
 
-class ENGINE_API RenderSystem : public ecs::System
+class ENGINE_API RenderSystem : public ecs::System<RenderSystem>
 {
-    RTTR_ENABLE(System)
 public:
     RenderSystem(ecs::World* world);
     virtual ~RenderSystem() = default;
@@ -81,9 +80,8 @@ struct ENGINE_API CameraComponent : public ecs::Component
     bool        m_active = false;
 };
 
-class ENGINE_API CameraSystem : public ecs::System
+class ENGINE_API CameraSystem : public ecs::System<CameraSystem>
 {
-    RTTR_ENABLE(System)
 public:
     CameraSystem(ecs::World* world);
     virtual ~CameraSystem() = default;

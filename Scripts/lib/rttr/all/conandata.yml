@@ -1,4 +1,7 @@
 sources:
+  "0.9.7":
+    url: "https://github.com/RGameStudio/rttr/archive/refs/tags/0.9.7.tar.gz"
+    sha256: "6160325bd4a82ed25023c410e40b5b85705983db400687c33ea263c0ab94bfe0"
   "0.9.6.2":
     url: "https://github.com/RGameStudio/rttr/archive/refs/tags/0.9.6.2.tar.gz"
     sha256: "0752cc3b21a926e32a5825facc4813d284ce216902a0abe422a92ca1855f49ca"

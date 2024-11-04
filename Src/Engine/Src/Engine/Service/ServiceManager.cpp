@@ -75,7 +75,7 @@ void ServiceManager::UpdateDependencyOrder()
 
     for (const auto [type, _] : m_servicesMap)
     {
-        const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value<IService::MetaInfo>();
+        const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value_unsafe<IService::MetaInfo>();
 
         auto& typeDeps = updateDependenciesMap[type];
         typeDeps.insert(metadata.m_updateBefore.begin(), metadata.m_updateBefore.end());
@@ -89,7 +89,7 @@ void ServiceManager::UpdateDependencyOrder()
 
     for (const auto [type, _] : m_servicesMap)
     {
-        const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value<IService::MetaInfo>();
+        const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value_unsafe<IService::MetaInfo>();
 
         auto& typeDeps = postUpdateDependenciesMap[type];
         typeDeps.insert(metadata.m_postUpdateBefore.begin(), metadata.m_postUpdateBefore.end());

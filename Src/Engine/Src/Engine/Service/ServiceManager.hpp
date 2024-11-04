@@ -34,7 +34,7 @@ public:
 
         if (m_servicesMap.find(type) == m_servicesMap.end())
         {
-            const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value<IService::MetaInfo>();
+            const auto metadata = type.get_metadata(registration::C_METADATA_KEY).get_value_safe<IService::MetaInfo>();
 
             if (metadata.m_domain != Domain::ALL && (m_domain & metadata.m_domain) != metadata.m_domain)
             {

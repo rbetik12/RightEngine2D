@@ -7,9 +7,8 @@
 namespace engine
 {
 
-class ENGINE_API ProjectService : public IService
+class ENGINE_API ProjectService : public Service<ProjectService>
 {
-    RTTR_ENABLE(IService);
 public:
     ProjectService();
     ~ProjectService();

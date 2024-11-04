@@ -8,9 +8,8 @@ namespace engine
 
 class CustomThread;
 
-class ENGINE_API ThreadService final : public IService
+class ENGINE_API ThreadService final : public Service<ThreadService>
 {
-    RTTR_ENABLE(IService);
 public:
 
     ThreadService();

@@ -32,19 +32,19 @@ namespace helpers
 } // helpers
 
 template<typename T>
-class ENGINE_API Service
+class ENGINE_API Service : public core::RTTRObject<T>
 {
 public:
-    Service(rttr::string_view name) : m_class(name)
+    Service(std::string_view name) : core::RTTRObject<T>(name)
     {
         static_assert(std::is_base_of_v<IService, T>, "T must be derived of engine::IService");
 
-        m_class.constructor();
+        this->m_class.constructor();
     }
 
     ~Service()
     {
-        m_class(
+        this->m_class(
             rttr::metadata(C_METADATA_KEY, std::move(m_meta))
         );
     }
@@ -96,24 +96,23 @@ public:
     }
 
 private:
-    IService::MetaInfo                m_meta;
-    rttr::registration::class_<T>    m_class;
+    IService::MetaInfo m_meta;
 };
 
 template<typename T>
-class ENGINE_API System
+class ENGINE_API System : public core::RTTRObject<T>
 {
 public:
-    System(rttr::string_view name) : m_class(name)
+    System(std::string_view name) : core::RTTRObject<T>(name)
     {
-        static_assert(std::is_base_of_v<engine::ecs::System, T>, "T must be derived of engine::ecs::System");
+        static_assert(std::is_base_of_v<engine::ecs::ISystem, T>, "T must be derived of engine::ecs::System");
 
-        m_class.constructor<ecs::World*>();
+        this->m_class.constructor<ecs::World*>();
     }
 
     ~System()
     {
-        m_class(
+        this->m_class(
             rttr::metadata(C_METADATA_KEY, std::move(m_meta))
         );
     }
@@ -127,7 +126,7 @@ public:
     template<typename TOther>
     System& UpdateAfter()
     {
-        static_assert(std::is_base_of_v<engine::ecs::System, TOther>, "TOther must be derived of engine::ecs::System");
+        static_assert(std::is_base_of_v<engine::ecs::ISystem, TOther>, "TOther must be derived of engine::ecs::System");
         static_assert(!std::is_same_v<T, TOther>, "Cycle in system update order");
 
         m_meta.m_updateAfter.emplace_back(rttr::type::get<TOther>());
@@ -137,7 +136,7 @@ public:
     template<typename TOther>
     System& UpdateBefore()
     {
-        static_assert(std::is_base_of_v<engine::ecs::System, TOther>, "TOther must be derived of engine::ecs::System");
+        static_assert(std::is_base_of_v<engine::ecs::ISystem, TOther>, "TOther must be derived of engine::ecs::System");
         static_assert(!std::is_same_v<T, TOther>, "Cycle in system update order");
 
         m_meta.m_updateBefore.emplace_back(rttr::type::get<TOther>());
@@ -145,8 +144,7 @@ public:
     }
 
 private:
-    engine::ecs::System::MetaInfo    m_meta;
-    rttr::registration::class_<T>    m_class;
+    engine::ecs::ISystem::MetaInfo m_meta;
 };
 
 enum class CtorType : uint8_t
@@ -157,31 +155,31 @@ enum class CtorType : uint8_t
 };
 
 template<typename T, CtorType type = CtorType::AsObject>
-class ENGINE_API Class
+class ENGINE_API Class : public core::RTTRObject<T>
 {
 public:
-    explicit Class(rttr::string_view name) : m_class(name)
+    explicit Class(std::string_view name) : core::RTTRObject<T>(name)
     {
         ENGINE_ASSERT_WITH_MESSAGE(!helpers::typeRegistered<T>(), fmt::format("Type '{}' was already registered!", rttr::type::get<T>().get_name()));
 
         if constexpr (type == CtorType::AsObject)
         {
             static_assert(std::is_copy_constructible_v<T>, "If you want to register non-copyable type, you can use pointer type");
-            m_class.constructor()
+            this->m_class.constructor()
             (
                 rttr::policy::ctor::as_object
             );
         }
         else if constexpr (type == CtorType::AsRawPtr)
         {
-            m_class.constructor()
+            this->m_class.constructor()
             (
                 rttr::policy::ctor::as_raw_ptr
             );
         }
         else if constexpr (type == CtorType::AsSharedPtr)
         {
-            m_class.constructor()
+            this->m_class.constructor()
             (
                 rttr::policy::ctor::as_std_shared_ptr
             );
@@ -189,16 +187,13 @@ public:
     }
 
     template <typename PropType, typename ClassType>
-    Class& Property(rttr::string_view name, PropType ClassType::* field)
+    Class& Property(std::string_view name, PropType ClassType::* field)
     {
         static_assert(std::is_base_of_v<ClassType, T>);
 
-        m_class.property(name, field);
+        this->m_class.property(name, field);
         return *this;
     }
-
-protected:
-    rttr::registration::class_<T> m_class;
 };
 
 
@@ -207,7 +202,7 @@ template<typename T>
 class ENGINE_API ResourceLoader : public Class<T, CtorType::AsRawPtr>
 {
 public:
-    ResourceLoader(rttr::string_view name) : Class<T, CtorType::AsRawPtr>(name)
+    ResourceLoader(std::string_view name) : Class<T, CtorType::AsRawPtr>(name)
     {
         static_assert(std::is_base_of_v<Loader, T>, "Resource loader must be derived of Loader class");
     }
@@ -217,10 +212,10 @@ template<typename T>
 class ENGINE_API ProjectSettings : public Class<T>
 {
 public:
-    ProjectSettings(rttr::string_view name) : Class<T>(name) {}
+    ProjectSettings(std::string_view name) : Class<T>(name) {}
 
     template <typename PropType, typename ClassType>
-    ProjectSettings& property(rttr::string_view name, PropType ClassType::* field)
+    ProjectSettings& property(std::string_view name, PropType ClassType::* field)
     {
         Class<T>::property(name, field);
         return *this;
@@ -238,10 +233,10 @@ template<typename T>
 class ENGINE_API Component : public Class<T>
 {
 public:
-    Component(ecs::Component::Type type, rttr::string_view name) : Class<T>(name) {}
+    Component(ecs::Component::Type type, std::string_view name) : Class<T>(name) {}
 
     template <typename PropType, typename ClassType>
-    Component& property(rttr::string_view name, PropType ClassType::* field)
+    Component& property(std::string_view name, PropType ClassType::* field)
     {
         Class<T>::property(name, field);
         return *this;

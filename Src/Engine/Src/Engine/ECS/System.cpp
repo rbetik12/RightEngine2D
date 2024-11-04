@@ -3,7 +3,7 @@
 namespace engine::ecs
 {
 
-System::System(World* world) : m_world(world)
+ISystem::ISystem(World* world) : m_world(world)
 {
 }
 

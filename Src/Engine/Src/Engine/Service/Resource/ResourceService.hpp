@@ -14,9 +14,8 @@ class MaterialResource;
 class TextureResource;
 class MeshResource;
 
-class ENGINE_API ResourceService : public IService
+class ENGINE_API ResourceService : public Service<ResourceService>
 {
-	RTTR_ENABLE(IService);
 public:
 	ResourceService();
 	virtual ~ResourceService() override;

@@ -19,9 +19,8 @@ struct ENGINE_API TransformComponent : public ecs::Component
     glm::mat4 m_worldTransform = glm::mat4(1.0f);
 };
 
-class ENGINE_API TransformSystem : public ecs::System
+class ENGINE_API TransformSystem : public ecs::System<TransformSystem>
 {
-    RTTR_ENABLE(System)
 public:
     TransformSystem(ecs::World* world);
     virtual ~TransformSystem() = default;
