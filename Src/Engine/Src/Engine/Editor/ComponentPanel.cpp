@@ -145,8 +145,6 @@ void ComponentPanel::DrawPanel()
         return;
     }
 
-
-
 	DrawComponent<TransformComponent>(selectedEntity, em, [](TransformComponent& t)
 	{
 		auto rotation = glm::degrees(glm::eulerAngles(t.m_rotation));
@@ -163,6 +161,58 @@ void ComponentPanel::DrawPanel()
 		DrawVec3Control("Color", l.m_color);
 		ImGui::Spacing();
 		ImGui::DragFloat("Intensity", &l.m_intensity, 1, 0, 1000);
+	});
+
+	DrawComponent<MeshComponent>(selectedEntity, em, [](MeshComponent& l)
+	{
+		auto material = l.m_material->Material();
+
+		if (auto materialBuffer = material->Buffer<PBRMaterialUB>(11))
+		{
+			bool dirty = false;
+			ImGui::TextUnformatted("Albedo");
+
+			if (ImGui::ColorPicker3("Color Picker", (float*)&materialBuffer->m_albedoVec))
+			{
+				dirty = true;
+			}
+
+			if (ImGui::Checkbox("Use albedo texture", &materialBuffer->m_useAlbedoTex))
+			{
+				dirty = true;
+			}
+
+			ImGui::Separator();
+
+			ImGui::TextUnformatted("Roughness");
+			if (ImGui::SliderFloat("Roughness", &materialBuffer->m_roughness, 0, 1))
+			{
+				dirty = true;
+			}
+
+			if (ImGui::Checkbox("Use roughness texture", &materialBuffer->m_useRoughnessTex))
+			{
+				dirty = true;
+			}
+
+			ImGui::Separator();
+
+			ImGui::TextUnformatted("Metallic");
+			if (ImGui::SliderFloat("Metallic", &materialBuffer->m_metallic, 0, 1))
+			{
+				dirty = true;
+			}
+
+			if (ImGui::Checkbox("Use metallic texture", &materialBuffer->m_useMetallicTex))
+			{
+				dirty = true;
+			}
+
+			if (dirty)
+			{
+				material->UpdateBuffer(11, *materialBuffer);
+			}
+		}
 	});
 }
 

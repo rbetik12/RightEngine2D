@@ -82,7 +82,28 @@ public:
         ENGINE_ASSERT(name == name2);
 
         info.m_cpuBuffer = bufferObject;
-        info.m_gpuBuffer->CopyToBuffer(&bufferObject, sizeof(T));
+        info.m_gpuBuffer->CopyToBuffer(info.m_cpuBuffer.get_raw_ptr(), info.m_cpuBuffer.get_type().get_sizeof());
+    }
+
+    template <typename T>
+    inline T* Buffer(int slot)
+    {
+        ENGINE_ASSERT(registration::helpers::typeRegistered<T>());
+
+        if (slot > m_buffers.size())
+        {
+            return nullptr;
+        }
+
+        auto& info = m_buffers[slot];
+
+        ENGINE_ASSERT(info.m_cpuBuffer.is_valid());
+        if (info.m_cpuBuffer.get_type().get_name() != rttr::type::get<T>().get_name())
+        {
+            return nullptr;
+        }
+
+        return &info.m_cpuBuffer.get_value_safe<T>();
     }
 
     void SetBuffer(rttr::type type, int slot, rhi::ShaderStage stage, std::string_view name = "", int offset = 0);
@@ -92,6 +113,8 @@ public:
     void Sync();
 
 private:
+    void UpdateBuffer(int slot);
+
     struct BufferInfo
     {
         rttr::variant                   m_cpuBuffer;

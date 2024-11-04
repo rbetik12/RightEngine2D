@@ -1,0 +1,14 @@
+layout(binding = 11) uniform PBRMaterialUB
+{
+    vec3 u_AlbedoVec;
+
+    float u_RoughnessValue;
+    float u_MetallicValue;
+
+    bool u_UseAlbedoTex;
+    bool u_UseNormalTex;
+    bool u_UseMetallicTex;
+    bool u_UseRoughnessTex;
+    
+    vec2 _padding_;
+};
